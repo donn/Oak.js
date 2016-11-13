@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Oak.js</title>
+	<meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="Styles/styles.css">
+</head>
+<body>
+    <header>
+		<input id='fileInputElement' type='file' />
+		<input id='asmInputElement' type='file' />
+		<h1><a href='https://github.com/Skyus/Oak.js'>Oak.js</a></h1>
+        <label class='asmUpload' for="asmInputElement"><span class='tooltip'>Upload Assembly</span></label>
+        <label class='fileUpload' for="fileInputElement"><span class='tooltip'>Upload File</span></label>
+        <div class='assemble'><span class='tooltip'>Assemble</span></div>
+        <div class='disassemble'><span class='tooltip'>Disassemble</span></div>
+        <div class='simulate'><span class='tooltip'>Simulate</span></div>
+        <!--<div class='stepbystep'><span class='tooltip'>Step By Step Simulate</span></div>-->
+		<div class='downloadBin'><span class='tooltip'>Download Binary</span></div>
+		<div class='download'><span class='tooltip'>Download Assembly</span></div>
+		<div><input type='checkbox' id='ShowMC' /><span class='tooltip'>Show Machine Code</span></div>
+    </header>
+	<nav><div class='tabs'></div><div class='addTab'></div></nav>
+	<div id='toasts'>
+	</div>
+	<main>
+	</main>
+    <script src="Scripts/oak.min.js"></script>	
+    <script src="Scripts/jquery-3.1.1.min.js"></script>
+    <script src="Scripts/editor.min.js"></script>
+</body>
+</html>
