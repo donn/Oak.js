@@ -453,7 +453,7 @@ $(document).ready(function() {
 		$("#asmInputElement").on("change", function(evt){
 			var files = $(this)[0].files;
 			if (!files.length) {
-				addToast("<b>No Files: </b> Please choose assembly file to upload one.", TOAST_WARNING);
+				addToast("<b>No file chosen.</b>", TOAST_WARNING);
 				return;
 			}
 
@@ -465,7 +465,6 @@ $(document).ready(function() {
 			var fr = new FileReader();
 			fr.addEventListener('load', function () {
 				$("main section.sel #asm").val(this.result);
-				assembleField();
 			});
 			fr.readAsText(blob);
 		});
