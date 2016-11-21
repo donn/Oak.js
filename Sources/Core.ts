@@ -20,6 +20,6 @@ interface Core
     decode();
     execute();
     instructionCallback(data: string): void;
-    syscall(): void;
+    ecall(): void;
     
 }

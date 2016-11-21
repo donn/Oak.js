@@ -173,13 +173,9 @@ function simulateMC() {
 		var val = $("main section.sel #machinecode").val();
 		var bytes = hexToBytes(val);
 		var output = simulate(coreArray[getSelected()], bytes);
-		if (output !== "SCALL" && output !== null && output != undefined) {
+		if (output !== "@Oak_Ecall" && output != null) {
 			addToast("<b>Simulator Error: </b>" + output, TOAST_ERROR);
 		}
-		// else if (output != "SCALL") {
-		// 	updateRegAndMemory();
-		// 	addToast("<b>Complete:</b> Simulation complete.", TOAST_NORMAL);
-		// }
 	}
 }
 
@@ -208,7 +204,7 @@ function addTab(tabTitle) {
 		$("main section.sel #machinecode").stop().slideUp(0);
 		$("#ShowMC").prop('checked', false);
 
-		coreArray.push(new RISCVCore(2048, invokeSyscall, decodeCallback));
+		coreArray.push(new RISCVCore(2048, invokeEnvironmentCall, decodeCallback));
 
 		// Implement Tab Switch
 		$(".tabs span:last-child").on("click", function() {
@@ -289,13 +285,9 @@ function processKey(event) {
 
 			updateRegAndMemory();
 			var output = continueSim(coreArray[getSelected()]);
-			if (output !== "SCALL" && output !== null && output != undefined) {
+			if (output !== "@Oak_Ecall" && output != null) {
 				addToast("<b>Simulator Error: </b>" + output, TOAST_ERROR);
 			}
-			// else if (output != "SCALL") {
-			// 	updateRegAndMemory();
-			// 	addToast("<b>Complete:</b> Simulation complete.", TOAST_NORMAL);
-			// }
 		}
 		// Minus
 		else if (event.keyCode == 189) {
@@ -354,7 +346,7 @@ function processKey(event) {
 	}
 }
 
-function invokeSyscall() {
+function invokeEnvironmentCall() {
 	var core = coreArray[getSelected()];
 	var type = registerRead(core, 17);
 	var arg = registerRead(core, 10);
@@ -392,19 +384,15 @@ function invokeSyscall() {
 		exit = true;
 		break;
 	default:
-		addToast("<b>WARNING:</b> Syscall " + type + "unsupported.", TOAST_WARNING);
+		addToast("<b>WARNING:</b> Environment call " + type + "unsupported.", TOAST_WARNING);
 		break;
 	}
 
 	if (!exit) {
 		var output = continueSim(coreArray[getSelected()]);
-		if (output != "SCALL" && output !== null && output != undefined) {
+		if (output != "@Oak_Ecall" && output != null) {
 			addToast("<b>Simulator Error: </b>" + output, TOAST_ERROR);
 		}
-		// else if (output != "SCALL") {
-		// 	updateRegAndMemory();
-		// 	addToast("<b>Complete:</b> Simulation complete.", TOAST_NORMAL);
-		// }
 	} else {
 		updateRegAndMemory();
 		addToast("<b>Complete:</b> Simulation complete.", TOAST_NORMAL);
@@ -437,10 +425,10 @@ $(document).ready(function() {
 				var hexer = "";
 				for (var i=0; i < bytes.length; i++) {
 					if (bytes[i] < 16) {
-						hexer += ("0"+bytes[i].toString(16)+" ");
+						hexer += ("0"+bytes[i].toString(16).toUpperCase()+" ");
 					}
 					else {
-						hexer += (bytes[i].toString(16)+" ");
+						hexer += (bytes[i].toString(16).toUpperCase()+" ");
 					}
 				}
 
@@ -475,7 +463,7 @@ $(document).ready(function() {
 			var blob = new Blob([link], {type: "text/plain"});
 			var blobLink = URL.createObjectURL(blob);
 			
-			var name = $(".tabs span.sel span").html()+".s";
+			var name = $(".tabs span.sel span").html()+".S";
 			el.setAttribute('href', blobLink);
 			el.setAttribute('download', name);
 

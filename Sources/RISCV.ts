@@ -215,7 +215,7 @@ function Oak_gen_RISCV(): InstructionSet
         ["opcode", "funct3"],
         [parseInt("0010011", 2), parseInt("100", 2)],
         function(core) {
-            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) ^ core.arguments[2]);
+            core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) >>> 0) ^ core.arguments[2]);
             return null;
         }
     ));
@@ -226,7 +226,7 @@ function Oak_gen_RISCV(): InstructionSet
         ["opcode", "funct3"],
         [parseInt("0010011", 2), parseInt("110", 2)],
         function(core) {
-            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) | core.arguments[2]);
+            core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) >>> 0) | core.arguments[2]);
             return null;
         }
     ));
@@ -237,7 +237,7 @@ function Oak_gen_RISCV(): InstructionSet
         ["opcode", "funct3"],
         [parseInt("0010011", 2), parseInt("111", 2)],
         function(core) {
-            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) & core.arguments[2]);
+            core.registerFile.write(core.arguments[0], ((core.registerFile.read(core.arguments[1]) >>> 0) & core.arguments[2]));
             return null;
         }
     ));
@@ -415,7 +415,7 @@ function Oak_gen_RISCV(): InstructionSet
                 new BitRange("imm[4:0]", 7, 5, false, 12),
                 new BitRange("opcode", 0, 7)
             ],
-            ["rs1", "imm", "rs2"],
+            ["rs2", "imm", "rs1"],
             [Parameter.register, Parameter.immediate, Parameter.register],
             /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*(-?0?[boxd]?[0-9A-F]+)\(\s*([A-Za-z0-9]+)\s*\)/,
             "@mnem @arg, @arg(@arg)"
@@ -864,13 +864,13 @@ function Oak_gen_RISCV(): InstructionSet
     (
         new Instruction
         (
-            "SCALL",
+            "ECALL",
             allConstSubtype,
             ["const"],
             [parseInt("00000000000000000000000001110011", 2)],
             function(core)
             {
-                core.syscall();
+                core.ecall();
                 return null;
             }
             
@@ -982,6 +982,40 @@ function Oak_gen_RISCV(): InstructionSet
             return null; //captured by jalr
         }
     ));
+    
+    //Scall, Syscall both as PseudoInstructions
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "SCALL",
+            allConstSubtype,
+            ["const"],
+            [parseInt("00000000000000000000000001110011", 2)],
+            function(core)
+            {
+                return null; //captured by ecall
+            }
+            
+        )
+    )
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "SYSCALL",
+            allConstSubtype,
+            ["const"],
+            [parseInt("00000000000000000000000001110011", 2)],
+            function(core)
+            {
+                return null; //captured by ecall
+            }
+            
+        )
+    )
     
 
     /*
@@ -1203,7 +1237,6 @@ function Oak_gen_RISCV(): InstructionSet
             //Check for unterminated string/char (also comments)
             var inString = false;
             var commentOut = false;
-            var colonIndex = -1;
 
             //Comments
             for (var j = 0; j < chars.length; j++)
@@ -1448,7 +1481,6 @@ function Oak_gen_RISCV(): InstructionSet
                 continue;
             }
             
-            var directiveChars = directives[0].split("");
             //Calculate lengths
             if (text)
             {
@@ -1558,7 +1590,6 @@ function Oak_gen_RISCV(): InstructionSet
                 else if (this.dataDirectives.indexOf(directives[0]) !== -1)
                 {
                     let index = this.dataDirectives.indexOf(directives[0]);
-                    var bytes: number[] = [];
                     
                     if (this.dataDirectiveSizes[index] !== 0)
                     {
@@ -1787,7 +1818,7 @@ class RISCVRegisterFile
         console.log("Registers\n------");
         for (var i = 0; i < 32; i++)
         {
-            console.log(i, this.abiNames[i], this.physicalFile[i]);
+            console.log("x" + i.toString(), this.abiNames[i], this.physicalFile[i].toString(), (this.physicalFile[i] >>> 0).toString(16).toUpperCase());
         }
         console.log("------");
     }
@@ -1850,10 +1881,10 @@ class RISCVCore //: Core
     pc: number;
     memory: number[];
 
-    //Syscall Lambda
-    syscall: () => void;
+    //Environment Call Lambda
+    ecall: () => void;
 
-    //Syscall Lambda
+    //Instruction Callback
     instructionCallback: (data: string) => void;
 
 
@@ -1899,8 +1930,7 @@ class RISCVCore //: Core
         {
             return false;
         }
-        
-        var result: number[] = [];
+
         for (var i = 0; i < bytes.length; i++)
         {
             this.memory[address + i] = bytes[i];
@@ -2042,12 +2072,12 @@ class RISCVCore //: Core
     }
 
 
-    constructor(memorySize: number, syscall: () => void, instructionCallback: (data: string) => void)
+    constructor(memorySize: number, ecall: () => void, instructionCallback: (data: string) => void)
     {
         this.instructionSet = RISCV;
         this.pc = 0 >>> 0;
         this.memorySize = memorySize;
-        this.syscall = syscall;
+        this.ecall = ecall;
         this.instructionCallback = instructionCallback;
         this.registerFile = new RISCVRegisterFile(memorySize, RISCV.abiNames);
         
