@@ -195,7 +195,7 @@ function decodeCallback(data) {
 
 var template = "<section class='sel'><div id='asm'></div><div class='grabber asmDrag'></div><textarea rows='8' id='machinecode' placeholder='Machine Code'></textarea><div class='grabber mcDrag'></div><div class='output'><p id='console'></p><p id='instructions'></p><p id='memory'></p><div class='side'><select><option id='-1'>-- Choose an Action --</option><optgroup label='Console Display'><option id='0'>Output</option><option id='1'>Instructions</option><option id='2'>Memory</option></optgroup><optgroup label='Register Format'><option id='3'>Hexadecimal</option><option id='4'>Decimal</option><option id='5'>Unsigned Decimal</option><option id='6'>Binary</option></optgroup></select><table><thead><tr><th>Register</th><th>Data</th></tr></thead><tbody></tbody></table></div></div></section>";
 
-function addTab(tabTitle) {
+function addTab(tabTitle, asmContent) {
 	if (inputMode == INPUT_NOINPUT) {
 		$(".tabs span").removeClass("sel");
 		$(".tabs").append("<span class='sel'><span>"+tabTitle+"</span><div class='close'></div></span>");
@@ -203,7 +203,7 @@ function addTab(tabTitle) {
 
 		$("main").append(template);
 
-		$("main section.sel #asm").html(".data\n    text: .string \"word\"\n    .text\nmain:\n    add x3, x2, x1\n    addi x4, x1, x3\n    li a7, 5\n    scall              # Get Input\n    addi a0, a7, 0x241\n    li a7, 1\n    scall              # Output = Input + 5\n    li a7, 10\n    scall              # Quit");
+		$("main section.sel #asm").html(asmContent);
 		var editor = ace.edit($("main section.sel #asm").get(0));
 		editor.setTheme("ace/theme/sqlserver");
 		editor.getSession().setMode("ace/mode/riscv");
@@ -294,7 +294,7 @@ function closeTab(id) {
 }
 
 $(".addTab").on("click", function() {
-	addTab("Untitled");
+	addTab("Untitled", ".data\n    text: .string \"word\"\n    .text\nmain:\n    add x3, x2, x1\n    addi x4, x1, x3\n    li a7, 5\n    scall              # Get Input\n    addi a0, a7, 0x241\n    li a7, 1\n    scall              # Output = Input + 5\n    li a7, 10\n    scall              # Quit");
 });
 
 // Implement this on Oak.js
@@ -432,7 +432,7 @@ function invokeEnvironmentCall() {
 }
 
 $(document).ready(function() {
-	addTab("Untitled");
+	addTab("Untitled", ".data\n    text: .string \"word\"\n    .text\nmain:\n    add x3, x2, x1\n    addi x4, x1, x3\n    li a7, 5\n    scall              # Get Input\n    addi a0, a7, 0x241\n    li a7, 1\n    scall              # Output = Input + 5\n    li a7, 10\n    scall              # Quit");
 	
 	$(document).on("keyup", function( event ) {processKey(event)});
 	if (!window.File || !window.FileReader || !window.FileList || !window.Blob) {
@@ -448,7 +448,7 @@ $(document).ready(function() {
 
 			var file = files[0];
 
-			addTab(file.name);
+			addTab(file.name, "");
 			
 			var blob = file.slice(0, file.size);
 			var fr = new FileReader();
@@ -465,7 +465,7 @@ $(document).ready(function() {
 				}
 
 				$("#ShowMC").prop('checked', true);
-				$("main section.sel #machinecode").val(hexer).stop().slideDown(200);
+				$("main section.sel #machinecode, main section.sel .mcDrag").val(hexer).stop().slideDown(200);
 			});
 			fr.readAsArrayBuffer(blob);
 		});
@@ -478,13 +478,11 @@ $(document).ready(function() {
 			}
 
 			var file = files[0];
-
-			addTab(file.name);
 			
 			var blob = file.slice(0, file.size);
 			var fr = new FileReader();
 			fr.addEventListener('load', function () {
-				$("main section.sel #asm").val(this.result);
+				addTab(file.name, this.result);
 			});
 			fr.readAsText(blob);
 		});
