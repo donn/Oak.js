@@ -26,9 +26,9 @@ function addToast(str, type) {
 
 $("#ShowMC").on("change", function() {
 	if($(this).prop('checked') == true) {
-		$("main section.sel #machinecode").stop().slideDown(200);
+		$("main section.sel #machinecode, main section.sel .mcDrag").stop().slideDown(200);
 	} else {
-		$("main section.sel #machinecode").stop().slideUp(200);
+		$("main section.sel #machinecode, main section.sel .mcDrag").stop().slideUp(200);
 	}
 });
 
@@ -193,15 +193,47 @@ function decodeCallback(data) {
 	$("main section.sel #instructions").append("<span>"+data+"</span>");
 }
 
-var template = "<section class='sel'><textarea rows='8' id='asm' placeholder='Assembly Code'></textarea><textarea rows='8' id='machinecode' placeholder='Machine Code'></textarea><div class='output'><p id='console'></p><p id='instructions'></p><p id='memory'></p><div class='side'><select><option id='-1'>-- Choose an Action --</option><optgroup label='Console Display'><option id='0'>Output</option><option id='1'>Instructions</option><option id='2'>Memory</option></optgroup><optgroup label='Register Format'><option id='3'>Hexadecimal</option><option id='4'>Decimal</option><option id='5'>Unsigned Decimal</option><option id='6'>Binary</option></optgroup></select><table><thead><tr><th>Register</th><th>Data</th></tr></thead><tbody></tbody></table></div></div></section>";
+var template = "<section class='sel'><div id='asm'></div><div class='grabber asmDrag'></div><textarea rows='8' id='machinecode' placeholder='Machine Code'></textarea><div class='grabber mcDrag'></div><div class='output'><p id='console'></p><p id='instructions'></p><p id='memory'></p><div class='side'><select><option id='-1'>-- Choose an Action --</option><optgroup label='Console Display'><option id='0'>Output</option><option id='1'>Instructions</option><option id='2'>Memory</option></optgroup><optgroup label='Register Format'><option id='3'>Hexadecimal</option><option id='4'>Decimal</option><option id='5'>Unsigned Decimal</option><option id='6'>Binary</option></optgroup></select><table><thead><tr><th>Register</th><th>Data</th></tr></thead><tbody></tbody></table></div></div></section>";
 
 function addTab(tabTitle) {
 	if (inputMode == INPUT_NOINPUT) {
 		$(".tabs span").removeClass("sel");
 		$(".tabs").append("<span class='sel'><span>"+tabTitle+"</span><div class='close'></div></span>");
 		$("main section").removeClass("sel");
+
 		$("main").append(template);
-		$("main section.sel #machinecode").stop().slideUp(0);
+
+		$("main section.sel #asm").html(".data\n    text: .string \"word\"\n    .text\nmain:\n    add x3, x2, x1\n    addi x4, x1, x3\n    li a7, 5\n    scall              # Get Input\n    addi a0, a7, 0x241\n    li a7, 1\n    scall              # Output = Input + 5\n    li a7, 10\n    scall              # Quit");
+		var editor = ace.edit($("main section.sel #asm").get(0));
+		editor.setTheme("ace/theme/sqlserver");
+		editor.getSession().setMode("ace/mode/riscv");
+		editor.getSession().setUseWrapMode(true)
+
+		$('main section.sel .grabber').on('mousedown', function(e){
+			var $element;
+			if ($(this).hasClass("asmDrag"))
+				$element = $(this).parent().children("#asm");
+			else
+				$element = $(this).parent().children("#machinecode");
+
+			var	pY = e.pageY-$(this).position().top+$element.position().top;
+			
+			$(document).on('mouseup', function(e){
+				$(document).off('mouseup').off('mousemove');
+			});
+			$(document).on('mousemove', function(me){
+				var mx = Math.max(100, me.pageY - pY);
+
+				$element.css({
+					height: mx
+				});
+
+				editor.resize();
+			});
+					
+		});
+
+		$("main section.sel #machinecode, main section.sel .mcDrag").stop().slideUp(0);
 		$("#ShowMC").prop('checked', false);
 
 		coreArray.push(new RISCVCore(2048, invokeEnvironmentCall, decodeCallback));
@@ -401,7 +433,7 @@ function invokeEnvironmentCall() {
 
 $(document).ready(function() {
 	addTab("Untitled");
-	$("#machinecode").stop().slideUp(0);
+	
 	$(document).on("keyup", function( event ) {processKey(event)});
 	if (!window.File || !window.FileReader || !window.FileList || !window.Blob) {
 		$(".download, .downloadBin, .asmUpload, .fileUpload").remove();
@@ -493,6 +525,4 @@ $(document).ready(function() {
 
 		});
 	}
-	/* Please. This gets annoying. People know how to use a web browser. :P */
-	//addToast("<b>Tip: </b>You can press the <i>F11</i> key to make our editor full screen!", TOAST_NORMAL);
 });

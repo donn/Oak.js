@@ -206,7 +206,7 @@ tr { margin: 0; }
 tr:nth-child(even) {background: #D6D6D6}
 
 main {
-	margin-top: 1em;
+	margin-top: 4px;
 	width: 100%;
 	padding: 0;
 }
@@ -226,21 +226,65 @@ main textarea {
     border-radius: 0px;
     box-sizing: border-box;
 	border: none;
-    border-bottom: #a9b8cc 2px solid;
 	font-size: 1.2em;
     background-color: #eee;
     color: #777;
-    resize: vertical;
 	background-position: bottom  right;
 	background-repeat: no-repeat;
+	resize: none;
 }
 
 #asm {
+	width: 100%;
+	height: 100px;
+	overflow: visible;
+}
+
+#asm::before {
+	z-index: 1;
+	content: "";
+	position: absolute;
+	bottom: 0;
+	right: 16px;
+	width: 280px;
+	height: 58px;
+	background-position: bottom  right;
+	background-repeat: no-repeat;
 	background-image: url(../Images/assemblyoverlay.png);
+    transition: opacity 0.2s, visibility 0.2s 0.2s;
+	opacity: 1;
+	visibility: visible;
+}
+
+#asm:hover::before {
+	opacity: 0;
+	visibility: hidden;
+}
+
+.grabber {
+	content: '';
+	z-index: 1;
+	width: 100%;
+	height: 8px;
+	background: #ccc;
+	background-image: url(../Images/grabber.png);
+	background-repeat: no-repeat;
+	background-position: center;
 }
 
 #machinecode {
 	background-image: url(../Images/machinecodeoverlay.png);
+}
+
+#machinecode::before {
+    transition: opacity 0.2s, visibility 0.2s 0.2s;
+	opacity: 1;
+	visibility: visible;
+}
+
+#machinecode:hover::before {
+	opacity: 0;
+	visibility: hidden;
 }
 
 #asm:focus, #machinecode:focus {
