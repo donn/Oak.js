@@ -1,2 +1,2 @@
 tsc Sources/*.ts --outDir Build/
-cat Build/*.js > Oak.js
+cat Build/*.js > Sources/Oak.js

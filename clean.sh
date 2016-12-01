@@ -1,2 +1,2 @@
 rm -rf Build
-rm -f Oak.js
+rm -f Sources/Oak.js

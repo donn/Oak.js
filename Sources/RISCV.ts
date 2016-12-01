@@ -1255,7 +1255,7 @@ function Oak_gen_RISCV(): InstructionSet
                         }
                         else if (chars[j] == "\n")
                         {
-                            result.errorMessage = "Line " + j + ": Unterminated string.";
+                            result.errorMessage = "Line " + i + ": Unterminated string.";
                             return result;
                         }
                     }
