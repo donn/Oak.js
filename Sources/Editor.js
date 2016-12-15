@@ -11,7 +11,7 @@ var INPUT_ALPHANUMERIC = 2;
 var cursor = 0;
 var inputMode = INPUT_NOINPUT;
 
-var defaultCode = "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n   ecall\n.data\nstr:\    .string \"Hello, World!\"";
+var defaultCode = "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"";
 
 function addToast(str, type) {
 	if (type==TOAST_ERROR)
