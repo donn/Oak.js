@@ -11,7 +11,7 @@ var INPUT_ALPHANUMERIC = 2;
 var cursor = 0;
 var inputMode = INPUT_NOINPUT;
 
-var defaultCode = "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"";
+var defaultCode = " ";
 
 function addToast(str, type) {
 	if (type==TOAST_ERROR)
@@ -176,6 +176,7 @@ function simulateMC() {
 		var bytes = hexToBytes(val);
 		var output = simulate(coreArray[getSelected()], bytes);
 		if (output !== "@Oak_Ecall" && output != null) {
+			updateRegAndMemory();
 			addToast("<b>Simulator Error: </b>" + output, TOAST_ERROR);
 		}
 	}
@@ -317,10 +318,10 @@ function processKey(event) {
 			$("section.sel #machinecode").prop('disabled', false);
 			$("#fileInputElement").prop('disabled', false);
 			$("#asmInputElement").prop('disabled', false);
-
 			updateRegAndMemory();
 			var output = continueSim(coreArray[getSelected()]);
 			if (output !== "@Oak_Ecall" && output != null) {
+				updateRegAndMemory();
 				addToast("<b>Simulator Error: </b>" + output, TOAST_ERROR);
 			}
 		}
@@ -426,6 +427,7 @@ function invokeEnvironmentCall() {
 	if (!exit) {
 		var output = continueSim(coreArray[getSelected()]);
 		if (output != "@Oak_Ecall" && output != null) {
+			updateRegAndMemory();
 			addToast("<b>Simulator Error: </b>" + output, TOAST_ERROR);
 		}
 	} else {
