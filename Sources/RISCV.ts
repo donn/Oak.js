@@ -217,8 +217,7 @@ function Oak_gen_RISCV(): InstructionSet
         function(core) {
             core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) >>> 0) ^ core.arguments[2]);
             return null;
-        },
-        false
+        }
     ));
 
     instructions.push(new Instruction(
@@ -229,8 +228,7 @@ function Oak_gen_RISCV(): InstructionSet
         function(core) {
             core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) >>> 0) | core.arguments[2]);
             return null;
-        },
-        false
+        }
     ));
 
     instructions.push(new Instruction(
@@ -241,8 +239,7 @@ function Oak_gen_RISCV(): InstructionSet
         function(core) {
             core.registerFile.write(core.arguments[0], ((core.registerFile.read(core.arguments[1]) >>> 0) & core.arguments[2]));
             return null;
-        },
-        false
+        }
     ));
 
     //IL Subtype
