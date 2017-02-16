@@ -198,6 +198,8 @@ function decodeCallback(data) {
 
 var template = "<section class='sel'><div id='asm'></div><div class='grabber asmDrag'></div><textarea rows='8' id='machinecode' placeholder='Machine Code'></textarea><div class='grabber mcDrag'></div><div class='output'><p id='console'></p><p id='instructions'></p><p id='memory'></p><div class='side'><select><option id='-1'>-- Choose an Action --</option><optgroup label='Console Display'><option id='0'>Output</option><option id='1'>Instructions</option><option id='2'>Memory</option></optgroup><optgroup label='Register Format'><option id='3'>Hexadecimal</option><option id='4'>Decimal</option><option id='5'>Unsigned Decimal</option><option id='6'>Binary</option></optgroup></select><table><thead><tr><th>Register</th><th>Data</th></tr></thead><tbody></tbody></table></div></div></section>";
 
+
+
 function addTab(tabTitle, asmContent) {
 	if (inputMode == INPUT_NOINPUT) {
 		$(".tabs span").removeClass("sel");

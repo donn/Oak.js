@@ -1,4 +1,5 @@
-# Oak.js
+![Oak.js](Images/logo.png)
+
 A port of [Oak](https://github.com/Skyus/Oak) to TypeScript for a Computer Organization course.
 
 Unlike the Swift version, the TypeScript version only aims to use a specified subset of the RISC-V instruction set architecture. As a result, some features were removed, including variable length ISA support.
