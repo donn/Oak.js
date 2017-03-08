@@ -315,7 +315,7 @@ function Oak_gen_RISCV(): InstructionSet
         "LBU",
         ilSubtype,
         ["opcode", "funct3"],
-        [parseInt("0000011", 2), parseInt("000", 2)],
+        [parseInt("0000011", 2), parseInt("100", 2)],
         function(core) {
             let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 1);
             if (bytes === null)
@@ -331,7 +331,7 @@ function Oak_gen_RISCV(): InstructionSet
         "LHU",
         ilSubtype,
         ["opcode", "funct3"],
-        [parseInt("0000011", 2), parseInt("001", 2)],
+        [parseInt("0000011", 2), parseInt("101", 2)],
         function(core) {
             let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 2);
             if (bytes === null)
@@ -1216,7 +1216,7 @@ function Oak_gen_RISCV(): InstructionSet
         for (var i = 0; i < lines.length; i++)
         {  
             
-            var labelExtractor = /(([A-Za-z_][A-Za-z0-9_]*):)?(.*)?/.exec(lines[i]);
+            var labelExtractor = /\s*(([A-Za-z_][A-Za-z0-9_]*):)?(.*)?/.exec(lines[i]);
             if (labelExtractor == null)
             {
                 console.log("Congratulations, you broke regular expressions.")
