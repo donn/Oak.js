@@ -49,14 +49,20 @@ aside {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-align: center;
 }
 
-aside > select, aside > input {
+aside span {
+    margin: 4px 3%;
+}
+
+aside select, aside input {
     width: 94%;
     margin: 4px 3%;
     padding: 0.5em;
     border: none;
     box-sizing: border-box;
+    margin-bottom: 16px;
 }
 
 aside > button {
@@ -136,8 +142,13 @@ header a:first-child {
 nav {
     width: 100%;
     white-space: nowrap;
-    overflow-x: overlay;
+    overflow-x: hidden;
     overflow-y: hidden;
+}
+
+nav:hover {
+    overflow-x: scroll;
+    overflow-x: overlay;
 }
 
 nav > div.edited > span:after {
@@ -180,10 +191,6 @@ header > select {
     border: none;
     color: #eee;
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-}
-
-#options {
-
 }
 
 /* Navigation Tabs Scrollbar */

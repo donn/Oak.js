@@ -3,32 +3,40 @@
     <head>
         <title>Oak.js</title>
         <link rel="stylesheet" type="text/css" href="styles/style.css"></link>
-        <link rel="stylesheet" type="text/css" href="styles/dark.css" id="theme0"></link>
-        <link rel="stylesheet" type="text/css" href="styles/light.css" id="theme1" disabled></link>
+        <link rel="stylesheet" type="text/css" href="styles/dark.css" id="theme1" disabled></link>
+        <link rel="stylesheet" type="text/css" href="styles/light.css" id="theme0"></link>
     </head>
     <body>
         <header>
             <a href='/'><img src='images/logo.png' /></a><a href='https://skyus.github.io/Oak.js/manual.html'>Help</a><a href='https://github.com/Skyus/Oak.js'>Source</a>
             <select id='themes'>
-                <option value='0'>Dark Theme</option>
-                <option value='1'>Light Theme</option>
+                <option value='0'>Light Theme</option>
+                <option value='1'>Dark Theme</option>
             </select>
         </header>
         <main>
             <aside>
                 <div class='grabberX'></div>
                 <div class='optionsTabs'>
-                    <div class='selected'>Project Settings</div><div>Register Values</div><div>Memory Conversion</div>
+                    <div class='selected'>Project Settings</div><div>Registers</div><div>Num. Conversion</div>
                 </div>
-                <select id='isa'>
-                    <option value='0'>RISC-V</option>
-                    <option value='1'>MIPS</option>
-                </select>
-                <input placeholder='Memory Size' value='4096' />
+                <div>
+                    <span>File Name</span>
+                    <input placeholder='File Name' value='Test 1' />
+                </div><div>
+                    <span>Instruction Set</span>
+                    <select id='isa'>
+                        <option value='0'>RISC-V</option>
+                        <option value='1'>MIPS</option>
+                    </select>
+                </div><div>
+                    <span>Instruction Set</span>
+                    <input placeholder='Memory Size' type='number' value='4096' />
+                </div>
                 <button>Apply</button>
             </aside>
             <section>
-                <nav><div class='selected'><span>Tab 1</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div></nav>
+                <nav><div class='selected'><span>Tab 1</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div></nav>
                 <div class='grabberY'></div>
             </section>
             <footer></footer>

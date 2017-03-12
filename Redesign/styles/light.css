@@ -25,16 +25,21 @@ section {
     color: #333;
 }
 
-aside > select, aside > input {
-    background: #ccc;
+aside span {
+    color: #444;
 }
 
-aside > button {
+aside select, aside input {
+    background: #ccc;
+    color: #333;
+}
+
+aside button {
     background: #526681;
     color: #ccc;
 }
 
-aside > button:hover {
+aside button:hover {
     background: #7c8ea6;
     color: #fff;
 }
