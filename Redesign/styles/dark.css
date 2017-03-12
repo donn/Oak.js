@@ -1,0 +1,71 @@
+header {
+    background-color: #526681;
+}
+
+header > a, header > select {
+    background: #404f64;
+}
+
+/* Mains */
+aside, footer {
+    background-color: #333;
+}
+
+section {
+    background-color: #444;
+}
+
+/* Side */
+.optionsTabs > div {
+    background: #444;
+    color: #999;
+}
+
+.optionsTabs > div.selected {
+    color: #fff;
+}
+
+aside > select, aside > input {
+    background: #444;
+}
+
+aside > button {
+    background: #404f64;
+    color: #ccc;
+}
+
+aside > button:hover {
+    background: #526681;
+    color: #fff;
+}
+
+/* Resizers */
+.grabberX, .grabberY {
+    background-color: #222;
+}
+
+/* Tabs */
+nav {
+    background-color: #393939;
+    border-bottom: #526681 2px solid;
+}
+
+nav > div {
+    color: #777;
+    background-color: #444;
+    border-color: #222;
+}
+
+nav > div:hover {
+    background: #292929;
+    color: #fff;
+}
+
+nav > div.selected {
+    background-color: #526681;
+    color: #eee;
+}
+
+nav > div > div {
+    background-image: url(../images/closeDark.png);
+}
