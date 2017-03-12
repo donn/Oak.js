@@ -29,7 +29,6 @@ aside {
     width: 20%;
     box-sizing: border-box;
     padding-left: 4px;
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
     font-size: 75%;
 }
 
@@ -129,7 +128,6 @@ header a {
     padding: 12px 16px;
     vertical-align: middle;
     color: #ddd;
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
     font-size: 80%;
     transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
     text-decoration: none;
@@ -179,7 +177,6 @@ nav > div {
     border-right: 1px solid;
     padding: 6px 12px;
     font-size: 70%;
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
     transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
     user-select: none;
     cursor: pointer;
@@ -192,5 +189,9 @@ header > select {
     padding: 0 1em;
     border: none;
     color: #eee;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+* {
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 }

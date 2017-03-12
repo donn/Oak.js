@@ -3,6 +3,10 @@ function changeTheme() {
 }
 
 $(document).ready(function() {
+    $('#themes').val(0);
+    for (i = 1; i < 3; i++)
+        $("#theme"+i).prop('disabled', true);
+
     $("#themes").change(function() {
         var themeID = $(this).val();
         for (i = 0; i < 3; i++)
