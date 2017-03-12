@@ -107,6 +107,7 @@ footer {
 header {
     height: 40px;
 }
+
 header > a:hover {
     background: transparent;
     color: white;
@@ -131,6 +132,7 @@ header a {
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
     font-size: 80%;
     transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+    text-decoration: none;
 }
 
 header a:first-child {
@@ -191,26 +193,4 @@ header > select {
     border: none;
     color: #eee;
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-}
-
-/* Navigation Tabs Scrollbar */
-nav::-webkit-scrollbar {
-    height: 6px;
-    margin-bottom: 8px;
-    display: none;
-    background: transparent;
-}
-
-nav:hover::-webkit-scrollbar {
-    display: block;
-}
- 
-nav::-webkit-scrollbar-track {
-    background: transparent;
-}
- 
-nav::-webkit-scrollbar-thumb {
-    border-radius: 3px;
-    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
-    height: 3px;
 }

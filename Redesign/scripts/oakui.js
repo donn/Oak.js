@@ -5,7 +5,7 @@ function changeTheme() {
 $(document).ready(function() {
     $("#themes").change(function() {
         var themeID = $(this).val();
-        for (i = 0; i < 2; i++)
+        for (i = 0; i < 3; i++)
             $("#theme"+i).prop('disabled', i!=themeID);
     });
     
