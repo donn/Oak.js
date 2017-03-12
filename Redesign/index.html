@@ -2,14 +2,14 @@
 <html>
     <head>
         <title>Oak.js</title>
-        <link rel="stylesheet" type="text/css" href="styles/style.css"></link>
-        <link rel="stylesheet" type="text/css" href="styles/dos.css" id="theme2" disabled></link>
-        <link rel="stylesheet" type="text/css" href="styles/dark.css" id="theme1" disabled></link>
-        <link rel="stylesheet" type="text/css" href="styles/light.css" id="theme0"></link>
+        <link rel="stylesheet" type="text/css" href="Styles/style.css"></link>
+        <link rel="stylesheet" type="text/css" href="Styles/dos.css" id="theme2" disabled></link>
+        <link rel="stylesheet" type="text/css" href="Styles/dark.css" id="theme1" disabled></link>
+        <link rel="stylesheet" type="text/css" href="Styles/light.css" id="theme0"></link>
     </head>
     <body>
         <header>
-            <a href='/'><img src='images/logo.png' /></a><a href='https://skyus.github.io/Oak.js/manual.html'>Help</a><a href='https://github.com/Skyus/Oak.js'>Source</a>
+            <a href=''><img src='Images/logo.png' /></a><a href='https://skyus.github.io/Oak.js/manual.html'>Help</a><a href='https://github.com/Skyus/Oak.js'>Source</a>
             <select id='themes'>
                 <option value='0'>Light Theme</option>
                 <option value='1'>Dark Theme</option>
@@ -20,30 +20,126 @@
             <aside>
                 <div class='grabberX'></div>
                 <div class='optionsTabs'>
-                    <div class='selected'>Project Settings</div><div>Registers</div><div>Num. Conversion</div>
+                    <div class='selected' onclick="setOptionsTab(0)">Project Settings</div><div onclick="setOptionsTab(1)">Registers</div><div onclick="setOptionsTab(2)">Num. Conversion</div>
                 </div>
-                <div>
-                    <span>File Name</span>
-                    <input placeholder='File Name' value='Test 1' />
-                </div><div>
-                    <span>Instruction Set</span>
-                    <select id='isa'>
-                        <option value='0'>RISC-V</option>
-                        <option value='1'>MIPS</option>
+                <div class='projectSettings selected'>
+                    <div>
+                        <div>
+                            <span>File Name</span>
+                            <input placeholder='File Name' value='Test 1' />
+                        </div><div>
+                            <span>Instruction Set</span>
+                            <select id='isa'>
+                                <option value='0'>RISC-V</option>
+                                <option value='1'>MIPS</option>
+                            </select>
+                        </div><div>
+                            <span>Instruction Set</span>
+                            <input placeholder='Memory Size' type='number' value='4096' />
+                        </div>
+                    </div>
+                    <button>Apply</button>
+                </div><div class='registerStatus'>
+                    <table cellpadding="0" cellspacing="0">
+                        <thead>
+                            <tr><th>Reg</th><th><select>
+                                <option value='0'>Hex</option>
+                                <option value='1'>Unsigned Integer</option>
+                                <option value='2'>Signed Integer</option>
+                                <option value='3'>Binary</option>
+                                <option value='4'>Float</option>
+                            </select></th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>zero</td><td>0x00000000</td></tr>
+                            <tr class='alt'><td>ra</td><td>0x00000000</td></tr>
+                            <tr><td>sp</td><td>0x00000000</td></tr>
+                            <tr class='alt'><td>gp</td><td>0x00000000</td></tr>
+                            <tr><td>tp</td><td>0x00000000</td></tr>
+                            <tr class='alt'><td>t0</td><td>0x00000000</td></tr>
+                            <tr><td>t1</td><td>0x00000000</td></tr>
+                            <tr class='alt'><td>t2</td><td>0x00000000</td></tr>
+                            <tr><td>s0</td><td>0x00000000</td></tr>
+                            <tr class='alt'><td>s1</td><td>0x00000000</td></tr>
+                            <tr><td>a0</td><td>0x00000000</td></tr>
+                            <tr class='alt'><td>a1</td><td>0x00000000</td></tr>
+                            <tr><td>a2</td><td>0x00000000</td></tr>
+                            <tr class='alt'><td>a3</td><td>0x00000000</td></tr>
+                            <tr><td>a4</td><td>0x00000000</td></tr>
+                            <tr class='alt'><td>a5</td><td>0x00000000</td></tr>
+                            <tr><td>a6</td><td>0x00000000</td></tr>
+                            <tr class='alt'><td>a7</td><td>0x00000000</td></tr>
+                            <tr><td>s2</td><td>0x00000000</td></tr>
+                            <tr class='alt'><td>s3</td><td>0x00000000</td></tr>
+                            <tr><td>s4</td><td>0x00000000</td></tr>
+                            <tr class='alt'><td>s5</td><td>0x00000000</td></tr>
+                            <tr><td>s6</td><td>0x00000000</td></tr>
+                            <tr class='alt'><td>s7</td><td>0x00000000</td></tr>
+                            <tr><td>s8</td><td>0x00000000</td></tr>
+                            <tr class='alt'><td>s9</td><td>0x00000000</td></tr>
+                            <tr><td>s10</td><td>0x00000000</td></tr>
+                            <tr class='alt'><td>s11</td><td>0x00000000</td></tr>
+                            <tr><td>t3</td><td>0x00000000</td></tr>
+                            <tr class='alt'><td>t4</td><td>0x00000000</td></tr>
+                            <tr><td>t5</td><td>0x00000000</td></tr>
+                            <tr class='alt'><td>t6</td><td>0x00000000</td></tr>
+                        </tbody>
+                    </table>
+                </div><div class='conversion'>
+                    <span>Input:</span>
+                    <input placeholder='Input' />
+                    <span>Input Type:</span>
+                    <select>
+                        <option value='0'>Hex</option>
+                        <option value='1'>Unsigned Integer</option>
+                        <option value='2'>Signed Integer</option>
+                        <option value='3'>Binary</option>
+                        <option value='4'>Float</option>
                     </select>
-                </div><div>
-                    <span>Instruction Set</span>
-                    <input placeholder='Memory Size' type='number' value='4096' />
+                    <hr />
+                    <span>Output:</span>
+                    <input placeholder='Output' />
+                    <span>Output Type:</span>
+                    <select>
+                        <option value='0'>Hex</option>
+                        <option value='1'>Unsigned Integer</option>
+                        <option value='2'>Signed Integer</option>
+                        <option value='3'>Binary</option>
+                        <option value='4'>Float</option>
+                    </select>
+                    <button>Convert</button>
                 </div>
-                <button>Apply</button>
             </aside>
             <section>
-                <nav><div class='selected'><span>Tab 1</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div></nav>
+                <nav id='tabs'><div class='selected'><span>Tab 1</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div></nav>
+                <div id='editor'>    la a0, str
+    li a7, 4 #4 is the string print service number...
+    ecall
+    li a7, 10 #...and 10 is the program termination service number!
+    ecall
+.data
+str:    .string "Hello, World!"</div>
                 <div class='grabberY'></div>
             </section>
-            <footer></footer>
+            <footer>
+                <select>
+                    <option>Console</option>
+                    <option>Memory</option>
+                    <option>Instruction Log</option>
+                </select>
+            </footer>
         </main>
-        <script src="scripts/jquery.js"></script>
-        <script src="scripts/oakui.js"></script>
+        <nav id="contextMenu">
+            <ul>
+                <li>Rename Tab</li>
+                <li>Move Tab</li>
+                <li>Close Tab</li>
+            </ul>
+        </nav>
+        <script src="Scripts/jquery.js"></script>
+        <script src="Scripts/ace.min.js"></script>
+        <script src="Scripts/Ace/mode-riscv.js"></script>
+        <script src="Scripts/Ace/theme-oak.js"></script>    
+        <script src="Scripts/oakui.js"></script>
     </body>
 </html>

@@ -7,23 +7,27 @@ input, button, select {
     background: black;
 }
 
+main nav > div > div {
+    background-image: url(../Images/closeDark.png);
+}
+
 /* Navigation Tabs Scrollbar */
-nav::-webkit-scrollbar {
+main nav::-webkit-scrollbar {
     height: 6px;
     margin-bottom: 8px;
     display: none;
     background: transparent;
 }
 
-nav:hover::-webkit-scrollbar {
+main nav:hover::-webkit-scrollbar {
     display: block;
 }
  
-nav::-webkit-scrollbar-track {
+main nav::-webkit-scrollbar-track {
     background: transparent;
 }
  
-nav::-webkit-scrollbar-thumb {
+main nav::-webkit-scrollbar-thumb {
     border-radius: 3px;
     -webkit-box-shadow: inset 0 0 6px rgba(255,255,255,0.5); 
     height: 3px;
@@ -35,6 +39,11 @@ nav::-webkit-scrollbar-thumb {
     color: white;
 }
 
-nav > div {
+main nav > div {
     border: none;
+}
+
+/* Context Menu */
+#contextMenu li {
+    color: #666;
 }

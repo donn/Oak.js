@@ -1,54 +1,100 @@
-function changeTheme() {
-    alert(1);    
+function setOptionsTab(index) {
+    for (var i = 0; i < 3; i++) {
+        if (i == index) {
+            $("aside > div").eq(i+2).addClass("selected");
+            $(".optionsTabs > div").eq(i).addClass("selected");
+        }
+        else {
+            $("aside > div").eq(i+2).removeClass("selected");
+            $(".optionsTabs > div").eq(i).removeClass("selected");
+        }
+    }
 }
-
-$(document).ready(function() {
-    $('#themes').val(0);
-    for (i = 1; i < 3; i++)
-        $("#theme"+i).prop('disabled', true);
-
-    $("#themes").change(function() {
-        var themeID = $(this).val();
-        for (i = 0; i < 3; i++)
-            $("#theme"+i).prop('disabled', i!=themeID);
-    });
     
-    $('.grabberX').on('mousedown', function(e){
-        var $element = $(this).parent();
-        var $element2 = $(this).parent().parent().find("section");
-        var $element3 = $(this).parent().parent().find("footer");
-        var width = $(this).parent().parent().width();
-        
-        $(document).on('mouseup', function(e){
-            $(document).off('mouseup').off('mousemove');
+(function() {
+    "use strict";
+
+    function contextMenuListener(el) {
+        el.addEventListener( "contextmenu", function(e) {
+            $("#contextMenu").css({left: e.pageX, top: e.pageY}).stop().slideDown(64);
+            
+            var i = 0;
+            while (el.parentElement.children[i]!==el) {
+                i++;
+            }
+            
+            $('body').click(function(evt){    
+                /*if(evt.target.id == "contextMenu")
+                    return;
+                
+                if($(evt.target).closest('#contextMenu').length)
+                    return;*/
+                $("#contextMenu").slideUp(64);
+            });
+
+            e.preventDefault();
+        });
+    }
+
+    $(document).ready(function() {
+        $('#themes').val(0);
+        for (var i = 1; i < 3; i++) 
+            $("#theme"+i).prop('disabled', true);
+
+        $("#themes").change(function() {
+            var themeID = $(this).val();
+            for (i = 0; i < 3; i++)
+                $("#theme"+i).prop('disabled', i!=themeID);
         });
 
-        $(document).on('mousemove', function(me){
-            var mx = (me.pageX)*100.0/width;
-            mx = Math.min(90, Math.max(20, mx));
+        var editor = ace.edit($("section > #editor").get(0));
+        editor.setOption("firstLineNumber", 0);
+        editor.setTheme("ace/theme/oak");
+        editor.getSession().setMode("ace/mode/riscv");
+        editor.getSession().setUseWrapMode(true);
 
-            $element.css({width: ((100-mx)+"%")});
-            $element2.css({width: ((mx)+"%")});
-            $element3.css({width: ((mx)+"%")});
+        var taskItems = document.querySelectorAll("main nav > div");
+        for ( var i = 0, len = taskItems.length; i < len; i++ ) {
+            contextMenuListener(taskItems[i]);
+        }
+        
+        $('.grabberX').on('mousedown', function(e){
+            var $element = $(this).parent();
+            var $element2 = $(this).parent().parent().find("section");
+            var $element3 = $(this).parent().parent().find("footer");
+            var width = $(this).parent().parent().width();
+            
+            $(document).on('mouseup', function(e){
+                $(document).off('mouseup').off('mousemove');
+            });
+
+            $(document).on('mousemove', function(me){
+                var mx = (me.pageX)*100.0/width;
+                mx = Math.min(90, Math.max(20, mx));
+
+                $element.css({width: ((100-mx)+"%")});
+                $element2.css({width: ((mx)+"%")});
+                $element3.css({width: ((mx)+"%")});
+            });
+        });
+        
+        $('.grabberY').on('mousedown', function(e){
+            var $element = $(this).parent();
+            var $element2 = $(this).parent().parent().find("footer");
+            var height = $(this).parent().parent().height();
+
+            var	pY = e.pageY-$(this).position().top+$element.position().top;
+            
+            $(document).on('mouseup', function(e){
+                $(document).off('mouseup').off('mousemove');
+            });
+            $(document).on('mousemove', function(me){
+                var my = (me.pageY - pY)*100.0/height;
+                my = Math.min(90, Math.max(15, my));
+
+                $element.css({height: ((my)+"%")});
+                $element2.css({height: ((100-my)+"%")});
+            });
         });
     });
-    
-    $('.grabberY').on('mousedown', function(e){
-        var $element = $(this).parent();
-        var $element2 = $(this).parent().parent().find("footer");
-        var height = $(this).parent().parent().height();
-
-        var	pY = e.pageY-$(this).position().top+$element.position().top;
-        
-        $(document).on('mouseup', function(e){
-            $(document).off('mouseup').off('mousemove');
-        });
-        $(document).on('mousemove', function(me){
-            var my = (me.pageY - pY)*100.0/height;
-            my = Math.min(90, Math.max(15, my));
-
-            $element.css({height: ((my)+"%")});
-            $element2.css({height: ((100-my)+"%")});
-        });
-    });
-});
+})();

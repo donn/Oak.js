@@ -20,6 +20,13 @@ section {
     width: 80%;
 }
 
+section > #editor {
+    position: absolute;
+    top: 27px;
+    bottom: 0;
+    width: 100%;
+}
+
 /* Side */
 aside {
     position: absolute;
@@ -49,6 +56,8 @@ aside {
     overflow: hidden;
     text-overflow: ellipsis;
     text-align: center;
+    transition: background-color 0.5s ease, color 0.5s ease;
+    cursor: pointer;
 }
 
 aside span {
@@ -64,7 +73,7 @@ aside select, aside input {
     margin-bottom: 16px;
 }
 
-aside > button {
+aside button {
     border: none;
     position: absolute;
     bottom: 0;
@@ -74,6 +83,33 @@ aside > button {
     margin: 8px 3%;
     border-radius: 4px;
     transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+aside > .projectSettings, aside > .registerStatus, aside > .conversion {
+    position: absolute;
+    top: 2.5em;
+    right: 0;
+    left: 4px;
+    bottom: 0;
+    display: none;
+}
+
+aside > .selected {
+    display: block;
+}
+
+aside > .registerStatus, aside > .conversion {
+    overflow-y: auto;
+}
+
+.projectSettings > div {
+    overflow-y: auto;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 3em;
+    left: 0;
+    margin-bottom: 16px;
 }
 
 /* Console */
@@ -92,6 +128,7 @@ footer {
     width: 4px;
     height: 100%;
     cursor: ew-resize;
+    z-index: 40;
 }
 
 .grabberY {
@@ -100,6 +137,7 @@ footer {
     width: 100%;
     height: 4px;
     cursor: ns-resize;
+    z-index: 40;
 }
 
 /* Header */
@@ -139,23 +177,23 @@ header a:first-child {
 }
 
 /* Navigation Tabs */
-nav {
+main nav {
     width: 100%;
     white-space: nowrap;
     overflow-x: hidden;
     overflow-y: hidden;
 }
 
-nav:hover {
-    overflow-x: scroll;
+main nav:hover {
+    overflow-x: auto;
     overflow-x: overlay;
 }
 
-nav > div.edited > span:after {
+main nav > div.edited > span:after {
     content: '*';
 }
 
-nav > div > div {
+main nav > div > div {
     display: inline-block;
     width: 10px;
     height: 10px;
@@ -167,11 +205,11 @@ nav > div > div {
     background-position: cover;
 }
 
-nav > div:hover > div, nav > div.selected > div {
+main nav > div:hover > div, main nav > div.selected > div {
     opacity: 0.6;
 }
 
-nav > div {
+main nav > div {
     display: inline-block;
     padding: 2px;
     border-right: 1px solid;
@@ -194,4 +232,63 @@ header > select {
 
 * {
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+/* Context Menu */
+#contextMenu {
+    color: #666;
+    position: absolute;
+    background: #eee;
+    border-radius: 2px;
+    border: 1px solid #aaa;
+    font-size: 75%;
+    display: none;
+}
+
+#contextMenu > ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+#contextMenu li {
+    padding: 4px 8px;
+}
+
+#contextMenu li:hover {
+    background: #7c8ea6;
+    color: white;
+    cursor: pointer;
+}
+
+/* Table */
+table {
+    width: 100%;
+    text-align: center;
+    font-size: 110%;
+}
+
+table select {
+    padding: 0.1em;
+    margin: 0;
+}
+
+td {
+    padding: 0.5em;
+}
+
+hr {
+    border: none;
+    height: 2px;
+    margin: 0 8px;
+    margin-bottom: 1em;
+}
+
+footer > select {
+    position: absolute;
+    top: 0;
+    right: 0;
+    border: none;
+    background: transparent;
+    padding: 0.5em;
 }
