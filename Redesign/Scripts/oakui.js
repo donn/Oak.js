@@ -173,8 +173,6 @@ function oakParseToFloat(num) {
     }
     mantissa += 1;
 
-    alert(sign * exp * mantissa);
-
     return sign * exp * mantissa;
 }
 
