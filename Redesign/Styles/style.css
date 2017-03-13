@@ -1,3 +1,7 @@
+* {
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
 body {
     margin: 0;
 }
@@ -25,6 +29,10 @@ section > #editor {
     top: 27px;
     bottom: 0;
     width: 100%;
+}
+
+section > #editor * {
+    font-family: Consolas, monospace;
 }
 
 /* Side */
@@ -77,6 +85,7 @@ aside button {
     border: none;
     position: absolute;
     bottom: 0;
+    right: 0;
     width: 94%;
     box-sizing: border-box;
     padding: 0.8em;
@@ -227,11 +236,6 @@ header > select {
     padding: 0 1em;
     border: none;
     color: #eee;
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-}
-
-* {
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 }
 
 /* Context Menu */
@@ -269,12 +273,18 @@ table {
 }
 
 table select {
-    padding: 0.1em;
+    padding: 0.2em;
     margin: 0;
+    font-weight: bold;
 }
 
 td {
     padding: 0.5em;
+}
+
+th {
+    font-weight: bold;
+    padding: 0.8em;
 }
 
 hr {

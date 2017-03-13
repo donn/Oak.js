@@ -36,20 +36,16 @@ function setOptionsTab(index) {
         });
     }
 
+    var defaultCode = "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"";
+    
     $(document).ready(function() {
         $('#themes').val(0);
-        for (var i = 1; i < 3; i++) 
+        for (var i = 1; i < 3; i++)
             $("#theme"+i).prop('disabled', true);
 
-        $("#themes").change(function() {
-            var themeID = $(this).val();
-            for (i = 0; i < 3; i++)
-                $("#theme"+i).prop('disabled', i!=themeID);
-        });
-
+        $("section > #editor").html(defaultCode);
         var editor = ace.edit($("section > #editor").get(0));
         editor.setOption("firstLineNumber", 0);
-        editor.setTheme("ace/theme/oak");
         editor.getSession().setMode("ace/mode/riscv");
         editor.getSession().setUseWrapMode(true);
 
@@ -97,4 +93,23 @@ function setOptionsTab(index) {
             });
         });
     });
+
+    
+    $("#themes").change(function() {
+        var themeID = $(this).val();
+        for (var i = 0; i < 3; i++)
+            $("#theme"+i).prop('disabled', i!=themeID);
+
+        var editor = ace.edit($("section > #editor").get(0));
+        if (themeID == 0) {
+            editor.setTheme("ace/theme/oak");
+        }
+        else if (themeID == 1) {
+            editor.setTheme("ace/theme/oakdark");
+        }
+        else {
+            editor.setTheme("ace/theme/oakdos");
+        }
+    });
+
 })();

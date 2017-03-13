@@ -81,6 +81,10 @@ main nav > div > div {
     background-image: url(../Images/closeLight.png);
 }
 
+main nav > div.selected > div {
+    background-image: url(../Images/closeDark.png);
+}
+
 /* Navigation Tabs Scrollbar */
 main nav::-webkit-scrollbar {
     height: 6px;
@@ -117,7 +121,7 @@ tr {
     color: #333;
 }
 
-tr.alt {
+tr.alt, thead > tr, table select {
     background: #ddd;
     color: #555;
 }

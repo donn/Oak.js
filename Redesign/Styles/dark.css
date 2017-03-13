@@ -112,12 +112,20 @@ table select {
     background: transparent;
 }
 
+footer select {
+    color: #eee;
+}
+
+footer option {
+    color: #333;
+}
+
 tr {
     background: #444;
     color: #ddd;
 }
 
-tr.alt {
+tr.alt, thead > tr, table select {
     background: #333;
     color: #bbb;
 }
