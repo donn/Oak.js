@@ -7,12 +7,17 @@ header > a, header > select {
 }
 
 /* Mains */
-aside, footer {
+main > aside, footer {
     background-color: #333;
 }
 
 section {
     background-color: #444;
+}
+
+section > aside > textarea {
+    background-color: #444;
+    color: #eee;
 }
 
 /* Side */
@@ -31,21 +36,21 @@ section {
     color: #fff;
 }
 
-aside span {
+main > aside span {
     color: #aaa;
 }
 
-aside select, aside input {
+main > aside select, main > aside input {
     background: #444;
     color: #eee;
 }
 
-aside button {
+main > aside button {
     background: #404f64;
     color: #ccc;
 }
 
-aside button:hover {
+main > aside button:hover {
     background: #526681;
     color: #fff;
 }
@@ -112,11 +117,11 @@ table select {
     background: transparent;
 }
 
-footer select {
+footer select, section > select {
     color: #eee;
 }
 
-footer option {
+footer option, section > select > option {
     color: #333;
 }
 

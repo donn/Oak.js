@@ -55,7 +55,7 @@ function setOptionsTab(index) {
             contextMenuListener(taskItems[i]);
         }
         
-        $('.grabberX').on('mousedown', function(e){
+        $('#sideGrabber').on('mousedown', function(e){
             var $element = $(this).parent();
             var $element2 = $(this).parent().parent().find("section");
             var $element3 = $(this).parent().parent().find("footer");
@@ -75,7 +75,26 @@ function setOptionsTab(index) {
             });
         });
         
-        $('.grabberY').on('mousedown', function(e){
+        $('#editorGrabber').on('mousedown', function(e){
+            var $element = $(this).parent();
+            var $element2 = $(this).parent().parent().find("#editor");
+            var width = $(this).parent().parent().width();
+            
+            $(document).on('mouseup', function(e){
+                $(document).off('mouseup').off('mousemove');
+            });
+
+            $(document).on('mousemove', function(me){
+                var mx = (me.pageX)*100.0/width;
+                mx = Math.min(90, Math.max(20, mx));
+
+                $element.css({width: ((100-mx)+"%")});
+                $element2.css({width: ((mx)+"%")});
+                $element3.css({width: ((mx)+"%")});
+            });
+        });
+        
+        $('#yGrabber').on('mousedown', function(e){
             var $element = $(this).parent();
             var $element2 = $(this).parent().parent().find("footer");
             var height = $(this).parent().parent().height();
@@ -95,11 +114,19 @@ function setOptionsTab(index) {
         });
     });
 
-    
     $("#themes").change(function() {
         var themeID = $(this).val();
         for (var i = 0; i < 3; i++)
             $("#theme"+i).prop('disabled', i!=themeID);
+    });
+
+    $("#editorSel").change(function() {
+        var v = $(this).val();
+        
+        if (v == 1)
+            $("section > aside").css({width: "50%"});
+        else
+            $("section > aside").css({width: "0%"});
     });
 
 })();

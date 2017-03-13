@@ -22,6 +22,8 @@ section {
     height: 75%;
     left: 0;
     width: 80%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 section > #editor {
@@ -35,8 +37,41 @@ section > #editor * {
     font-family: Consolas, monospace;
 }
 
+/* Section Side */
+section > select {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    border: none;
+    background: transparent;
+    padding: 0.5em;
+    z-index: 2;
+}
+
+section > aside {
+    position: absolute;
+    top: 27px;
+    bottom: 0;
+    right: 0;
+    width: 0%;
+    z-index: 1;
+    overflow: none;
+}
+
+section > aside > textarea {
+    resize: none;
+    position: absolute;
+    width: 100%;
+    margin-left: 2px;
+    padding: 0.5em;
+    height: 100%;
+    box-sizing: border-box;
+    outline: none;
+    border: none;
+}
+
 /* Side */
-aside {
+main > aside {
     position: absolute;
     top: 0;
     bottom: 0;
@@ -68,11 +103,11 @@ aside {
     cursor: pointer;
 }
 
-aside span {
+main > aside span {
     margin: 4px 3%;
 }
 
-aside select, aside input {
+main > aside select, main > aside input {
     width: 94%;
     margin: 4px 3%;
     padding: 0.5em;
@@ -81,7 +116,7 @@ aside select, aside input {
     margin-bottom: 16px;
 }
 
-aside button {
+main > aside button {
     border: none;
     position: absolute;
     bottom: 0;
@@ -94,7 +129,7 @@ aside button {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-aside > .projectSettings, aside > .registerStatus, aside > .conversion {
+main > aside > .projectSettings, main > aside > .registerStatus, main > aside > .conversion {
     position: absolute;
     top: 2.5em;
     right: 0;
@@ -103,11 +138,11 @@ aside > .projectSettings, aside > .registerStatus, aside > .conversion {
     display: none;
 }
 
-aside > .selected {
+main > aside > .selected {
     display: block;
 }
 
-aside > .registerStatus, aside > .conversion {
+main > aside > .registerStatus, main > aside > .conversion {
     overflow-y: auto;
 }
 

@@ -20,7 +20,7 @@
         </header>
         <main>
             <aside>
-                <div class='grabberX'></div>
+                <div class='grabberX' id='sideGrabber'></div>
                 <div class='optionsTabs'>
                     <div class='selected' onclick="setOptionsTab(0)">Project Settings</div><div onclick="setOptionsTab(1)">Registers</div><div onclick="setOptionsTab(2)">Num. Conversion</div>
                 </div>
@@ -115,7 +115,15 @@
             <section>
                 <nav id='tabs'><div class='selected'><span>Tab 1</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div></nav>
                 <div id='editor'></div>
-                <div class='grabberY'></div>
+                <div class='grabberY' id='yGrabber'></div>
+                <aside>
+                    <div class='grabberX' id='editorGrabber'></div>
+                    <textarea></textarea>
+                </aside>
+                <select id='editorSel'>
+                    <option value='0'>Hide Hex Code</option>
+                    <option value='1'>Show Hex Code</option>
+                </select>
             </section>
             <footer>
                 <select>
