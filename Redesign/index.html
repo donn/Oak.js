@@ -88,28 +88,29 @@
                         </tbody>
                     </table>
                 </div><div class='conversion'>
-                    <span>Input:</span>
-                    <input placeholder='Input' />
-                    <span>Input Type:</span>
-                    <select>
-                        <option value='0'>Hex</option>
-                        <option value='1'>Unsigned Integer</option>
-                        <option value='2'>Signed Integer</option>
-                        <option value='3'>Binary</option>
-                        <option value='4'>Float</option>
-                    </select>
-                    <hr />
-                    <span>Output:</span>
-                    <input disabled placeholder='Output' />
-                    <span>Output Type:</span>
-                    <select>
-                        <option value='0'>Hex</option>
-                        <option value='1'>Unsigned Integer</option>
-                        <option value='2'>Signed Integer</option>
-                        <option value='3'>Binary</option>
-                        <option value='4'>Float</option>
-                    </select>
-                    <button>Convert</button>
+                    <div>
+                        <span>Input:</span>
+                        <input id='inputVal' placeholder='Input' />
+                        <span>Input Type:</span>
+                        <select id='inputSel'>
+                            <option value='0'>Hex</option>
+                            <option value='1'>Integer</option>
+                            <option value='3'>Binary</option>
+                            <option value='4'>Float</option>
+                        </select>
+                        <hr />
+                        <span>Output Type:</span>
+                        <select id='outputSel'>
+                            <option value='0'>Hex</option>
+                            <option value='1'>Unsigned Integer</option>
+                            <option value='2'>Signed Integer</option>
+                            <option value='3'>Binary</option>
+                            <option value='4'>Float</option>
+                        </select>
+                        <span>Output:</span>
+                        <input id='outputVal' disabled placeholder='Output' />
+                    </div>
+                    <button id='convertBtn'>Convert</button>
                 </div>
             </aside>
             <section>
@@ -121,15 +122,15 @@
                     <textarea></textarea>
                 </aside>
                 <select id='editorSel'>
-                    <option value='0'>Hide Hex Code</option>
-                    <option value='1'>Show Hex Code</option>
+                    <option value='0'>Hide Machine Code</option>
+                    <option value='1'>Show Machine Code</option>
                 </select>
             </section>
             <footer>
-                <select>
-                    <option>Console</option>
-                    <option>Memory</option>
-                    <option>Instruction Log</option>
+                <select id='consoleSel'>
+                    <option value='0'>Console</option>
+                    <option value='1'>Memory</option>
+                    <option value='2'>Instruction Log</option>
                 </select>
             </footer>
         </main>

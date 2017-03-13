@@ -138,15 +138,21 @@ main > aside > .projectSettings, main > aside > .registerStatus, main > aside > 
     display: none;
 }
 
+#outputVal {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 main > aside > .selected {
     display: block;
 }
 
-main > aside > .registerStatus, main > aside > .conversion {
+.registerStatus {
     overflow-y: auto;
 }
 
-.projectSettings > div {
+.projectSettings > div, .conversion > div {
     overflow-y: auto;
     position: absolute;
     top: 0;

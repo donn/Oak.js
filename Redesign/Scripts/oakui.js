@@ -10,6 +10,218 @@ function setOptionsTab(index) {
         }
     }
 }
+
+function padNo(str, length)
+{
+    var padded = str;
+    for (var i = 0; i < length - str.length; i++)
+    {
+        padded = "0" + padded;
+    }
+    return padded;
+}
+
+// Not working properly.
+function oakParseFromFloat(num) {
+    var sign = (num < 0);
+    var signString = (sign)?"1":"0";
+    
+    var flParts = num.toString().split(".");
+    var wholePart = parseInt(flParts[0]);
+    var fracPart = 0;
+    if (isNaN(wholePart))   wholePart = 0;
+    if (flParts.length > 1) fracPart = parseInt(flParts[1]);
+
+    // Whole mantissa
+    var wholeMantissa = (wholePart >>> 0).toString(2);
+
+    // Frac mantissa
+    var fracMantissaStr = "";
+    var fracPartParsing = parseFloat("0."+fracPart.toString());
+    var i = 0;
+    while(fracPartParsing > 0) {
+        //fracMantissa += ((true)?"1":"0");
+        var potentialAdd = Math.pow(2, -i-1);
+        
+        if (fracPartParsing - potentialAdd < 0) {
+            // Wrong Number
+            fracMantissaStr += "0";
+        }
+        else {
+            // Right Number
+            fracPartParsing -= potentialAdd;
+            fracMantissaStr += "1";
+        }
+
+        i++;
+    }
+    var finalMantissa = parseInt(wholeMantissa.substr(1)+fracMantissaStr, 2).toString(2);
+
+    alert(wholeMantissa);
+    
+    var exponent;
+    if (wholeMantissa > 0) {
+        exponent = wholeMantissa.length;
+    }
+    else {
+        exponent = -fracMantissaStr.length;
+    }
+    finalMantissa = parseInt(wholeMantissa.substr(1)+fracMantissaStr, 2).toString(2).substring(0,23);
+
+    exponent += 127;
+    exponent = Math.log2(exponent);
+    var exponentStr = (exponent >>> 0).toString(2);
+    var finalStr = signString+"|"+padNo(exponentStr, 8)+"|"+padNo(finalMantissa, 23);
+    alert(finalStr);
+    return parseInt(finalStr, 2);
+}
+
+// From Jonas Raoni Soares Silva, JSFromHell states
+//          that code can be redistributed and modified
+//          as long as original credits are kept.
+// http://jsfromhell.com/classes/binary-parser
+function encodeFloat(number) {
+    var n = +number,
+        status = (n !== n) || n == -Infinity || n == +Infinity ? n : 0,
+        exp = 0,
+        len = 281, // 2 * 127 + 1 + 23 + 3,
+        bin = new Array(len),
+        signal = (n = status !== 0 ? 0 : n) < 0,
+        n = Math.abs(n),
+        intPart = Math.floor(n),
+        floatPart = n - intPart,
+        i, lastBit, rounded, j, exponent;
+
+    if (status !== 0) {
+        if (n !== n) {
+            return 0x7fc00000;
+        }
+        if (n === Infinity) {
+            return 0x7f800000;
+        }
+        if (n === -Infinity) {
+            return 0xff800000
+        }
+    }
+
+    i = len;
+    while (i) {
+        bin[--i] = 0;
+    }
+
+    i = 129;
+    while (intPart && i) {
+        bin[--i] = intPart % 2;
+        intPart = Math.floor(intPart / 2);
+    }
+
+    i = 128;
+    while (floatPart > 0 && i) {
+        (bin[++i] = ((floatPart *= 2) >= 1) - 0) && --floatPart;
+    }
+
+    i = -1;
+    while (++i < len && !bin[i]);
+
+    if (bin[(lastBit = 22 + (i = (exp = 128 - i) >= -126 && exp <= 127 ? i + 1 : 128 - (exp = -127))) + 1]) {
+        if (!(rounded = bin[lastBit])) {
+            j = lastBit + 2;
+            while (!rounded && j < len) {
+                rounded = bin[j++];
+            }
+        }
+
+        j = lastBit + 1;
+        while (rounded && --j >= 0) {
+            (bin[j] = !bin[j] - 0) && (rounded = 0);
+        }
+    }
+    i = i - 2 < 0 ? -1 : i - 3;
+    while(++i < len && !bin[i]);
+    (exp = 128 - i) >= -126 && exp <= 127 ? ++i : exp < -126 && (i = 255, exp = -127);
+    (intPart || status !== 0) && (exp = 128, i = 129, status == -Infinity ? signal = 1 : (status !== status) && (bin[i] = 1));
+
+    n = Math.abs(exp + 127);
+    exponent = 0;
+    j = 0;
+    while (j < 8) {
+        exponent += (n % 2) << j;
+        n >>= 1;
+        j++;
+    }
+
+    var mantissa = 0;
+    n = i + 23;
+    for (; i < n; i++) {
+        mantissa = (mantissa << 1) + bin[i];
+    }
+    return ((signal ? 0x80000000 : 0) + (exponent << 23) + mantissa) | 0;
+}
+
+function oakParseToFloat(num) {
+    var mantissaMask = 0x7fffff;
+    var expMask = 0x7f800000;
+    var signMask = 0x80000000;
+
+    var sign = 1;
+    if (signMask & num) sign = -1;
+    var exp = (expMask & num) >> 23;
+    exp = Math.pow(2, (exp - 127));
+    var mantissa = (mantissaMask & num);
+    for (var i = 0; i < 23; i++) {
+        mantissa /= 2;
+    }
+    mantissa += 1;
+
+    alert(sign * exp * mantissa);
+
+    return sign * exp * mantissa;
+}
+
+function converter() {
+    var input = $("#inputVal").val();
+    var inputType = parseInt($("#inputSel").val());
+    switch(inputType) {
+        case 0: // Hex
+            input = parseInt(input, 16);
+            break;
+        case 1: // uint
+        case 2: // int
+            input = parseInt(input, 10);
+            break;
+        case 3: // bin
+            input = parseInt(input, 2);
+            break;
+        case 4: // float
+            input = encodeFloat(input);
+            break;
+    }
+
+    if (input.toString() == "NaN")
+        alert("Invalid value for input!");
+
+    var output;
+    var outputType = parseInt($("#outputSel").val());
+    switch(outputType) {
+        case 0: // Hex
+            output = "0x"+padNo((input >>> 0).toString(16), 8);
+            break;
+        case 1: // uint
+            output = (input >>> 0).toString(10);
+            break;
+        case 2: // int
+            output = input.toString(10);
+            if (output > 2147483648) { output = output - 4294967296 }
+            break;
+        case 3: // bin
+            output = "0b"+padNo((input >>> 0).toString(2), 32);
+            break;
+        case 4: // float
+            output = oakParseToFloat(input);
+            break;
+    }
+    $("#outputVal").val(output);
+}
     
 (function() {
     "use strict";
@@ -39,7 +251,7 @@ function setOptionsTab(index) {
     var defaultCode = "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"";
     
     $(document).ready(function() {
-        $('#themes').val(0);
+        $('select').val(0);
         for (var i = 1; i < 3; i++)
             $("#theme"+i).prop('disabled', true);
 
@@ -49,6 +261,8 @@ function setOptionsTab(index) {
         editor.setTheme("ace/theme/oak");
         editor.getSession().setMode("ace/mode/riscv");
         editor.getSession().setUseWrapMode(true);
+
+        $("#convertBtn").on("click", function() {converter()});
 
         var taskItems = document.querySelectorAll("main nav > div");
         for ( var i = 0, len = taskItems.length; i < len; i++ ) {
@@ -123,10 +337,14 @@ function setOptionsTab(index) {
     $("#editorSel").change(function() {
         var v = $(this).val();
         
-        if (v == 1)
+        if (v == 1) {
+            $("section > #editor").css({width: "50%"});
             $("section > aside").css({width: "50%"});
-        else
+        }
+        else {
+            $("section > #editor").css({width: "100%"});
             $("section > aside").css({width: "0%"});
+        }
     });
 
 })();
