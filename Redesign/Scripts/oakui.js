@@ -46,6 +46,7 @@ function setOptionsTab(index) {
         $("section > #editor").html(defaultCode);
         var editor = ace.edit($("section > #editor").get(0));
         editor.setOption("firstLineNumber", 0);
+        editor.setTheme("ace/theme/oak");
         editor.getSession().setMode("ace/mode/riscv");
         editor.getSession().setUseWrapMode(true);
 
@@ -99,17 +100,6 @@ function setOptionsTab(index) {
         var themeID = $(this).val();
         for (var i = 0; i < 3; i++)
             $("#theme"+i).prop('disabled', i!=themeID);
-
-        var editor = ace.edit($("section > #editor").get(0));
-        if (themeID == 0) {
-            editor.setTheme("ace/theme/oak");
-        }
-        else if (themeID == 1) {
-            editor.setTheme("ace/theme/oakdark");
-        }
-        else {
-            editor.setTheme("ace/theme/oakdos");
-        }
     });
 
 })();
