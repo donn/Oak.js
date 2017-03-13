@@ -116,6 +116,12 @@ main > aside select, main > aside input {
     margin-bottom: 16px;
 }
 
+button {
+    border-radius: 4px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    cursor: pointer;
+}
+
 main > aside button {
     border: none;
     position: absolute;
@@ -125,8 +131,6 @@ main > aside button {
     box-sizing: border-box;
     padding: 0.8em;
     margin: 8px 3%;
-    border-radius: 4px;
-    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 main > aside > .projectSettings, main > aside > .registerStatus, main > aside > .conversion {
@@ -195,35 +199,46 @@ header {
     height: 40px;
 }
 
-header > a:hover {
-    background: transparent;
-    color: white;
-}
-
 header img {
     height: 32px;
     transition: transform 0.3s ease-in-out;
 }
 
-header > a:hover img {
-    height: 32px;
-    transform: scale(1.2);
+header > a {
+    float: right;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 0.5em;
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+    position: relative;
 }
 
-header a {
+header > a > img {
+    height: 100%;
+}
+
+.noTab header > a {
+    display: none;
+}
+
+header > a:first-child {
+    float: none;
     display: inline-block;
-    height: 16px;
-    padding: 12px 16px;
-    vertical-align: middle;
+    height: 100%;
+    vertical-align: top;
     color: #ddd;
     font-size: 80%;
-    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
     text-decoration: none;
+    cursor: pointer;
+    padding: 4px 16px;
 }
 
-header a:first-child {
-    height: 32px;
-    padding: 4px 16px;
+header > a:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+header > a:hover img {
+    transform: scale(1.2);
 }
 
 /* Navigation Tabs */
@@ -288,6 +303,7 @@ header > select {
     border: 1px solid #aaa;
     font-size: 75%;
     display: none;
+    z-index: 99;
 }
 
 #contextMenu > ul {
@@ -342,4 +358,144 @@ footer > select {
     border: none;
     background: transparent;
     padding: 0.5em;
+}
+
+#noTab {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    display: none;
+    text-align: center;
+}
+
+.noTab #noTab:before {
+  content: '';
+  display: inline-block;
+  height: 100%; 
+  vertical-align: middle;
+}
+
+.noTab #noTab {
+    display: block;
+}
+
+#noTab div {
+    display: inline-block;
+    vertical-align: middle;
+    text-align: center;
+    vertical-align: middle;
+    width: 50%;
+}
+
+#noTab p {
+    color: #666;
+    font-size: 80%;
+}
+
+#noTab button {
+    width: 31%;
+    margin: 0 1%;
+    padding: 1em;
+    border: 8px solid transparent;
+    box-sizing: border-box;
+    font-size: 80%;
+}
+
+.noTab footer, .noTab aside, .noTab section {
+    display: none;
+}
+
+header > div {
+    position: relative;
+    display: inline-block;
+    word-wrap: nowrap;
+    overflow: visible;
+    box-sizing: border-box;
+    height: 100%;
+    margin: 0;
+    vertical-align: top;
+}
+
+header > div > span {
+    padding: 0.5em 2em;
+    margin: 0;
+    height: 100%;
+    display: inline-block;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 3;
+    top: 0;
+    transition: background-color 0.5s ease, color 0.5s ease;
+    cursor: pointer;
+}
+
+header > div > div {
+    display: none;
+    width: 100%;
+    border-radius: 0 0 4px 4px;
+    overflow: hidden;
+    z-index: 2;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #ddd;
+    box-sizing: border-box;
+    box-shadow: 0 0 8px black;
+}
+
+header > div:hover > div {
+    display: block;
+}
+
+header > div > div > a {
+    display: block;
+    color: #333;
+    background: transparent;
+    padding: 1em;
+    font-size: 75%;
+    transition: background-color 0.5s ease, color 0.5s ease, 0.5s ease padding-left;
+    text-decoration: none;
+}
+
+header > div > div > a:hover {
+    background: #7c8ea6;
+    color: #fff;
+    padding-left: 2em;
+}
+
+.tooltip {
+	padding: 8px 12px;
+	position: absolute;
+	top: 40px;
+	left: 50%;
+	width: 104px;
+	z-index: 88;
+	box-sizing: border-box;
+	margin-left: -56px;
+	text-align: center;
+	color: white;
+	font-size: 12px;
+	border-radius: 8px;
+	background: #333;
+	visibility: hidden;
+	opacity: 0;
+    transition: opacity 1s;
+}
+
+a:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+.tooltip::before {
+    content: " ";
+    position: absolute;
+    bottom: 100%; /* At the bottom of the tooltip */
+    left: 50%;
+    margin-left: -2px;
+    border-width: 5px;
+    border-style: solid;
+    border-color:  transparent transparent #333 transparent;
 }

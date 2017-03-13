@@ -2,8 +2,14 @@ header {
     background-color: #7c8ea6;
 }
 
-header > a, header > select {
+header > a, header > div > span, header > select {
     background: #526681;
+    color: #ddd;
+}
+
+header > a:hover, header > div > span:hover {
+    background-color: #7c8ea6;
+    coor: white;
 }
 
 /* Mains */
@@ -45,12 +51,12 @@ main > aside select, main > aside input {
     color: #333;
 }
 
-main > aside button {
+button {
     background: #526681;
     color: #ccc;
 }
 
-main > aside button:hover {
+button:hover {
     background: #7c8ea6;
     color: #fff;
 }

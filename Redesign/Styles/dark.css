@@ -2,8 +2,14 @@ header {
     background-color: #526681;
 }
 
-header > a, header > select {
+header > a, header > div > span, header > select {
     background: #404f64;
+    color: #ddd;
+}
+
+header > a:hover, header > div > span:hover {
+    background-color: #526681;
+    coor: white;
 }
 
 /* Mains */

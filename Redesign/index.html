@@ -9,16 +9,41 @@
 
         <link rel="icon" type="image/png" sizes="16x16" href="Images/favicon.ico">
     </head>
-    <body>
+    <body class='noTab'>
         <header>
-            <a href=''><img src='Images/logoShadow.png' /></a><a href='https://skyus.github.io/Oak.js/manual.html'>Help</a><a href='https://github.com/Skyus/Oak.js'>Source</a>
+            <a href=''><img src='Images/logoShadow.png' /></a><div>
+                <span>File</span>
+                <div>
+                    <a href="javascript:void(0)" class="addTab">Add Tab</a>
+                    <a href=''>Load Assembly</a>
+                    <a href=''>Load Binary</a>
+                    <a href=''>Save Assembly</a>
+                    <a href=''>Save Binary</a>
+                </div>
+            </div><div>
+                <span>Help</span>
+                <div>
+                    <a href='https://skyus.github.io/Oak.js/manual.html'>Manual</a>
+                    <a href='https://github.com/Skyus/Oak.js'>Source</a>
+                </div>
+            </div>
             <select id='themes'>
                 <option value='0'>Light Theme</option>
                 <option value='1'>Dark Theme</option>
                 <option value='2'>DOS</option>
             </select>
+            <a href='javascript:void(0)' id='assemble'><img src='Images/assemble.png' /><span class='tooltip'>Assemble</span></a>
+            <a href='javascript:void(0)' id='step'><img src='Images/stepByStep.png' /><span class='tooltip'>Step By Step</span></a>
+            <a href='javascript:void(0)' id='play'><img src='Images/play.png' /><span class='tooltip'>Play</span></a>
         </header>
         <main>
+            <div id='noTab'>
+                <div>
+                    <h2>Welcome to Oak.js!</h2>
+                    <p>Oak.js is a simulator and assembler for RISC-V, MIPS.</p>
+                    <button class='addTab'>Add Tab</button><button class='loadAsm'>Load Assembly</button><button class='loadBin'>Load Binary</button>
+                </div>
+            </div>
             <aside>
                 <div class='grabberX' id='sideGrabber'></div>
                 <div class='optionsTabs'>
@@ -28,7 +53,7 @@
                     <div>
                         <div>
                             <span>File Name</span>
-                            <input placeholder='File Name' value='Test 1' />
+                            <input placeholder='File Name' id='filename' value='Test 1' />
                         </div><div>
                             <span>Instruction Set</span>
                             <select id='isa'>
@@ -37,10 +62,10 @@
                             </select>
                         </div><div>
                             <span>Memory Size (Bytes)</span>
-                            <input placeholder='Memory Size (Bytes)' type='number' value='4096' />
+                            <input placeholder='Memory Size (Bytes)' type='number' id='memsize' value='4096' />
                         </div>
                     </div>
-                    <button>Apply</button>
+                    <button id='applyBtn'>Apply</button>
                 </div><div class='registerStatus'>
                     <table cellpadding="0" cellspacing="0">
                         <thead>
@@ -114,7 +139,7 @@
                 </div>
             </aside>
             <section>
-                <nav id='tabs'><div class='selected'><span>Tab 1</span><div></div></div><div><span>Tab 2</span><div></div></div><div class='edited'><span>Tab 3</span><div></div></div><div><span>Tab 4</span><div></div></div></nav>
+                <nav id='tabs'></nav>
                 <div id='editor'></div>
                 <div class='grabberY' id='yGrabber'></div>
                 <aside>

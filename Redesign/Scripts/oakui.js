@@ -1,3 +1,12 @@
+function Tab(_name, _content) {
+    return {
+        name: _name,
+        content: _content,
+        instructionSet: 0,
+        memorySize: 4096
+    };
+}
+
 function setOptionsTab(index) {
     for (var i = 0; i < 3; i++) {
         if (i == index) {
@@ -246,7 +255,65 @@ function converter() {
         });
     }
 
+    var tabs = [];
+    var currentTab = -1;
+
+    var defaultTab = "<div class='selected'><span></span><div></div></div>";
     var defaultCode = "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"";
+    
+    function addTab(name, code) {
+        var editor = ace.edit($("section > #editor").get(0));
+        
+        if (tabs.length != 0)
+            tabs[currentTab].content = editor.getValue();
+
+        $("body").removeClass("noTab");
+        $("section nav > div").removeClass("selected");
+        currentTab = $("section nav > div").length;
+        $("section nav").append(defaultTab);
+        $("section nav > div.selected span").html(name + " " + (1+currentTab));
+        $("section nav > div.selected").on("click", function() {
+            var n = $(this).index();
+            switchToTab(n);
+        });
+        $("section nav > div > div").on("click", function() {
+            var n = $(this).index();
+            //removeTab(n);
+        });
+        $("#filename").val(name + " " + (1+currentTab));
+        $("#isa").val(0);
+        $("#memsize").val(4096);
+        tabs.push(Tab(name + " " + (1+currentTab), code));
+        editor.setValue(tabs[currentTab].content);
+    }
+
+    function switchToTab(num) {
+        var editor = ace.edit($("section > #editor").get(0));
+        tabs[currentTab].content = editor.getValue();
+        editor.setValue(tabs[num].content);
+        var tabsEl = $("section nav > div");
+        tabsEl.eq(currentTab).removeClass("selected");
+        tabsEl.eq(num).addClass("selected");
+        $("#filename").val(tabs[num].name);
+        $("#isa").val(tabs[num].instructionSet);
+        $("#memsize").val(tabs[num].memorySize);
+
+        currentTab = num;
+    }
+
+    function removeTab(id) {
+        if (tabs.length == 1) {
+            tabs.pop();
+            $("section nav").html("");
+            $("body").addClass("noTab");
+            currentTab = -1;
+        }
+        else {
+            tabs.splice(id, 1);
+            alert(tabs.length);
+            $("section nav > div").eq(id).remove();
+        }
+    }
     
     $(document).ready(function() {
         $('select').val(0);
@@ -260,12 +327,20 @@ function converter() {
         editor.getSession().setMode("ace/mode/riscv");
         editor.getSession().setUseWrapMode(true);
 
+        $(".addTab").on("click", function() {addTab("Untitled", defaultCode)});
         $("#convertBtn").on("click", function() {converter()});
-
-        var taskItems = document.querySelectorAll("main nav > div");
-        for ( var i = 0, len = taskItems.length; i < len; i++ ) {
-            contextMenuListener(taskItems[i]);
-        }
+        
+        $("#applyBtn").on("click", function() {
+            var name = $("#filename").val();
+            $("nav .selected span").html(name);
+            tabs[currentTab].name = name;
+            
+            var isa = $("#isa").val();
+            tabs[currentTab].instructionSet = isa;
+            
+            var memsize = $("#memsize").val();
+            tabs[currentTab].memorySize = memsize;
+        });
         
         $('#sideGrabber').on('mousedown', function(e){
             var $element = $(this).parent();
@@ -275,6 +350,8 @@ function converter() {
             
             $(document).on('mouseup', function(e){
                 $(document).off('mouseup').off('mousemove');
+
+                e.preventDefault();
             });
 
             $(document).on('mousemove', function(me){
@@ -284,7 +361,11 @@ function converter() {
                 $element.css({width: ((100-mx)+"%")});
                 $element2.css({width: ((mx)+"%")});
                 $element3.css({width: ((mx)+"%")});
+
+                me.preventDefault();
             });
+
+            e.preventDefault();
         });
         
         $('#editorGrabber').on('mousedown', function(e){
@@ -294,6 +375,8 @@ function converter() {
             
             $(document).on('mouseup', function(e){
                 $(document).off('mouseup').off('mousemove');
+
+                e.preventDefault();
             });
 
             $(document).on('mousemove', function(me){
@@ -303,7 +386,11 @@ function converter() {
                 $element.css({width: ((100-mx)+"%")});
                 $element2.css({width: ((mx)+"%")});
                 $element3.css({width: ((mx)+"%")});
+
+                me.preventDefault();
             });
+
+            e.preventDefault();
         });
         
         $('#yGrabber').on('mousedown', function(e){
@@ -315,6 +402,8 @@ function converter() {
             
             $(document).on('mouseup', function(e){
                 $(document).off('mouseup').off('mousemove');
+
+                e.preventDefault();
             });
             $(document).on('mousemove', function(me){
                 var my = (me.pageY - pY)*100.0/height;
@@ -322,7 +411,11 @@ function converter() {
 
                 $element.css({height: ((my)+"%")});
                 $element2.css({height: ((100-my)+"%")});
+
+                me.preventDefault();
             });
+
+            e.preventDefault();
         });
     });
 
