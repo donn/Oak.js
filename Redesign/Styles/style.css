@@ -160,12 +160,12 @@ header > a:hover {
 }
 
 header img {
-    height: 24px;
+    height: 32px;
     transition: transform 0.3s ease-in-out;
 }
 
 header > a:hover img {
-    height: 24px;
+    height: 32px;
     transform: scale(1.2);
 }
 
@@ -181,8 +181,8 @@ header a {
 }
 
 header a:first-child {
-    height: 24px;
-    padding: 8px 16px;
+    height: 32px;
+    padding: 4px 16px;
 }
 
 /* Navigation Tabs */
