@@ -569,6 +569,8 @@ function converter() {
         if (tabs.length != 0) {
             tabs[currentTab].content = editor.getValue();
             tabs[currentTab].machineCode = mcEditor.val();
+            tabs[currentTab].instructionLog = $("#log").html();
+            tabs[currentTab].console = $("#console").html();
         }
 
         $("body").removeClass("noTab");
