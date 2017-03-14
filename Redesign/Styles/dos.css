@@ -72,6 +72,19 @@ section > aside > textarea {
     color: white;
 }
 
+header > div > div {
+    background: black;
+}
+
+header > div > div > a {
+    color: #fff;
+}
+
+header > div > div > a:hover {
+    padding-left: 1em;
+    color: #0f0;
+}
+
 .optionTabs > div {
     color: #666;
 }

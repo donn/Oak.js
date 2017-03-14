@@ -3,7 +3,8 @@ function Tab(_name, _content) {
         name: _name,
         content: _content,
         instructionSet: 0,
-        memorySize: 4096
+        memorySize: 4096,
+        registers: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
     };
 }
 
@@ -260,7 +261,23 @@ function converter() {
 
     var defaultTab = "<div class='selected'><span></span><div></div></div>";
     var defaultCode = "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"";
-    
+    var riscvRegNames = ["zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s0", "s11", "t3", "t4", "t5", "t6"];
+    var mipsRegNames = ["$zero", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$gp", "$sp", "$fp", "$ra"];
+
+    function setRegisterNames() {
+        var regNames;
+        if (tabs[currentTab].instructionSet == 0) 
+            regNames = riscvRegNames;
+        else
+            regNames = mipsRegNames;
+
+        // When we add non-32 reg ISAs, here we should resize the table.
+        var cells = $("table tr > td:first-child");
+        for (var i = 0; i < regNames.length; i++) {
+            cells.eq(i).html(regNames[i]);
+        }
+    }
+
     function addTab(name, code) {
         var editor = ace.edit($("section > #editor").get(0));
         
@@ -276,15 +293,17 @@ function converter() {
             var n = $(this).index();
             switchToTab(n);
         });
-        $("section nav > div > div").on("click", function() {
-            var n = $(this).index();
-            //removeTab(n);
+        $("section nav > div.selected > div").on("click", function(e) {
+            var n = $(this).parent().index();
+            removeTab(n);
+            e.preventDefault();
         });
         $("#filename").val(name + " " + (1+currentTab));
         $("#isa").val(0);
         $("#memsize").val(4096);
         tabs.push(Tab(name + " " + (1+currentTab), code));
         editor.setValue(tabs[currentTab].content);
+        setRegisterNames();
     }
 
     function switchToTab(num) {
@@ -299,6 +318,7 @@ function converter() {
         $("#memsize").val(tabs[num].memorySize);
 
         currentTab = num;
+        setRegisterNames();
     }
 
     function removeTab(id) {
@@ -310,8 +330,23 @@ function converter() {
         }
         else {
             tabs.splice(id, 1);
-            alert(tabs.length);
             $("section nav > div").eq(id).remove();
+            if (currentTab > id)
+                currentTab--;
+            else if (currentTab == id) {
+                if (id != 0)
+                    currentTab--;
+                
+                var tabsEl = $("section nav > div");
+                tabsEl.removeClass("selected");
+                tabsEl.eq(currentTab).addClass("selected");
+                $("#filename").val(tabs[currentTab].name);
+                $("#isa").val(tabs[currentTab].instructionSet);
+                $("#memsize").val(tabs[currentTab].memorySize);
+                var editor = ace.edit($("section > #editor").get(0));
+                editor.setValue(tabs[currentTab].content);
+                setRegisterNames();
+            }
         }
     }
     
@@ -320,13 +355,14 @@ function converter() {
         for (var i = 1; i < 3; i++)
             $("#theme"+i).prop('disabled', true);
 
-        $("section > #editor").html(defaultCode);
         var editor = ace.edit($("section > #editor").get(0));
         editor.setOption("firstLineNumber", 0);
         editor.setTheme("ace/theme/oak");
         editor.getSession().setMode("ace/mode/riscv");
         editor.getSession().setUseWrapMode(true);
+        editor.$blockScrolling = Infinity;
 
+        addTab("Untitled", defaultCode);
         $(".addTab").on("click", function() {addTab("Untitled", defaultCode)});
         $("#convertBtn").on("click", function() {converter()});
         
@@ -337,6 +373,7 @@ function converter() {
             
             var isa = $("#isa").val();
             tabs[currentTab].instructionSet = isa;
+            setRegisterNames();
             
             var memsize = $("#memsize").val();
             tabs[currentTab].memorySize = memsize;
