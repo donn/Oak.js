@@ -419,7 +419,7 @@ header > div {
 }
 
 header > div > span {
-    padding: 0.5em 2em;
+    padding: 0.75em 2em;
     margin: 0;
     height: 100%;
     display: inline-block;
@@ -429,6 +429,7 @@ header > div > span {
     top: 0;
     transition: background-color 0.5s ease, color 0.5s ease;
     cursor: pointer;
+    vertical-align: middle;
 }
 
 header > div > div {
