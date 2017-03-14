@@ -11,18 +11,88 @@ function Tab(_name, _content) {
 
 var tabs = [];
 var currentTab = -1;
+var editor;
+
+var CONSOLE_ERROR = 0;
+var CONSOLE_SUCCESS = 1;
+var CONSOLE_WARNING = 2;
+var CONSOLE_NORMAL = 3;
+
+function addConsoleMsg(msg, type) {
+    var typeStr = "";
+    if (type == CONSOLE_ERROR)
+        typeStr = " class='error'";
+    else if (type == CONSOLE_SUCCESS)
+        typeStr = " class='success'";
+    else if (type == CONSOLE_WARNING)
+        typeStr = " class='warning'";
+    $("#console").append("<span"+typeStr+">"+msg+"</span>");
+}
 
 /* Calls */
-function assemble() {
-    alert("assemble");
+function uiAssemble() {
+    var core = tabs[currentTab].core;
+    resetCore(core);
+    var val = editor.getValue();
+    var output = assemble(core, val);
+
+    $("#console").html("");
+    if (output.errorMessage==null) {
+        $("#machineCode").val(output.machineCode.Oak_hex());
+        addConsoleMsg("<b>Assembly Succeeded!</b", CONSOLE_SUCCESS);
+    }
+    else {
+        addConsoleMsg("<b>Assembler Error: </b>" + output.errorMessage, CONSOLE_ERROR);
+    }
 }
 
-function stepbystep() {
-    alert("stepbystep");
+function uiStepbystep() {
 }
 
-function play() {
-    alert("play");
+function updateRegAndMemory() {
+    var core = tabs[currentTab].core;
+    var t0 = performance.now();		
+    console.log("Updating memory/registers...");
+    
+    for (var i = 0; i < 32; i++) {
+        tabs[currentTab].registers[i] = registerRead(core, i);
+    }
+
+    var memory = getMemory(core);
+    $("#memory").html("");
+    for (var i=0; i < memory.length; i++) {
+        var memOut = memory[i];
+        $("#memory").append("0x"+padNo(memOut.toString(16), 2) + " ");
+    }
+    showRegisters();
+    var t1 = performance.now();
+    
+    console.log("Memory/register update done in " + (t1 - t0) + "ms.");
+}
+
+function uiSimulate() {
+    var core = tabs[currentTab].core;
+    var consoleContents = $("#console").html();
+    if (consoleContents.length > 0) {
+        $("#console").html("");
+        $("#log").html("");
+    }
+
+    resetCore(core);
+    var val = $("#machineCode").val();
+    var bytes = [];
+    var hex = val.split(" ");
+    for (var i = 0; i < hex.length; i++) {
+        var byte = parseInt(hex[i], 16);
+        if (!isNaN(byte))
+            bytes.push(byte);
+    }
+
+    var output = simulate(core, bytes);
+    if (output !== "@Oak_Ecall" && output != null) {
+        updateRegAndMemory();
+        addConsoleMsg("<b>Simulator Error: </b>" + output, CONSOLE_ERROR);
+    }
 }
 
 function updateMemory(newSize) {
@@ -32,13 +102,110 @@ function updateMemory(newSize) {
     }
 }
 
-/* Callbacks */
-function invokeEnvironmentCall() {
-    alert("ecall");
+function setConsoleMode(mode) {
+    if (mode == 0) {
+        $("#memory, #log").css("display", "none");
+        $("#console").css("display", "block");
+    }
+    else if (mode == 1) {
+        $("#console, #log").css("display", "none");
+        $("#memory").css("display", "block");
+    }
+    else {
+        $("#console, #memory").css("display", "none");
+        $("#log").css("display", "block");
+    }
+
+    $("#consoleSel").val(mode);
 }
 
-function decodeCallback() {
-    alert("decode");
+function showRegisters() {
+    var mode = parseInt($("#regSel").val());
+    var registers = tabs[currentTab].registers;
+    var cells = $("table tr > td:nth-child(2)");
+
+    for (var i = 0; i < registers.length; i++) {
+        var output;
+        switch(mode) {
+            case 0: // Hex
+                output = "0x"+padNo((registers[i] >>> 0).toString(16), 8);
+                break;
+            case 1: // uint
+                output = (registers[i] >>> 0).toString(10);
+                break;
+            case 2: // int
+                output = registers[i].toString(10);
+                if (output > 2147483648) { output = output - 4294967296 }
+                break;
+            case 3: // bin
+                output = "0b"+padNo((registers[i] >>> 0).toString(2), 32);
+                break;
+            case 4: // float
+                output = oakParseToFloat(registers[i]);
+                break;
+        }
+        cells.eq(i).html(output);
+    }
+}
+
+/* Callbacks */
+function invokeEnvironmentCall() {
+    var core = tabs[currentTab].core;
+
+    var type = registerRead(core, 17);
+    var arg = registerRead(core, 10);
+
+    setConsoleMode(0);
+    var exit = false;
+
+    switch (type) {
+    case 1: // Integer
+        $("#console").append("<span> >>> "+arg+"</span>");
+        break;
+    case 4: // String
+        var pointer = arg;
+        var output = "";
+        var char = core.memory[pointer];
+        while (char != 0)
+        {
+            output += String.fromCharCode(char);
+            pointer += 1;
+            char = core.memory[pointer];
+        }
+        console.log(output);
+        $("#console").append("<span> >>> "+output+"</span>");
+        break;
+    case 5:
+        updateRegAndMemory();
+        inputMode = INPUT_NUMERICAL;
+        $("#console").append("<span class='input insertable'> <<< </span>");
+        /*$("section.sel #asm").prop('disabled', true);
+        $("section.sel #machinecode").prop('disabled', true);
+        $("#fileInputElement").prop('disabled', true);
+        $("#asmInputElement").prop('disabled', true);*/
+        return;
+    case 10:
+        exit = true;
+        break;
+    default:
+        addConsoleMsg("<b>WARNING:</b> Environment call " + type + "unsupported.", CONSOLE_WARNING);
+        break;
+    }
+
+    if (!exit) {
+        var output = continueSim(core);
+        if (output != "@Oak_Ecall" && output != null) {
+            updateRegAndMemory();
+            addConsoleMsg("<b>Simulator Error: </b>" + output, CONSOLE_ERROR);
+        }
+    } else {
+        updateRegAndMemory();
+        addConsoleMsg("<b>Complete:</b> Simulation complete.", CONSOLE_SUCCESS);
+    }
+}
+
+function decodeCallback(data) {
+    $("#log").append("<span>"+data+"</span>");
 }
 
 function setOptionsTab(index) {
@@ -54,8 +221,7 @@ function setOptionsTab(index) {
     }
 }
 
-function padNo(str, length)
-{
+function padNo(str, length) {
     var padded = str;
     for (var i = 0; i < length - str.length; i++)
     {
@@ -294,35 +460,6 @@ function converter() {
     var riscvRegNames = ["zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s0", "s11", "t3", "t4", "t5", "t6"];
     var mipsRegNames = ["$zero", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$gp", "$sp", "$fp", "$ra"];
 
-    function showRegisters() {
-        var mode = parseInt($("#regSel").val());
-        var registers = tabs[currentTab].registers;
-        var cells = $("table tr > td:nth-child(2)");
-
-        for (var i = 0; i < registers.length; i++) {
-            var output;
-            switch(mode) {
-                case 0: // Hex
-                    output = "0x"+padNo((registers[i] >>> 0).toString(16), 8);
-                    break;
-                case 1: // uint
-                    output = (registers[i] >>> 0).toString(10);
-                    break;
-                case 2: // int
-                    output = registers[i].toString(10);
-                    if (output > 2147483648) { output = output - 4294967296 }
-                    break;
-                case 3: // bin
-                    output = "0b"+padNo((registers[i] >>> 0).toString(2), 32);
-                    break;
-                case 4: // float
-                    output = oakParseToFloat(registers[i]);
-                    break;
-            }
-            cells.eq(i).html(output);
-        }
-    }
-
     function setRegisterNames() {
         var regNames;
         if (tabs[currentTab].instructionSet == 0) 
@@ -339,8 +476,6 @@ function converter() {
     }
 
     function addTab(name, code) {
-        var editor = ace.edit($("section > #editor").get(0));
-        
         if (tabs.length != 0)
             tabs[currentTab].content = editor.getValue();
 
@@ -370,7 +505,6 @@ function converter() {
     }
 
     function switchToTab(num) {
-        var editor = ace.edit($("section > #editor").get(0));
         tabs[currentTab].content = editor.getValue();
         editor.setValue(tabs[num].content);
         var tabsEl = $("section nav > div");
@@ -406,19 +540,21 @@ function converter() {
                 $("#filename").val(tabs[currentTab].name);
                 $("#isa").val(tabs[currentTab].instructionSet);
                 $("#memsize").val(tabs[currentTab].memorySize);
-                var editor = ace.edit($("section > #editor").get(0));
                 editor.setValue(tabs[currentTab].content);
                 setRegisterNames();
             }
         }
     }
-    
+    function removeTabThis() {
+        removeTab(currentTab);
+    }
+
     $(document).ready(function() {
         $('select').val(0);
         for (var i = 1; i < 3; i++)
             $("#theme"+i).prop('disabled', true);
 
-        var editor = ace.edit($("section > #editor").get(0));
+        editor = ace.edit("editor");
         editor.setOption("firstLineNumber", 0);
         editor.setTheme("ace/theme/oak");
         editor.getSession().setMode("ace/mode/riscv");
@@ -427,7 +563,9 @@ function converter() {
 
         addTab("Untitled", defaultCode);
         $(".addTab").on("click", function() {addTab("Untitled", defaultCode)});
+        $(".removeTab").on("click", function() {removeTabThis();});
         $("#convertBtn").on("click", function() {converter()});
+        $("#consoleSel").on("change", function() {setConsoleMode($(this).val());});
         
         $("#applyBtn").on("click", function() {
             var name = $("#filename").val();
@@ -487,7 +625,6 @@ function converter() {
 
                 $element.css({width: ((100-mx)+"%")});
                 $element2.css({width: ((mx)+"%")});
-                $element3.css({width: ((mx)+"%")});
 
                 me.preventDefault();
             });

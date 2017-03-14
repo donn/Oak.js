@@ -93,6 +93,9 @@ header > div > div > a:hover {
     color: #fff;
 }
 
+hr {
+    background: white;
+}
 
 .tooltip {
 	color: #0f0;

@@ -15,10 +15,12 @@
                 <span>File</span>
                 <div>
                     <a href="javascript:void(0)" class="addTab">Add Tab</a>
-                    <a href=''>Load Assembly</a>
-                    <a href=''>Load Binary</a>
-                    <a href=''>Save Assembly</a>
-                    <a href=''>Save Binary</a>
+                    <a href="javascript:void(0)" class="removeTab menuSection">Close Tab</a>
+                    <!--<a href='javascript:void(0)'>Load Assembly</a>
+                    <a href='javascript:void(0)' class='menuSection'>Load Binary</a>
+                    <a href='javascript:void(0)'>Download Assembly</a>
+                    <a href='javascript:void(0)' class='menuSection'>Download Binary</a>
+                    <a href='javascript:void(0)'>Download RAM</a>-->
                 </div>
             </div><div>
                 <span>Help</span>
@@ -32,9 +34,9 @@
                 <option value='1'>Dark Theme</option>
                 <option value='2'>DOS</option>
             </select>
-            <a href='javascript:void(0)' onclick='assemble()'><img src='Images/assemble.png' /><span class='tooltip'>Assemble</span></a>
-            <a href='javascript:void(0)' onclick='stepbystep()'><img src='Images/stepByStep.png' /><span class='tooltip'>Step By Step</span></a>
-            <a href='javascript:void(0)' onclick='play()'><img src='Images/play.png' /><span class='tooltip'>Play</span></a>
+            <a href='javascript:void(0)' onclick='uiAssemble()'><img src='Images/assemble.png' /><span class='tooltip'>Assemble</span></a>
+            <!--<a href='javascript:void(0)' onclick='uiStepbystep()'><img src='Images/stepByStep.png' /><span class='tooltip'>Step By Step</span></a>-->
+            <a href='javascript:void(0)' onclick='uiSimulate()'><img src='Images/play.png' /><span class='tooltip'>Play</span></a>
         </header>
         <main>
             <div id='noTab'>
@@ -143,7 +145,7 @@
                 <div class='grabberY' id='yGrabber'></div>
                 <aside>
                     <div class='grabberX' id='editorGrabber'></div>
-                    <textarea></textarea>
+                    <textarea id='machineCode'></textarea>
                 </aside>
                 <select id='editorSel'>
                     <option value='0'>Hide Machine Code</option>
@@ -156,6 +158,9 @@
                     <option value='1'>Memory</option>
                     <option value='2'>Instruction Log</option>
                 </select>
+                <div id='console'></div>
+                <div id='memory'></div>
+                <div id='log'></div>
             </footer>
         </main>
         <nav id="contextMenu">

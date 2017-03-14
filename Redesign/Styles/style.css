@@ -46,6 +46,7 @@ section > select {
     background: transparent;
     padding: 0.5em;
     z-index: 2;
+    margin-right: 16px;
 }
 
 section > aside {
@@ -173,6 +174,7 @@ footer {
     height: 25%;
     left: 0;
     width: 80%;
+    overflow: hidden;
 }
 
 /* Resizers */
@@ -358,6 +360,8 @@ footer > select {
     border: none;
     background: transparent;
     padding: 0.5em;
+    z-index: 1;
+    margin-right: 16px;
 }
 
 #noTab {
@@ -444,6 +448,10 @@ header > div > div {
     box-shadow: 0 0 8px black;
 }
 
+header > div > div .menuSection {
+    border-bottom: 1px solid rgba(0,0,0,0.3);
+}
+
 header > div:hover > div {
     display: block;
 }
@@ -491,4 +499,35 @@ a:hover .tooltip {
     margin-left: -2px;
     border-width: 5px;
     border-style: solid;
+}
+
+#console, #log, #memory {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    display: none;
+    overflow: auto;
+    padding: 1.5em;
+    font-size: 100%;
+    font-family: monospace;
+}
+
+#memory {
+    padding-top: 30px;
+}
+
+#console {
+    display: block;
+}
+
+footer span {
+    display: block;
+    padding: 0.2em;
+    font-family: monospace;
+}
+
+footer span b {
+    font-family: monospace;
 }
