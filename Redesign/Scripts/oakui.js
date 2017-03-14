@@ -1,7 +1,10 @@
-function Tab(_name, _content) {
+function Tab(_name, _content, _machinecode) {
     return {
         name: _name,
         content: _content,
+        machinecode: _machinecode,
+        console: "",
+        instructionLog: "",
         instructionSet: 0,
         memorySize: 4096,
         core: new RISCVCore(4096, invokeEnvironmentCall, decodeCallback),
@@ -12,6 +15,7 @@ function Tab(_name, _content) {
 var tabs = [];
 var currentTab = -1;
 var editor;
+var mcEditor;
 
 var CONSOLE_ERROR = 0;
 var CONSOLE_SUCCESS = 1;
@@ -31,6 +35,11 @@ function addConsoleMsg(msg, type) {
 
 /* Calls */
 function uiAssemble() {
+    var val = editor.getValue();
+    if (val == "") {
+        return;
+    }
+
     var core = tabs[currentTab].core;
     resetCore(core);
     var val = editor.getValue();
@@ -475,15 +484,17 @@ function converter() {
         showRegisters();
     }
 
-    function addTab(name, code) {
-        if (tabs.length != 0)
+    function addTab(name, code, machinecode) {
+        if (tabs.length != 0) {
             tabs[currentTab].content = editor.getValue();
+            tabs[currentTab].machineCode = mcEditor.val();
+        }
 
         $("body").removeClass("noTab");
         $("section nav > div").removeClass("selected");
         currentTab = $("section nav > div").length;
         $("section nav").append(defaultTab);
-        $("section nav > div.selected span").html(name + " " + (1+currentTab));
+        $("section nav > div.selected span").html(name);
         $("section nav > div.selected").on("click", function() {
             var n = $(this).index();
             switchToTab(n);
@@ -496,25 +507,36 @@ function converter() {
         $("#regSel").on("change", function() {
             showRegisters();
         });
-        $("#filename").val(name + " " + (1+currentTab));
+        $("#filename").val(name);
         $("#isa").val(0);
         $("#memsize").val(4096);
-        tabs.push(Tab(name + " " + (1+currentTab), code));
-        editor.setValue(tabs[currentTab].content);
+        $("#console").html("");
+        $("#memory").html("");
+        $("#log").html("");
+        tabs.push(Tab(name, code, machinecode));
+        editor.setValue(code);
+        mcEditor.val(machinecode);
         setRegisterNames();
     }
 
     function switchToTab(num) {
         tabs[currentTab].content = editor.getValue();
+        tabs[currentTab].machinecode = mcEditor.val();
+        tabs[currentTab].console = $("#console").html();
+        tabs[currentTab].instructionLog = $("#log").html();
         editor.setValue(tabs[num].content);
+        mcEditor.val(tabs[num].machinecode);
         var tabsEl = $("section nav > div");
         tabsEl.eq(currentTab).removeClass("selected");
         tabsEl.eq(num).addClass("selected");
         $("#filename").val(tabs[num].name);
         $("#isa").val(tabs[num].instructionSet);
         $("#memsize").val(tabs[num].memorySize);
+        $("#console").html(tabs[num].console);
+        $("#log").html(tabs[num].instructionLog);
 
         currentTab = num;
+        updateRegAndMemory();
         setRegisterNames();
     }
 
@@ -541,12 +563,62 @@ function converter() {
                 $("#isa").val(tabs[currentTab].instructionSet);
                 $("#memsize").val(tabs[currentTab].memorySize);
                 editor.setValue(tabs[currentTab].content);
+                mcEditor.val(tabs[currentTab].machineCode);
+                $("#console").html(tabs[currentTab].console);
+                $("#log").html(tabs[currentTab].instructionLog);
                 setRegisterNames();
             }
         }
     }
     function removeTabThis() {
         removeTab(currentTab);
+    }
+
+    function uploadBin(e) {
+        var files = $("#fileInputElement")[0].files;
+        if (!files.length) {
+            //addToast("<b>No Files: </b> Please choose files to upload one.", TOAST_WARNING);
+            return;
+        }
+
+        var file = files[0];
+        
+        var blob = file.slice(0, file.size);
+        var fr = new FileReader();
+        fr.addEventListener('load', function () {
+            var bytes = new Uint8Array(this.result);
+            var hexer = "";
+            for (var i=0; i < bytes.length; i++) {
+                if (bytes[i] < 16) {
+                    hexer += ("0"+bytes[i].toString(16).toUpperCase()+" ");
+                }
+                else {
+                    hexer += (bytes[i].toString(16).toUpperCase()+" ");
+                }
+            }
+
+            addTab(file.name, "", hexer);
+        });
+        fr.readAsArrayBuffer(blob);
+        $("#fileInputElement").val("");
+    }
+
+    function uploadAsm(e) {
+        var files = $("#asmInputElement")[0].files;
+        if (!files.length) {
+            //addToast("<b>No file chosen.</b>", TOAST_WARNING);
+            return;
+        }
+
+        var file = files[0];
+            
+        var blob = file.slice(0, file.size);
+        var fr = new FileReader();
+        fr.addEventListener('load', function () {
+            addTab(file.name, this.result, "");
+        });
+        fr.readAsText(blob);
+        $("#asmInputElement").val("");
     }
 
     $(document).ready(function() {
@@ -561,11 +633,15 @@ function converter() {
         editor.getSession().setUseWrapMode(true);
         editor.$blockScrolling = Infinity;
 
-        addTab("Untitled", defaultCode);
-        $(".addTab").on("click", function() {addTab("Untitled", defaultCode)});
+        mcEditor = $("#machineCode");
+
+        addTab("Untitled", defaultCode, "");
+        $(".addTab").on("click", function() {addTab("Untitled", defaultCode, "")});
         $(".removeTab").on("click", function() {removeTabThis();});
         $("#convertBtn").on("click", function() {converter()});
         $("#consoleSel").on("change", function() {setConsoleMode($(this).val());});
+        $("#fileInputElement").on("change", function(e) {uploadBin(e)});
+        $("#asmInputElement").on("change", function(e) {uploadAsm(e)});
         
         $("#applyBtn").on("click", function() {
             var name = $("#filename").val();

@@ -145,11 +145,11 @@ header > div > div {
     background: #333;
 }
 
-header > div > div > a {
+header > div > div > a, header > div > div > label {
     color: #eee;
 }
 
-header > div > div > a:hover {
+header > div > div > a:hover, header > div > div > label:hover {
     background: #526681;
     color: #fff;
 }

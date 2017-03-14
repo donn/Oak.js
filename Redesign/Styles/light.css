@@ -141,11 +141,11 @@ header > div > div {
     background: #ddd;
 }
 
-header > div > div > a {
+header > div > div > a, header > div > div > label {
     color: #333;
 }
 
-header > div > div > a:hover {
+header > div > div > a:hover, header > div > div > label:hover {
     background: #7c8ea6;
     color: #fff;
 }

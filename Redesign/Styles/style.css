@@ -329,6 +329,7 @@ table {
     width: 100%;
     text-align: center;
     font-size: 110%;
+    font-family: monospace;
 }
 
 table select {
@@ -456,16 +457,21 @@ header > div:hover > div {
     display: block;
 }
 
-header > div > div > a {
+header > div > div > input {
+    display: none;
+}
+
+header > div > div > a, header > div > div > label {
     display: block;
     background: transparent;
     padding: 1em;
     font-size: 75%;
     transition: background-color 0.5s ease, color 0.5s ease, 0.5s ease padding-left;
     text-decoration: none;
+    cursor: pointer;
 }
 
-header > div > div > a:hover {
+header > div > div > a:hover, header > div > div > label:hover {
     padding-left: 2em;
 }
 
