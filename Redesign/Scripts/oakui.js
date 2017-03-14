@@ -294,6 +294,87 @@ function oakParseFromFloat(num) {
     return parseInt(finalStr, 2);
 }
 
+function downloadAsm() {
+    var data = editor.getValue();
+    if (data.length == 0) {
+        return;
+    }
+
+    var el = document.createElement('a');
+    var blob = new Blob([data], {type: "text/plain"});
+    var blobLink = URL.createObjectURL(blob);
+    
+    var name = tabs[currentTab].name+".s";
+    el.setAttribute('href', blobLink);
+    el.setAttribute('download', name);
+
+    el.style.display = 'none';
+    document.body.appendChild(el);
+    el.click();
+    document.body.removeChild(el);
+}
+
+function downloadBin() {
+    var data = $("#machineCode").val();
+    if (data.length == 0) {
+        return;
+    }
+
+    var hexdata = data.split(" ");
+    var bytes = [];
+    for (var i = 0; i < hexdata.length; i++) {
+        var v = parseInt(hexdata[i], 16);
+        if (!isNaN(v))
+            bytes.push(v);
+    }
+    var byteArray = new Uint8Array(bytes);
+    var blob = new Blob([byteArray], {type: "application/octet-stream"});
+    var blobLink = URL.createObjectURL(blob);
+    
+    var element = document.createElement('a');
+    var name = tabs[currentTab].name+".bin";
+    element.setAttribute('href', blobLink);
+    element.setAttribute('download', name);
+
+    element.style.display = 'none';
+    document.body.appendChild(element);
+
+    element.click();
+
+    document.body.removeChild(element);
+}
+
+function downloadRam() {
+    var data = $("#memory").html();
+    if (data.length == 0) {
+        return;
+    }
+
+    var hexdata = data.split(" ");
+    var bytes = [];
+    for (var i = 0; i < hexdata.length; i++) {
+        var v = parseInt(hexdata[i], 16);
+        if (!isNaN(v))
+            bytes.push(v);
+    }
+    var byteArray = new Uint8Array(bytes);
+    var blob = new Blob([byteArray], {type: "application/octet-stream"});
+    var blobLink = URL.createObjectURL(blob);
+    
+    var element = document.createElement('a');
+    var name = tabs[currentTab].name+".ram";
+    element.setAttribute('href', blobLink);
+    element.setAttribute('download', name);
+
+    element.style.display = 'none';
+    document.body.appendChild(element);
+
+    element.click();
+
+    document.body.removeChild(element);
+
+}
+
 // From Jonas Raoni Soares Silva, JSFromHell states
 //          that code can be redistributed and modified
 //          as long as original credits are kept.
