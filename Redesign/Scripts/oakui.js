@@ -4,8 +4,41 @@ function Tab(_name, _content) {
         content: _content,
         instructionSet: 0,
         memorySize: 4096,
+        core: new RISCVCore(4096, invokeEnvironmentCall, decodeCallback),
         registers: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
     };
+}
+
+var tabs = [];
+var currentTab = -1;
+
+/* Calls */
+function assemble() {
+    alert("assemble");
+}
+
+function stepbystep() {
+    alert("stepbystep");
+}
+
+function play() {
+    alert("play");
+}
+
+function updateMemory(newSize) {
+    if (newSize != tabs[currentTab].memorySize) {
+        alert("Sorry, memory size update has not been implemented yet. Hopefully this will change soon.");
+        tabs[currentTab].memorySize = newSize;
+    }
+}
+
+/* Callbacks */
+function invokeEnvironmentCall() {
+    alert("ecall");
+}
+
+function decodeCallback() {
+    alert("decode");
 }
 
 function setOptionsTab(index) {
@@ -256,13 +289,39 @@ function converter() {
         });
     }
 
-    var tabs = [];
-    var currentTab = -1;
-
     var defaultTab = "<div class='selected'><span></span><div></div></div>";
     var defaultCode = "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"";
     var riscvRegNames = ["zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s0", "s11", "t3", "t4", "t5", "t6"];
     var mipsRegNames = ["$zero", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$gp", "$sp", "$fp", "$ra"];
+
+    function showRegisters() {
+        var mode = parseInt($("#regSel").val());
+        var registers = tabs[currentTab].registers;
+        var cells = $("table tr > td:nth-child(2)");
+
+        for (var i = 0; i < registers.length; i++) {
+            var output;
+            switch(mode) {
+                case 0: // Hex
+                    output = "0x"+padNo((registers[i] >>> 0).toString(16), 8);
+                    break;
+                case 1: // uint
+                    output = (registers[i] >>> 0).toString(10);
+                    break;
+                case 2: // int
+                    output = registers[i].toString(10);
+                    if (output > 2147483648) { output = output - 4294967296 }
+                    break;
+                case 3: // bin
+                    output = "0b"+padNo((registers[i] >>> 0).toString(2), 32);
+                    break;
+                case 4: // float
+                    output = oakParseToFloat(registers[i]);
+                    break;
+            }
+            cells.eq(i).html(output);
+        }
+    }
 
     function setRegisterNames() {
         var regNames;
@@ -276,6 +335,7 @@ function converter() {
         for (var i = 0; i < regNames.length; i++) {
             cells.eq(i).html(regNames[i]);
         }
+        showRegisters();
     }
 
     function addTab(name, code) {
@@ -297,6 +357,9 @@ function converter() {
             var n = $(this).parent().index();
             removeTab(n);
             e.preventDefault();
+        });
+        $("#regSel").on("change", function() {
+            showRegisters();
         });
         $("#filename").val(name + " " + (1+currentTab));
         $("#isa").val(0);
@@ -372,11 +435,13 @@ function converter() {
             tabs[currentTab].name = name;
             
             var isa = $("#isa").val();
-            tabs[currentTab].instructionSet = isa;
-            setRegisterNames();
+            if (tabs[currentTab].instructionSet != isa) {
+                tabs[currentTab].instructionSet = isa;
+                setRegisterNames();
+            }
             
             var memsize = $("#memsize").val();
-            tabs[currentTab].memorySize = memsize;
+            updateMemory(memsize);
         });
         
         $('#sideGrabber').on('mousedown', function(e){

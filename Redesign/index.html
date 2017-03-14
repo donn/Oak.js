@@ -32,9 +32,9 @@
                 <option value='1'>Dark Theme</option>
                 <option value='2'>DOS</option>
             </select>
-            <a href='javascript:void(0)' id='assemble'><img src='Images/assemble.png' /><span class='tooltip'>Assemble</span></a>
-            <a href='javascript:void(0)' id='step'><img src='Images/stepByStep.png' /><span class='tooltip'>Step By Step</span></a>
-            <a href='javascript:void(0)' id='play'><img src='Images/play.png' /><span class='tooltip'>Play</span></a>
+            <a href='javascript:void(0)' onclick='assemble()'><img src='Images/assemble.png' /><span class='tooltip'>Assemble</span></a>
+            <a href='javascript:void(0)' onclick='stepbystep()'><img src='Images/stepByStep.png' /><span class='tooltip'>Step By Step</span></a>
+            <a href='javascript:void(0)' onclick='play()'><img src='Images/play.png' /><span class='tooltip'>Play</span></a>
         </header>
         <main>
             <div id='noTab'>
@@ -58,7 +58,6 @@
                             <span>Instruction Set</span>
                             <select id='isa'>
                                 <option value='0'>RISC-V</option>
-                                <option value='1'>MIPS</option>
                             </select>
                         </div><div>
                             <span>Memory Size (Bytes)</span>
@@ -69,7 +68,7 @@
                 </div><div class='registerStatus'>
                     <table cellpadding="0" cellspacing="0">
                         <thead>
-                            <tr><th>Reg</th><th><select>
+                            <tr><th>Reg</th><th><select id='regSel'>
                                 <option value='0'>Hex</option>
                                 <option value='1'>Unsigned Integer</option>
                                 <option value='2'>Signed Integer</option>
