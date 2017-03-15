@@ -1,9 +1,6 @@
-* {
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-}
-
 body {
     margin: 0;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 }
 
 /* Main Container */
@@ -13,6 +10,11 @@ main {
     right: 0;
     top: 40px;
     bottom: 0;
+}
+
+main.helpMain {
+    position: relative;
+    top: 0;
 }
 
 /* Editor */
@@ -34,7 +36,7 @@ section > #editor {
 }
 
 section > #editor * {
-    font-family: Consolas, monospace;
+    font-family: monospace;
 }
 
 /* Section Side */
@@ -198,7 +200,10 @@ footer {
 
 /* Header */
 header {
+    position: relative;
     height: 40px;
+    z-index: 100;
+    box-shadow: 0 0 24px rgba(0,0,0,0.4);
 }
 
 header img {
@@ -223,7 +228,7 @@ header > a > img {
     display: none;
 }
 
-header > a:first-child {
+header > a:first-child, .noFloat {
     float: none;
     display: inline-block;
     height: 100%;
@@ -233,6 +238,10 @@ header > a:first-child {
     text-decoration: none;
     cursor: pointer;
     padding: 4px 16px;
+}
+
+.noFloat {
+    padding: 1em 2em;
 }
 
 header > a:hover {

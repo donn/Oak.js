@@ -1,3 +1,13 @@
+main.helpMain {
+    padding: 2em;
+    background: #222;
+    color: #ccc;
+}
+
+h1, h2, h3, h4 {
+    color: #526681;
+}
+
 header {
     background-color: #526681;
 }

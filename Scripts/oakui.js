@@ -231,8 +231,38 @@ function invokeEnvironmentCall() {
         core.memset(tabs[currentTab].registers[10], bytes);
         $("#console").append("<span class='input insertable'> <<< "+input+"</span>");
         break;
+    case 9:
+        var link;
+        switch(arg) {
+            default:
+                link = "https://youtube.com/watch?v=KZACorHeE-c";
+                break;
+            case 1:
+                link = "https://youtube.com/watch?v=L_jWHffIx5E";
+                break;
+            case 2:
+                link = "https://youtube.com/watch?v=dQw4w9WgXcQ";
+                break;
+            case 3:
+                link = "https://youtube.com/watch?v=VONRQMx78YI";
+                break;
+            case 4:
+                link = "https://youtube.com/watch?v=mtf7hC17IBM";
+                break;
+            case 5:
+                link = "https://youtube.com/watch?v=yKNxeF4KMsY";
+                break;
+        }
+
+        var win = window.open(link, '_blank');
+        win.focus();        
+        break;
     case 10:
         exit = true;
+        break;
+    case 666:
+        var msg = "[AARON BURR]<br /><br />How does a bastard, orphan, son of a whore and a<br /><br />Scotsman, dropped in the middle of a forgotten<br /><br />Spot in the Caribbean by providence, impoverished, in squalor<br /><br />Grow up to be a hero and a scholar?<br /><br /><br /><br />[JOHN LAURENS]<br /><br />The ten-dollar Founding Father without a father<br /><br />Got a lot farther by working a lot harder<br /><br />By being a lot smarter<br /><br />By being a self-starter<br /><br />By fourteen, they placed him in charge of a trading charter<br /><br /><br /><br />[THOMAS JEFFERSON]<br /><br />And every day while slaves were being slaughtered and carted<br /><br />Away across the waves, he struggled and kept his guard up<br /><br />Inside, he was longing for something to be a part of<br /><br />The brother was ready to beg, steal, borrow, or barter<br /><br /><br /><br />[JAMES MADISON]<br /><br />Then a hurricane came, and devastation reigned<br /><br />Our man saw his future drip, dripping down the drain<br /><br />Put a pencil to his temple, connected it to his brain<br /><br />And he wrote his first refrain, a testament to his pain<br /><br /><br /><br />[BURR]<br /><br />Well, the word got around, they said, “This kid is insane, man”<br /><br />Took up a collection just to send him to the mainland<br /><br />“Get your education, don’t forget from whence you came, and<br /><br />The world's gonna know your name. What’s your name, man?”<br /><br /><br /><br />[ALEXANDER HAMILTON]<br /><br />Alexander Hamilton<br /><br />My name is Alexander Hamilton<br /><br />And there’s a million things I haven’t done<br /><br />But just you wait, just you wait...<br /><br /><br /><br />[ELIZA HAMILTON]<br /><br />When he was ten his father split, full of it, debt-ridden<br /><br />Two years later, see Alex and his mother bed-ridden<br /><br />Half-dead sittin' in their own sick, the scent thick<br /><br /><br /><br />[FULL COMPANY EXCEPT HAMILTON (whispering)]<br /><br />And Alex got better but his mother went quick<br /><br /><br /><br />[GEORGE WASHINGTON]<br /><br />Moved in with a cousin, the cousin committed suicide<br /><br />Left him with nothin’ but ruined pride, something new inside<br /><br />A voice saying<br /><br /><br /><br />[WASHINGTON]<br /><br />“You gotta fend for yourself.”	[COMPANY]<br /><br />“Alex, you gotta fend for yourself.”<br /><br />[WASHINGTON]<br /><br />He started retreatin’ and readin’ every treatise on the shelf<br /><br /><br /><br />[BURR]<br /><br />There would have been nothin’ left to do<br /><br />For someone less astute<br /><br />He woulda been dead or destitute<br /><br />Without a cent of restitution<br /><br />Started workin’, clerkin’ for his late mother’s landlord<br /><br />Tradin’ sugar cane and rum and all the things he can’t afford<br /><br />Scammin’ for every book he can get his hands on<br /><br />Plannin’ for the future see him now as he stands on<br /><br />The bow of a ship headed for a new land<br /><br />In New York you can be a new man	 <br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />[COMPANY]<br /><br />Scammin’<br /><br /><br /><br />Plannin’<br /><br />Oooh...<br /><br />[COMPANY]<br /><br />In New York you can<br /><br />Be a new man—<br /><br />In New York you can<br /><br />Be a new man—	[HAMILTON]<br /><br />Just you wait!<br /><br /><br /><br />Just you wait!<br /><br />[COMPANY]<br /><br />In New York you can be a new man—<br /><br /><br /><br />[WOMEN]<br /><br />In New York—	 <br /><br />[MEN]<br /><br />New York—<br /><br />[HAMILTON]<br /><br />Just you wait!<br /><br /><br /><br />[COMPANY]<br /><br />Alexander Hamilton<br /><br /><br /><br />We are waiting in the wings for you<br /><br /><br /><br />You could never back down<br /><br />You never learned to take your time!<br /><br /><br /><br />Oh, Alexander Hamilton<br /><br /><br /><br />When America sings for you<br /><br />Will they know what you overcame?<br /><br />Will they know you rewrote the game?<br /><br />The world will never be the same, oh<br /><br /><br /><br />[BURR]<br /><br />The ship is in the harbor now<br /><br />See if you can spot him<br /><br /><br /><br />Another immigrant<br /><br />Comin’ up from the bottom<br /><br /><br /><br />His enemies destroyed his rep<br /><br />America forgot him	 <br /><br />[COMPANY]<br /><br />Alexander Hamilton<br /><br /><br /><br />Waiting in the wings for you<br /><br /><br /><br />You never learned to take your time!<br /><br /><br /><br />Oh, Alexander Hamilton<br /><br />Alexander Hamilton…<br /><br />America sings for you<br /><br />Will they know what you overcame?<br /><br />Will they know you rewrote the game?<br /><br />The world will never be the same, oh<br /><br /><br /><br /><br /><br />[MEN]<br /><br />Just you wait<br /><br /><br /><br />[COMPANY]<br /><br />Just you wait<br /><br /><br /><br /><br /><br /><br /><br />[MULLIGAN/MADISON & LAFAYETTE/JEFFERSON]<br /><br />We fought with him<br /><br /><br /><br />[LAURENS/PHILIP]<br /><br />Me? I died for him<br /><br /><br /><br />[WASHINGTON]<br /><br />Me? I trusted him<br /><br /><br /><br />[ELIZA & ANGELICA & PEGGY/MARIA]<br /><br />Me? I loved him<br /><br /><br /><br />[BURR]<br /><br />And me? I’m the damn fool that shot him<br /><br /><br /><br />[COMPANY]<br /><br />There’s a million things I haven’t done<br /><br />But just you wait!<br /><br /><br /><br />[BURR]<br /><br />What’s your name, man?<br /><br /><br /><br />[COMPANY]<br /><br />Alexander Hamilton!";
+        addConsoleMsg("<b>GABER'S SECRET ECALL:</b><br />"+msg, CONSOLE_SUCCESS);
         break;
     default:
         addConsoleMsg("<b>WARNING:</b> Environment call " + type + " unsupported.", CONSOLE_WARNING);
