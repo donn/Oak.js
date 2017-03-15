@@ -97,6 +97,11 @@ function uiSimulate() {
             bytes.push(byte);
     }
 
+    if (tabs[currentTab].memorySize <= bytes.length) {
+        addConsoleMsg("<b>ERROR: </b>The allocated memory size is not big enough to contain the program. Please make it at least " + bytes.length + " big.", CONSOLE_ERROR);
+        return;
+    }
+
     var output = simulate(core, bytes);
     if (output !== "@Oak_Ecall" && output != null) {
         updateRegAndMemory();
@@ -104,10 +109,19 @@ function uiSimulate() {
     }
 }
 
-function updateMemory(newSize) {
+function updateMemorySize(newSize) {
     if (newSize != tabs[currentTab].memorySize) {
-        alert("Sorry, memory size update has not been implemented yet. Hopefully this will change soon.");
+        if (newSize < 8) {
+            addConsoleMsg("<b>ERROR: </b> Please make the memory at least 8 bits. It should be enough to contain all instructions.", CONSOLE_ERROR);
+            return;
+        }
+
         tabs[currentTab].memorySize = newSize;
+        delete tabs[currentTab].core;
+        tabs[currentTab].core = new RISCVCore(newSize, invokeEnvironmentCall, decodeCallback);
+        updateRegAndMemory();
+        $("#console").html("");
+        addConsoleMsg("<b>SUCCESS: </b> Memory size has been successfully update. Please ensure, though, that it is enough to contain the program and any extra memory.", CONSOLE_SUCCESS);
     }
 }
 
@@ -740,7 +754,7 @@ function converter() {
             }
             
             var memsize = $("#memsize").val();
-            updateMemory(memsize);
+            updateMemorySize(memsize);
         });
         
         $('#sideGrabber').on('mousedown', function(e){
