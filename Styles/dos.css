@@ -1,3 +1,9 @@
+main.helpMain {
+    padding: 2em;
+    background: black;
+    color: white;
+}
+
 body {
     background: black;
     color: white;
@@ -17,7 +23,7 @@ main nav > div > div {
 }
 
 header {
-    border-bottom: 1px solid white;
+    border-bottom: 2px solid white;
 }
 
 /* Resizers */
