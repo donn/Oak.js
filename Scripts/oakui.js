@@ -79,6 +79,8 @@ function updateRegAndMemory() {
     console.log("Memory/register update done in " + (t1 - t0) + "ms.");
 }
 
+var startSim;
+
 function uiSimulate() {
     var core = tabs[currentTab].core;
     var consoleContents = $("#console").html();
@@ -102,6 +104,7 @@ function uiSimulate() {
         return;
     }
 
+    startSim = performance.now();
     var output = simulate(core, bytes);
     if (output !== "@Oak_Ecall" && output != null) {
         updateRegAndMemory();
@@ -223,7 +226,10 @@ function invokeEnvironmentCall() {
         }
     } else {
         updateRegAndMemory();
-        addConsoleMsg("<b>Complete:</b> Simulation complete.", CONSOLE_SUCCESS);
+        var time = performance.now() - startSim;
+        var numInstructions = $("#log > span").length;
+        var ips = numInstructions*1000.0/time;
+        addConsoleMsg("<b>Complete:</b> Simulation completed in "+Math.round(time)+" ms, "+numInstructions+" instructions, "+Math.round(ips)+" instructions/second.", CONSOLE_SUCCESS);
     }
 }
 
