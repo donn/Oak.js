@@ -725,6 +725,8 @@ function converter() {
         $("#consoleSel").on("change", function() {setConsoleMode($(this).val());});
         $("#fileInputElement").on("change", function(e) {uploadBin(e)});
         $("#asmInputElement").on("change", function(e) {uploadAsm(e)});
+        $(".loadAsm").on("click", function() {$("#asmInputElement").click();})
+        $(".loadBin").on("click", function() {$("#fileInputElement").click();})
         
         $("#applyBtn").on("click", function() {
             var name = $("#filename").val();
