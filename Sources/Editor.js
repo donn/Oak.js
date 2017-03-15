@@ -13,19 +13,6 @@ var inputMode = INPUT_NOINPUT;
 
 var defaultCode = "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"";
 
-function resizeMC() {
-
-}
-
-function resizeRAM() {
-
-}
-
-function resize() {
-    resizeMC();
-    resizeRAM();
-}
-
 function addToast(str, type) {
     if (type==TOAST_ERROR)
         $("#toasts").append("<div class='error'>"+str+"<span class='close'></span></div>");
@@ -440,7 +427,7 @@ function invokeEnvironmentCall() {
     }
 
     if (!exit) {
-        var output = continueSim(coreArray[getSelected()]);
+        var output = continueSim(core);
         if (output != "@Oak_Ecall" && output != null) {
             updateRegAndMemory();
             addToast("<b>Simulator Error: </b>" + output, TOAST_ERROR);

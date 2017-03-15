@@ -22,6 +22,19 @@ var CONSOLE_SUCCESS = 1;
 var CONSOLE_WARNING = 2;
 var CONSOLE_NORMAL = 3;
 
+function resizeMC() {
+
+}
+
+function resizeRAM() {
+
+}
+
+function resize() {
+    resizeMC();
+    resizeRAM();
+}
+
 function addConsoleMsg(msg, type) {
     var typeStr = "";
     if (type == CONSOLE_ERROR)
@@ -203,13 +216,11 @@ function invokeEnvironmentCall() {
         break;
     case 5:
         updateRegAndMemory();
-        inputMode = INPUT_NUMERICAL;
-        $("#console").append("<span class='input insertable'> <<< </span>");
-        /*$("section.sel #asm").prop('disabled', true);
-        $("section.sel #machinecode").prop('disabled', true);
-        $("#fileInputElement").prop('disabled', true);
-        $("#asmInputElement").prop('disabled', true);*/
-        return;
+        var input = prompt("Please enter a number as input.");
+        tabs[currentTab].registers[17] = parseInt(input);
+        registerWrite(core, 17, parseInt(input));
+        $("#console").append("<span class='input insertable'> <<< "+input+"</span>");
+        break;
     case 10:
         exit = true;
         break;
