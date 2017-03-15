@@ -76,6 +76,16 @@ function uiAssemble() {
 function uiStepbystep() {
 }
 
+function displayMemory() {
+    var core = tabs[currentTab].core;
+    var memory = getMemory(core);
+    $("#memory").html("");
+    for (var i=0; i < memory.length; i++) {
+        var memOut = memory[i];
+        $("#memory").append("0x"+padNo(memOut.toString(16), 2) + " ");
+    }
+}
+
 function updateRegAndMemory() {
     var core = tabs[currentTab].core;
     var t0 = performance.now();		
@@ -90,12 +100,7 @@ function updateRegAndMemory() {
             tabs[currentTab].regStates[i] = REGISTER_ASSIGNED;
     }
 
-    var memory = getMemory(core);
-    $("#memory").html("");
-    for (var i=0; i < memory.length; i++) {
-        var memOut = memory[i];
-        $("#memory").append("0x"+padNo(memOut.toString(16), 2) + " ");
-    }
+    displayMemory();
     showRegisters();
     var t1 = performance.now();
     
@@ -665,7 +670,7 @@ function converter() {
     function addTab(name, code, machinecode) {
         if (tabs.length != 0) {
             tabs[currentTab].content = editor.getValue();
-            tabs[currentTab].machineCode = mcEditor.val();
+            tabs[currentTab].machinecode = mcEditor.val();
             tabs[currentTab].instructionLog = $("#log").html();
             tabs[currentTab].console = $("#console").html();
         }
@@ -716,7 +721,7 @@ function converter() {
         $("#log").html(tabs[num].instructionLog);
 
         currentTab = num;
-        updateRegAndMemory();
+        displayMemory();
         setRegisterNames();
     }
 
@@ -746,6 +751,7 @@ function converter() {
                 mcEditor.val(tabs[currentTab].machineCode);
                 $("#console").html(tabs[currentTab].console);
                 $("#log").html(tabs[currentTab].instructionLog);
+                displayMemory();
                 setRegisterNames();
             }
         }
