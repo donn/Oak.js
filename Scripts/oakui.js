@@ -221,11 +221,21 @@ function invokeEnvironmentCall() {
         registerWrite(core, 17, parseInt(input));
         $("#console").append("<span class='input insertable'> <<< "+input+"</span>");
         break;
+    case 8:
+        updateRegAndMemory();
+        var input = prompt("Please enter a string as input.");
+        var bytes = [];
+        for (var i = 0; i < input.length; i++) {
+            bytes.push(input.charCodeAt(i) & 255);
+        }
+        core.memset(tabs[currentTab].registers[10], bytes);
+        $("#console").append("<span class='input insertable'> <<< "+input+"</span>");
+        break;
     case 10:
         exit = true;
         break;
     default:
-        addConsoleMsg("<b>WARNING:</b> Environment call " + type + "unsupported.", CONSOLE_WARNING);
+        addConsoleMsg("<b>WARNING:</b> Environment call " + type + " unsupported.", CONSOLE_WARNING);
         break;
     }
 
