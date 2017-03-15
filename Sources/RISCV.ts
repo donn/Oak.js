@@ -1812,6 +1812,7 @@ class RISCVRegisterFile
     private memorySize: number;
     physicalFile: number[];
     abiNames: string[];
+    modifiedRegisters: boolean[];
 
     print()
     {
@@ -1838,6 +1839,7 @@ class RISCVRegisterFile
     write(registerNumber: number, value: number)
     {
         this.physicalFile[registerNumber] = value;
+        this.modifiedRegisters[registerNumber] = true;
     }
 
     getRegisterCount():number
@@ -1845,13 +1847,22 @@ class RISCVRegisterFile
         return 32;
     }
 
-    
+
+    getModifiedRegisters():boolean[]
+    {
+        var modReg = this.modifiedRegisters.slice();
+        for (var i = 0; i < this.getRegisterCount(); i++) {
+            this.modifiedRegisters[i] = false;
+        }
+        return modReg;
+    }
 
     reset()
     {
         for (var i = 0; i < 32; i++)
         {
             this.physicalFile[i] = 0;
+            this.modifiedRegisters[i] = false;
         }
         this.physicalFile[2] = this.memorySize;
 
@@ -1860,9 +1871,11 @@ class RISCVRegisterFile
     constructor(memorySize: number, abiNames: string[])
     {
         this.physicalFile = [];
+        this.modifiedRegisters = [];
         for (var i = 0; i < 32; i++)
         {
             this.physicalFile.push(0);
+            this.modifiedRegisters.push(false);
         }
         this.memorySize = memorySize;
         this.physicalFile[2] = memorySize; //stack pointer
@@ -1898,8 +1911,6 @@ class RISCVCore //: Core
         }
         this.registerFile.reset();
     }
-
-    
 
     //Returns bytes on success, null on failure
     memcpy(address: number, bytes: number): number[]
