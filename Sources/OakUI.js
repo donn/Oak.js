@@ -100,7 +100,7 @@ function prepareSim() {
     }
 
     if (tabs[currentTab].memorySize <= bytes.length) {
-        addConsoleMsg("<b>ERROR: </b>The allocated memory size is not big enough to contain the program. Please make it at least " + bytes.length + " big.", CONSOLE_ERROR);
+        addConsoleMsg("<b>ERROR: </b>The allocated memory size is not big enough to contain the program. It needs to be at least " + bytes.length + " bytes.", CONSOLE_ERROR);
         return;
     }
 
@@ -203,7 +203,7 @@ function updateMemorySize(newSize) {
         tabs[currentTab].core = new RISCVCore(newSize, invokeEnvironmentCall, decodeCallback);
         updateRegAndMemory();
         $("#console").html("");
-        addConsoleMsg("<b>SUCCESS: </b> Memory size has been successfully update. Please ensure, though, that it is enough to contain the program and any extra memory.", CONSOLE_SUCCESS);
+        addConsoleMsg("<b>Success: </b> Memory has been resized. (Please make sure the new memory size fits your program!)", CONSOLE_SUCCESS);
     }
 }
 
