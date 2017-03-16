@@ -94,6 +94,11 @@ function prepareSim() {
             bytes.push(byte);
     }
 
+    if (bytes.length == 0) {
+        addConsoleMsg("<b>ERROR: </b>No valid machine code.", CONSOLE_ERROR);
+        return;
+    }
+
     if (tabs[currentTab].memorySize <= bytes.length) {
         addConsoleMsg("<b>ERROR: </b>The allocated memory size is not big enough to contain the program. Please make it at least " + bytes.length + " big.", CONSOLE_ERROR);
         return;
@@ -167,12 +172,22 @@ function updateRegAndMemory() {
 var startSim;
 
 function uiSimulate() {
-    var core = tabs[currentTab].core;
-    var bytes = prepareSim();
-    var output = simulate(core, bytes);
-    if (output !== "@Oak_Ecall" && output != null) {
-        updateRegAndMemory();
-        addConsoleMsg("<b>Simulator Error: </b>" + output, CONSOLE_ERROR);
+    if (tabs[currentTab].inSimulation) {
+        tabs[currentTab].inSimulation = false;
+        var output = continueSim(tabs[currentTab].core);
+        if (output != "@Oak_Ecall" && output != null) {
+            updateRegAndMemory();
+            addConsoleMsg("<b>Simulator Error: </b>" + output, CONSOLE_ERROR);
+        }
+    }
+    else {
+        var core = tabs[currentTab].core;
+        var bytes = prepareSim();
+        var output = simulate(core, bytes);
+        if (output !== "@Oak_Ecall" && output != null) {
+            updateRegAndMemory();
+            addConsoleMsg("<b>Simulator Error: </b>" + output, CONSOLE_ERROR);
+        }
     }
 }
 
@@ -337,19 +352,19 @@ function invokeEnvironmentCall() {
         break;
     }
 
-    if (!exit && tabs[currentTab].inSimulation == false) {
-        var output = continueSim(core);
-        if (output != "@Oak_Ecall" && output != null) {
-            updateRegAndMemory();
-            addConsoleMsg("<b>Simulator Error: </b>" + output, CONSOLE_ERROR);
-        }
-    } else {
+    if (exit) {
         tabs[currentTab].inSimulation = false;
         updateRegAndMemory();
         var time = performance.now() - startSim;
         var numInstructions = $("#log > span").length;
         var ips = numInstructions*1000.0/time;
         addConsoleMsg("<b>Complete:</b> Simulation completed in "+Math.round(time)+" ms, "+numInstructions+" instructions, "+Math.round(ips)+" instructions/second.", CONSOLE_SUCCESS);
+    } else if (tabs[currentTab].inSimulation == false) {
+        var output = continueSim(core);
+        if (output != "@Oak_Ecall" && output != null) {
+            updateRegAndMemory();
+            addConsoleMsg("<b>Simulator Error: </b>" + output, CONSOLE_ERROR);
+        }
     }
 }
 
