@@ -86,7 +86,7 @@ function simulateStep(core: Core): string
 
     if (debug)
     {
-        core.registerFile.print();
+        //core.registerFile.print();
     }
     
     if (decode == "ECALL")

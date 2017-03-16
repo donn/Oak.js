@@ -1,2 +1,2 @@
 uglifyjs Sources/Oak.js -c > Scripts/oak.min.js
-uglifyjs Sources/oakui.js -c > Scripts/oakui.min.js
+uglifyjs Sources/OakUI.js -c > Scripts/oakui.min.js
