@@ -275,6 +275,7 @@ function invokeEnvironmentCall() {
     if (tabs[currentTab].inSimulation == true) {
         var log = $("#log > span:last-child").html();
         addConsoleMsg("<b>Simulator Step: </b>" + log, CONSOLE_NORMAL);
+        updateRegAndMemory();
     }
         
     setConsoleMode(0);
@@ -351,10 +352,12 @@ function invokeEnvironmentCall() {
         addConsoleMsg("<b>WARNING:</b> Environment call " + type + " unsupported.", CONSOLE_WARNING);
         break;
     }
+    
+    if (tabs[currentTab].inSimulation == true)
+        updateRegAndMemory();
 
     if (exit) {
         tabs[currentTab].inSimulation = false;
-        updateRegAndMemory();
         var time = performance.now() - startSim;
         var numInstructions = $("#log > span").length;
         var ips = numInstructions*1000.0/time;
