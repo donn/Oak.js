@@ -1,10 +1,10 @@
 ![Oak.js](Images/logo.png)
 
-A port of [Oak](https://github.com/Skyus/Oak) to TypeScript for a Computer Organization course.
+A port of [Oak](https://github.com/Skyus/Oak) to TypeScript used for multiple school projects.
 
-Unlike the Swift version, the TypeScript version only aims to use a specified subset of the RISC-V instruction set architecture. As a result, some features were removed, including variable length ISA support.
+Unlike the Swift version, the TypeScript version is less flexible, but works better for less serious tasks. Also, as a result of reuse for school projects, is developed faster.
 
-The user interface was made mostly by [@KarimIO](https://github.com/KarimIO).
+The assembler and simulator were designed by [@skyus](https://github.com/skyus) and the user interface was designed by [@KarimIO](https://github.com/KarimIO).
 
 Oak.js is a sister project of [RiscBEE](https://github.com/skyus/RiscBEE).
 

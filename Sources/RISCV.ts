@@ -1,4 +1,5 @@
 /// <reference path="InstructionSet.ts"/>
+/// <reference path="Utils.ts" />
 //The RISC-V Instruction Set Architecture, Version 2.1
 
 function Oak_gen_RISCV(): InstructionSet
@@ -408,11 +409,11 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm[11:5]", 25, 7, false, 12),
+                new BitRange("imm[11:5]", 25, 7, false, null, 12),
                 new BitRange("rs2", 20, 5, false),
                 new BitRange("rs1", 15, 5, false),
                 new BitRange("funct3", 12, 3),
-                new BitRange("imm[4:0]", 7, 5, false, 12),
+                new BitRange("imm[4:0]", 7, 5, false, null, 12),
                 new BitRange("opcode", 0, 7)
             ],
             ["rs2", "imm", "rs1"],
@@ -531,17 +532,18 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm[11:5]", 25, 7, false, 13),
+                new BitRange("imm[11:5]", 25, 7, false, null, 13),
                 new BitRange("rs2", 20, 5, false),
                 new BitRange("rs1", 15, 5, false),
                 new BitRange("funct3", 12, 3),
-                new BitRange("imm[4:0]", 7, 5, false, 13),
+                new BitRange("imm[4:0]", 7, 5, false, null, 13),
                 new BitRange("opcode", 0, 7)
             ],
             ["rs1", "rs2", "imm"],
             [Parameter.register, Parameter.register, Parameter.special],
             /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)/,
             "@mnem @arg, @arg, @arg",
+            null,
             function(address: number, text: string, bits: number, labels: string[], addresses: number[])
             {
                 let array = text.split(""); //Character View
@@ -729,7 +731,7 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm", 12, 20, false, 21),
+                new BitRange("imm", 12, 20, false, null, 21),
                 new BitRange("rd", 7, 5, false),
                 new BitRange("opcode", 0, 7)
             ],
@@ -737,6 +739,7 @@ function Oak_gen_RISCV(): InstructionSet
             [Parameter.register, Parameter.special],
             /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)/,
             "@mnem @arg, @arg",
+            null,
             function(address: number, text: string, bits: number, labels: string[], addresses: number[])
             {
                 let array = text.split(""); //Character View
@@ -1738,74 +1741,11 @@ function Oak_gen_RISCV(): InstructionSet
         return result;
     };
 
-    let disassemble = function(machineCode: number): string
-    {
-        return "";
-    };
-
     let abiNames = ['zero', 'ra', 'sp', 'gp', 'tp', 't0', 't1', 't2', 's0', 's1', 'a0', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10', 's11', 't3', 't4', 't5', 't6'];
 
-    return new InstructionSet(32, formats, instructions, pseudoInstructions, [".word", ".half", ".byte", ".string"], [4, 2, 1, 0], abiNames, process, tokenize, assemble, disassemble);
+    return new InstructionSet(32, formats, instructions, pseudoInstructions, [".word", ".half", ".byte", ".string"], [4, 2, 1, 0], abiNames, process, tokenize, assemble);
 }
 let RISCV = Oak_gen_RISCV();
-
-function rangeCheck(value: number, bits: number): boolean
-{
-    if (bits == 32)
-    {
-        return true; //No other option.
-    }
-    if (bits > 32)
-    {
-        return false; //Impossible.
-    }
-    
-    var min = -(1 << bits - 1);
-    var max = (1 << bits - 1) - 1;
-    value = signExt(value, bits);
-    if (((value >> 0) <= max) && ((value >> 0) >= min))
-    {
-        return true;
-    }
-    return false;
-}
-
-/*
-    signExt
-
-    Sign extends an n-bit value to fit Javascript limits.
-
-    Usage signExt(value, n)
-*/
-function signExt(value: number, bits: number): number
-{
-    var mutableValue = value;
-    if ((mutableValue & (1 << (bits - 1))) !== 0)
-    {
-        mutableValue = ((~(0) >>> bits) << bits) | value;
-    }
-    return mutableValue;
-}
-
-/*
-    catBytes
-    
-    Converts bytes stored in a little endian fashion to a proper js integer.
-*/
-function catBytes(bytes: number[]): number
-{
-    if (bytes.length > 4)
-    {
-        return null;
-    }
-
-    var storage = 0 >>> 0;
-    for (var i = 0; i < bytes.length; i++)
-    {
-        storage = storage | (bytes[i] << (8 * i));
-    }
-    return storage;
-}
 
 class RISCVRegisterFile
 {
@@ -2043,35 +1983,7 @@ class RISCVCore //: Core
                 this.arguments[i] = signExt(this.arguments[i], bits);
             }
         }
-        
-        // for (var i = 0; i < this.decoded.format.parameters.length; i++)
-        // {
-        //     var bitRange: BitRange = this.decoded.format.ranges[this.decoded.format.parameterBitRangeIndex(this.decoded.format.parameters[i])];
-        //     if (bitRange == null)
-        //     {
-        //         return null;
-        //     }
-        //     var value = (this.fetched >>> bitRange.start) & ((1 << bitRange.bits) - 1);
-        //     if (this.decoded.signed)
-        //     {
-        //         value = signExt(value, bitRange.bits);
-        //     }
-        //     if (this.decoded.format.parameterTypes[i] == Parameter.offset)
-        //     {
-        //         value = this.pc + value;
-        //     }
-        //     this.arguments.push(value);
-        //     var strValue = value.toString();
-        //     if (this.decoded.format.parameterTypes[i] == Parameter.register)
-        //     {
-        //         strValue = "x" + strValue;
-        //     }
-        //     str += strValue;
-        //     if (i !== this.decoded.format.parameters.length - 1)
-        //     {
-        //         str += ", ";
-        //     }
-        // }
+
         return format.disassemble(this.decoded.mnemonic, this.arguments, this.instructionSet.abiNames);
 
     }

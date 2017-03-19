@@ -12,7 +12,7 @@
     </head>
     <body>
         <header>
-            <a href="https://skyus.github.io/Oak.js/"><img src='Images/logoShadow.png' /></a><a class='noFloat' href="https://github.com/Skyus/Oak.js">Source</a>
+            <a href="https://skyus.github.io/Oak.js/"><img src='Images/iconShadow.png' /></a><a class='noFloat' href="https://github.com/Skyus/Oak.js">Source</a>
             <select id='themes'>
                 <option value='0'>Light Theme</option>
                 <option value='1'>Dark Theme</option>
@@ -28,26 +28,30 @@
                 Oak.js starts executing from address 0 and implements an "amorphous" structure; i.e., there is no distinction between program data and machine code in binary files. It is the programmer's responsibility to make sure static data is not interpreted as instructions (to halt execution, see environment call 10). 
             </p>
             <h3>Instruction Support</h3>
+            <h4>RISC-V</h4>
             <p>
                 Oak.js supports the RV32I base integer instruction set, save for the following instructions:
             </p>
             <p><i>
                 fence, fence.i, ebreak, csrrw, csrrs, cssrc, csrrwi, csrrsi, csrrci
             </i></p>
+            <h4>MIPS</h4>
+            <p>
+                MIPS support is in progress.
+            </p>
             <h4>Pseudoinstructions</h4>
             <p>
                 As a limitation of Oak.js's architecture, very few pseudoinstructions are supported, and they all expand into only one instruction. The currently supported pseudoinstructions are li, mv, la, jr, scall, and syscall (the last two just mirror ecall).
             </p>
             <h4>Environment Calls</h4>
             <p>
-                The calling convention is as follows:
+                The calling convention for RISC-V is as follows:
             </p>
             <p>
                 a7 - Service Number <br />
                 a0-a6 - Arguments
             </p>
             <p>
-
                 The return value will be placed in a7 as well. This was a project requirement- ideally the return value would be in another register.
             </p>
             <p>

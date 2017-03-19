@@ -15,14 +15,16 @@ class BitRange
     field: string;
     start: number;
     bits: number;
+    defaultValue: number; //If it's a parameter and the condition to use it fails;
     limitlessBits: number;
     instructionDefined: boolean;
     
-    constructor(field: string, start: number, bits: number, instructionDefined: boolean = true, limitlessBits: number = null)
+    constructor(field: string, start: number, bits: number, instructionDefined: boolean = true,  defaultValue: number = null, limitlessBits: number = null)
     {
         this.field = field;
         this.start = start;
         this.bits = bits;
+        this.defaultValue = defaultValue;
         this.instructionDefined = instructionDefined;
         this.limitlessBits = limitlessBits;
     }
@@ -33,6 +35,7 @@ class Format
     ranges: BitRange[];
     parameters: string[];
     parameterTypes: Parameter[];
+    parameterConditions: (machineCode: number) => (boolean)[];
     regex: RegExp;
     disassembly: string; 
 
@@ -94,6 +97,7 @@ class Format
         parameterTypes: Parameter[],
         regex: RegExp,
         disassembly: string,
+        parameterConditions: (machineCode: number) => (boolean)[] = null,
         processSpecialParameter: (address: number, text: string, bits: number, labels: string[], addresses: number[]) => ({errorMessage: string, value: number}) = null,
         decodeSpecialParameter: (value: number) => number = null
     )
@@ -101,6 +105,7 @@ class Format
         this.parameters = parameters;
         this.ranges = ranges;
         this.parameterTypes = parameterTypes;
+        this.parameterConditions = parameterConditions;
         this.regex = regex;
         this.disassembly = disassembly;
         this.processSpecialParameter = processSpecialParameter;
@@ -260,9 +265,6 @@ class InstructionSet
     //Closures to assemble a file
     tokenize: (file: string) => ({errorMessage: string, labels: string[], addresses: number[], lines: string[], pc: number[]});
     assemble: (nester: number, address: number, lines: string[], labels: string[], addresses: number[]) => ({errorMessage: string, machineCode: number[], size: number});
-    
-    //Closure to disassemble an instruction
-    disassemble: (machinecode: number) => string;
 
     //Register abiNames
     abiNames: string[];
@@ -280,8 +282,7 @@ class InstructionSet
         abiNames: string[],
         process: (address: number, text: string, type: Parameter, bits: number, labels: string[], addresses: number[]) => ({errorMessage: string, value: number}),
         tokenize: (file: string) => ({errorMessage: string, labels: string[], addresses: number[], lines: string[], pc: number[]}),
-        assemble: (nester: number, address: number, lines: string[], labels: string[], addresses: number[]) => ({errorMessage: string, machineCode: number[], size: number}),
-        disassemble: (machinecode: number) => string
+        assemble: (nester: number, address: number, lines: string[], labels: string[], addresses: number[]) => ({errorMessage: string, machineCode: number[], size: number})
     )
     {
         this.bits = bits       
@@ -295,6 +296,5 @@ class InstructionSet
         this.processParameter = process;        
         this.tokenize = tokenize
         this.assemble = assemble
-        this.disassemble = disassemble
     }
 };
