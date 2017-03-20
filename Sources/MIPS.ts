@@ -10,7 +10,8 @@ function Oak_gen_MIPS(): InstructionSet
     var pseudoInstructions: PseudoInstruction[] = [];
 
     //R-Type
-    formats.push(
+    formats.push
+    (
         new Format
         (
             [
@@ -27,7 +28,91 @@ function Oak_gen_MIPS(): InstructionSet
             "@mnem @arg0, @arg1, @arg2",
             [null, null, function(machineCode: number) { return (machineCode & 63) <= 7 }, function(machineCode: number) { return (machineCode & 63) > 7 }]
         )
-    )
+    );
+
+    let rType = formats[formats.length - 1];
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "ADD",
+            rType,
+            ["opcode", "funct"],
+            [0x0, 0x20],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) + core.registerFile.read(core.arguments[2]));
+                return null;
+            }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "ADDU",
+            rType,
+            ["opcode", "funct"],
+            [0x0, 0x21],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) + core.registerFile.read(core.arguments[2]));
+                return null;
+            }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "SUB",
+            rType,
+            ["opcode", "funct"],
+            [0x0, 0x22],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) - core.registerFile.read(core.arguments[2]));
+                return null;
+            }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "SUBU",
+            rType,
+            ["opcode", "funct"],
+            [0x0, 0x23],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) - core.registerFile.read(core.arguments[2]));
+                return null;
+            }
+        )
+    );
+
+
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "SYSCALL",
+            rType,
+            ["opcode", "funct"],
+            [0x0, 0xC],
+            function(core)
+            {
+                core.ecall();
+                return null;
+            }
+        )
+    );
 
      /*
         ARGUMENT PROCESSOR
