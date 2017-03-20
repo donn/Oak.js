@@ -8,7 +8,7 @@ function Tab(_name, _content, _machinecode) {
         machinecode: _machinecode,
         console: "",
         instructionLog: "",
-        instructionSet: 0,
+        instructionSet: ISA_MIPS,
         memorySize: 4096,
         core: createCore(ISA_RISCV, 4096, invokeEnvironmentCall, decodeCallback),
         inSimulation: false,
@@ -729,8 +729,9 @@ function converter() {
     }
 
     var defaultTab = "<div class='selected'><span></span><div></div></div>";
-    var defaultCode = "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"";
-   
+    //var defaultCode = "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"";
+    var defaultCode = "add $0, $0, $0"
+
     function setRegisterNames() {
         var regNames = tabs[currentTab].core.instructionSet.abiNames;
         //alert(tabs[currentTab].core.instructionSet.abiNames);
@@ -769,8 +770,8 @@ function converter() {
             showRegisters();
         });
         $("#filename").val(name);
-        $("#isa").val(ISA_RISCV);
-        switchModes(ISA_RISCV);
+        $("#isa").val(ISA_MIPS);
+        switchModes(ISA_MIPS);
         $("#memsize").val(4096);
         $("#console").html("");
         $("#memory").html("");
