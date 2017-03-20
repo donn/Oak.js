@@ -35,7 +35,7 @@ class Format
     ranges: BitRange[];
     parameters: string[];
     parameterTypes: Parameter[];
-    parameterConditions: (machineCode: number) => (boolean)[];
+    parameterConditions: ((machineCode: number) => (boolean))[];
     regex: RegExp;
     disassembly: string; 
 
@@ -97,7 +97,7 @@ class Format
         parameterTypes: Parameter[],
         regex: RegExp,
         disassembly: string,
-        parameterConditions: (machineCode: number) => (boolean)[] = null,
+        parameterConditions: ((machineCode: number) => (boolean))[] = null,
         processSpecialParameter: (address: number, text: string, bits: number, labels: string[], addresses: number[]) => ({errorMessage: string, value: number}) = null,
         decodeSpecialParameter: (value: number) => number = null
     )

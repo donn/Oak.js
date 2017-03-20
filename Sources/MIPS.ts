@@ -15,13 +15,17 @@ function Oak_gen_MIPS(): InstructionSet
         (
             [
                 new BitRange("opcode", 26, 6),
-                new BitRange("rt", 16, 5),
-                new BitRange("rd", 11, 5)
+                new BitRange("rt", 16, 5, false),
+                new BitRange("rd", 11, 5, false),
+                new BitRange("funct", 0, 6),
+                new BitRange("rs", 21, 5, false, 0),
+                new BitRange("shamt", 6, 5, false, 0)
             ],
             ["rd", "rt", "rs", "shamt"],
             [Parameter.register, Parameter.register, Parameter.register, Parameter.immediate],
             /[a-zA-Z]+\s*\$([A-Za-z0-9]+)\s*,\s*\$([A-Za-z0-9]+)\s*,\s*\$?([A-Za-z0-9]+)/,
-            "@mnem @arg0, @arg1, @arg2"
+            "@mnem @arg0, @arg1, @arg2",
+            [null, null, function(machineCode: number) { return (machineCode & 63) <= 7 }, function(machineCode: number) { return (machineCode & 63) > 7 }]
         )
     )
 
@@ -630,7 +634,7 @@ function Oak_gen_MIPS(): InstructionSet
     };
 
 
-    let abiNames = ["$zero", "$at", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$k0", "$k1", "$gp", "$fp", "$ra"];
+    let abiNames = ["$zero", "$at", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$k0", "$k1", "$gp", "$sp", "$fp", "$ra"];
 
     return new InstructionSet(32, formats, instructions, pseudoInstructions, [".word", ".half", ".byte", ".string"], [4, 2, 1, 0], abiNames, null, null, null);
 }
