@@ -194,6 +194,18 @@ function uiSimulate() {
     }
 }
 
+function switchModes(type) {
+    switch(type) {
+        case ISA_MIPS:
+            editor.getSession().setMode("ace/mode/mips");
+            return;
+        default:
+        case ISA_RISCV:
+            editor.getSession().setMode("ace/mode/riscv");
+            return;
+    }
+}
+
 function createCore(type, size, ecallback, dcallback) {
     switch(type) {
         case ISA_MIPS:
@@ -718,9 +730,7 @@ function converter() {
 
     var defaultTab = "<div class='selected'><span></span><div></div></div>";
     var defaultCode = "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"";
-    var riscvRegNames = ["zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s0", "s11", "t3", "t4", "t5", "t6"];
-    var mipsRegNames = ["$zero", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$gp", "$sp", "$fp", "$ra"];
-
+   
     function setRegisterNames() {
         var regNames = tabs[currentTab].core.instructionSet.abiNames;
         //alert(tabs[currentTab].core.instructionSet.abiNames);
@@ -759,7 +769,8 @@ function converter() {
             showRegisters();
         });
         $("#filename").val(name);
-        $("#isa").val(0);
+        $("#isa").val(ISA_RISCV);
+        switchModes(ISA_RISCV);
         $("#memsize").val(4096);
         $("#console").html("");
         $("#memory").html("");
@@ -785,6 +796,7 @@ function converter() {
         $("#memsize").val(tabs[num].memorySize);
         $("#console").html(tabs[num].console);
         $("#log").html(tabs[num].instructionLog);
+        switchModes(tabs[num].instructionSet);
 
         currentTab = num;
         displayMemory();
@@ -810,6 +822,7 @@ function converter() {
                 var tabsEl = $("section nav > div");
                 tabsEl.removeClass("selected");
                 tabsEl.eq(currentTab).addClass("selected");
+                switchModes(tabs[currentTab].instructionSet);
                 $("#filename").val(tabs[currentTab].name);
                 $("#isa").val(tabs[currentTab].instructionSet);
                 $("#memsize").val(tabs[currentTab].memorySize);
@@ -911,6 +924,7 @@ function converter() {
                 tabs[currentTab].instructionSet = isa;
                 delete tabs[currentTab].core;
                 tabs[currentTab].core = createCore(isa, memsize, invokeEnvironmentCall, decodeCallback);
+                switchModes(isa);
                 setRegisterNames();
                 updateRegAndMemory();
             }
