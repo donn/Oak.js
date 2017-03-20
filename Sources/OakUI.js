@@ -10,7 +10,7 @@ function Tab(_name, _content, _machinecode) {
         instructionLog: "",
         instructionSet: ISA_MIPS,
         memorySize: 4096,
-        core: createCore(ISA_RISCV, 4096, invokeEnvironmentCall, decodeCallback),
+        core: null,
         inSimulation: false,
         registers: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
         regStates: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
@@ -770,13 +770,15 @@ function converter() {
             showRegisters();
         });
         $("#filename").val(name);
-        $("#isa").val(ISA_MIPS);
-        switchModes(ISA_MIPS);
         $("#memsize").val(4096);
         $("#console").html("");
         $("#memory").html("");
         $("#log").html("");
         tabs.push(Tab(name, code, machinecode));
+        tabs[currentTab].instructionSet = ISA_MIPS;
+        tabs[currentTab].core = createCore(tabs[currentTab].instructionSet, 4096, invokeEnvironmentCall, decodeCallback);
+        $("#isa").val(tabs[currentTab].instructionSet);
+        switchModes(tabs[currentTab].instructionSet);
         editor.setValue(code);
         mcEditor.val(machinecode);
         setRegisterNames();
