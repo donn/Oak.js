@@ -1,3 +1,6 @@
+var ISA_RISCV = 0;
+var ISA_MIPS = 1;
+
 function Tab(_name, _content, _machinecode) {
     return {
         name: _name,
@@ -7,7 +10,7 @@ function Tab(_name, _content, _machinecode) {
         instructionLog: "",
         instructionSet: 0,
         memorySize: 4096,
-        core: new RISCVCore(4096, invokeEnvironmentCall, decodeCallback),
+        core: createCore(ISA_RISCV, 4096, invokeEnvironmentCall, decodeCallback),
         inSimulation: false,
         registers: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
         regStates: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
@@ -191,6 +194,16 @@ function uiSimulate() {
     }
 }
 
+function createCore(type, size, ecallback, dcallback) {
+    switch(type) {
+        case ISA_MIPS:
+            return new MIPSCore(size, ecallback, dcallback);
+        default:
+        case ISA_RISCV:
+            return new RISCVCore(size, ecallback, dcallback);
+    }
+}
+
 function updateMemorySize(newSize) {
     if (newSize != tabs[currentTab].memorySize) {
         if (newSize < 8) {
@@ -200,7 +213,7 @@ function updateMemorySize(newSize) {
 
         tabs[currentTab].memorySize = newSize;
         delete tabs[currentTab].core;
-        tabs[currentTab].core = new RISCVCore(newSize, invokeEnvironmentCall, decodeCallback);
+        tabs[currentTab].core = createCore(tabs[currentTab].instructionSet, newSize, invokeEnvironmentCall, decodeCallback);
         updateRegAndMemory();
         $("#console").html("");
         addConsoleMsg("<b>Success: </b> Memory has been resized. (Please make sure the new memory size fits your program!)", CONSOLE_SUCCESS);
@@ -709,11 +722,8 @@ function converter() {
     var mipsRegNames = ["$zero", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$gp", "$sp", "$fp", "$ra"];
 
     function setRegisterNames() {
-        var regNames;
-        if (tabs[currentTab].instructionSet == 0) 
-            regNames = riscvRegNames;
-        else
-            regNames = mipsRegNames;
+        var regNames = tabs[currentTab].core.instructionSet.abiNames;
+        //alert(tabs[currentTab].core.instructionSet.abiNames);
 
         // When we add non-32 reg ISAs, here we should resize the table.
         var cells = $("table tr > td:first-child");
@@ -892,14 +902,18 @@ function converter() {
             $("nav .selected span").html(name);
             tabs[currentTab].name = name;
             
-            var isa = $("#isa").val();
-            if (tabs[currentTab].instructionSet != isa) {
-                tabs[currentTab].instructionSet = isa;
-                setRegisterNames();
-            }
-            
+            // TODO: The core may be created twice if both memory size and ISA change. We can fix this later.
             var memsize = $("#memsize").val();
             updateMemorySize(memsize);
+            
+            var isa = parseInt($("#isa").val());
+            if (tabs[currentTab].instructionSet != isa) {
+                tabs[currentTab].instructionSet = isa;
+                delete tabs[currentTab].core;
+                tabs[currentTab].core = createCore(isa, memsize, invokeEnvironmentCall, decodeCallback);
+                setRegisterNames();
+                updateRegAndMemory();
+            }
         });
         
         $('#sideGrabber').on('mousedown', function(e){
