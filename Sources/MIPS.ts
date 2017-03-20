@@ -24,7 +24,7 @@ function Oak_gen_MIPS(): InstructionSet
             ],
             ["rd", "rt", "rs", "shamt"],
             [Parameter.register, Parameter.register, Parameter.register, Parameter.immediate],
-            /[a-zA-Z]+\s*\$([A-Za-z0-9]+)\s*,\s*\$([A-Za-z0-9]+)\s*,\s*\$?([A-Za-z0-9]+)/,
+            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(\$?[A-Za-z0-9]+)/,
             "@mnem @arg0, @arg1, @arg2",
             [null, null, function(machineCode: number) { return (machineCode & 63) <= 7 }, function(machineCode: number) { return (machineCode & 63) > 7 }]
         )
@@ -129,22 +129,20 @@ function Oak_gen_MIPS(): InstructionSet
         };
         switch(type)
         {
-        case Parameter.register:                
-                let registerNo = parseInt(text);                    
-                if (isNaN(registerNo))
+        case Parameter.register:
+                var registerNo: number;
+                let index = this.abiNames.indexOf(text);
+                if (index !== -1)
                 {
-                    let index = this.abiNames.indexOf(text);
-                    if (index !== -1)
-                    {
-                        result.value = index;
-                        return result; 
-                    }
+                    result.value = index;
+                    return result; 
                 }
                 if (array[0] !== "$")
                 {
                     result.errorMessage = "Register " + text + " does not exist.";
                     return result;
                 }
+                console.log(array.splice(1, array.length - 1).join(""));
                 registerNo = parseInt(array.splice(1, array.length - 1).join(""));
                 if (0 <= registerNo && registerNo <= 31)
                 {

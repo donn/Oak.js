@@ -1138,7 +1138,7 @@ function Oak_gen_RISCV(): InstructionSet
                 int = addresses[labelLocation] - address + 4;
             }
             else
-            {
+            {process
                 var radix = 10 >>> 0;
                 var splice = false;
                 
