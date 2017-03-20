@@ -16,10 +16,10 @@ function Oak_gen_RISCV(): InstructionSet
         (
             [
                 new BitRange("funct7", 25, 7),
-                new BitRange("rs2", 20, 5, false),
-                new BitRange("rs1", 15, 5, false),
+                new BitRange("rs2", 20, 5, 0x70D0),
+                new BitRange("rs1", 15, 5, 0x70D0),
                 new BitRange("funct3", 12, 3),
-                new BitRange("rd", 7, 5, false),
+                new BitRange("rd", 7, 5, 0x70D0),
                 new BitRange("opcode", 0, 7)
             ],
             ["rd", "rs1", "rs2"],
@@ -149,10 +149,10 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm", 20, 12, false),
-                new BitRange("rs1", 15, 5, false),
+                new BitRange("imm", 20, 12, 0x70D0),
+                new BitRange("rs1", 15, 5, 0x70D0),
                 new BitRange("funct3", 12, 3),
-                new BitRange("rd", 7, 5, false),
+                new BitRange("rd", 7, 5, 0x70D0),
                 new BitRange("opcode", 0, 7)
             ],
             ["rd", "rs1", "imm"],
@@ -249,10 +249,10 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm", 20, 12, false),
-                new BitRange("rs1", 15, 5, false),
+                new BitRange("imm", 20, 12, 0x70D0),
+                new BitRange("rs1", 15, 5, 0x70D0),
                 new BitRange("funct3", 12, 3),
-                new BitRange("rd", 7, 5, false),
+                new BitRange("rd", 7, 5, 0x70D0),
                 new BitRange("opcode", 0, 7)
             ],
             ["rd", "imm", "rs1"],
@@ -351,10 +351,10 @@ function Oak_gen_RISCV(): InstructionSet
         (
             [
                 new BitRange("funct7", 25, 7),
-                new BitRange("shamt", 20, 5, false),
-                new BitRange("rs1", 15, 5, false),
+                new BitRange("shamt", 20, 5, 0x70D0),
+                new BitRange("rs1", 15, 5, 0x70D0),
                 new BitRange("funct3", 12, 3),
-                new BitRange("rd", 7, 5, false),
+                new BitRange("rd", 7, 5, 0x70D0),
                 new BitRange("opcode", 0, 7)
             ],
             ["rd", "rs1", "shamt"],
@@ -409,11 +409,11 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm[11:5]", 25, 7, false, null, 12),
-                new BitRange("rs2", 20, 5, false),
-                new BitRange("rs1", 15, 5, false),
+                new BitRange("imm[11:5]", 25, 7, 0x70D0, null, 12),
+                new BitRange("rs2", 20, 5, 0x70D0),
+                new BitRange("rs1", 15, 5, 0x70D0),
                 new BitRange("funct3", 12, 3),
-                new BitRange("imm[4:0]", 7, 5, false, null, 12),
+                new BitRange("imm[4:0]", 7, 5, 0x70D0, null, 12),
                 new BitRange("opcode", 0, 7)
             ],
             ["rs2", "imm", "rs1"],
@@ -491,8 +491,8 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm", 12, 20, false),
-                new BitRange("rd", 7, 5, false),
+                new BitRange("imm", 12, 20, 0x70D0),
+                new BitRange("rd", 7, 5, 0x70D0),
                 new BitRange("opcode", 0, 7)
             ],
             ["rd", "imm"],
@@ -532,11 +532,11 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm[11:5]", 25, 7, false, null, 13),
-                new BitRange("rs2", 20, 5, false),
-                new BitRange("rs1", 15, 5, false),
+                new BitRange("imm[11:5]", 25, 7, 0x70D0, null, 13),
+                new BitRange("rs2", 20, 5, 0x70D0),
+                new BitRange("rs1", 15, 5, 0x70D0),
                 new BitRange("funct3", 12, 3),
-                new BitRange("imm[4:0]", 7, 5, false, null, 13),
+                new BitRange("imm[4:0]", 7, 5, 0x70D0, null, 13),
                 new BitRange("opcode", 0, 7)
             ],
             ["rs1", "rs2", "imm"],
@@ -731,8 +731,8 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm", 12, 20, false, null, 21),
-                new BitRange("rd", 7, 5, false),
+                new BitRange("imm", 12, 20, 0x70D0, null, 21),
+                new BitRange("rd", 7, 5, 0x70D0),
                 new BitRange("opcode", 0, 7)
             ],
             ["rd", "imm"],
@@ -889,10 +889,10 @@ function Oak_gen_RISCV(): InstructionSet
         (
             [
                 new BitRange("funct7", 25, 7),
-                new BitRange("rs2", 20, 5, false),
+                new BitRange("rs2", 20, 5, 0x70D0),
                 new BitRange("rs1", 15, 5),
                 new BitRange("funct3", 12, 3),
-                new BitRange("rd", 7, 5, false),
+                new BitRange("rd", 7, 5, 0x70D0),
                 new BitRange("opcode", 0, 7)
             ],
             ["rd", "rs2"],
@@ -920,10 +920,10 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm", 20, 12, false),
+                new BitRange("imm", 20, 12, 0x70D0),
                 new BitRange("rs1", 15, 5),
                 new BitRange("funct3", 12, 3),
-                new BitRange("rd", 7, 5, false),
+                new BitRange("rd", 7, 5, 0x70D0),
                 new BitRange("opcode", 0, 7)
             ],
             ["rd", "imm"],
@@ -962,7 +962,7 @@ function Oak_gen_RISCV(): InstructionSet
         (
             [
                 new BitRange("imm", 20, 12),
-                new BitRange("rs1", 15, 5, false),
+                new BitRange("rs1", 15, 5, 0x70D0),
                 new BitRange("funct3", 12, 3),
                 new BitRange("rd", 7, 5),
                 new BitRange("opcode", 0, 7)
@@ -1523,7 +1523,7 @@ function Oak_gen_RISCV(): InstructionSet
 
                     for (var j = 0; j < bitRanges.length; j++)
                     {
-                        if (!bitRanges[j].instructionDefined)
+                        if (bitRanges[j].parameters != null)
                         {
                             var startBit = 0;
                             var endBit: number = null;
@@ -1937,7 +1937,7 @@ class RISCVCore //: Core
 
         for (var i = 0; i < bitRanges.length; i++)
         {
-            if (!bitRanges[i].instructionDefined)
+            if (bitRanges[i].parameter != null)
             {
                 var limit = 0;
                 var field = bitRanges[i].field;

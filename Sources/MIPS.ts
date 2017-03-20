@@ -16,11 +16,11 @@ function Oak_gen_MIPS(): InstructionSet
         (
             [
                 new BitRange("opcode", 26, 6),
-                new BitRange("rt", 16, 5, false),
-                new BitRange("rd", 11, 5, false),
+                new BitRange("rt", 16, 5, 1),
+                new BitRange("rd", 11, 5, 0),
                 new BitRange("funct", 0, 6),
-                new BitRange("rs", 21, 5, false, 0),
-                new BitRange("shamt", 6, 5, false, 0)
+                new BitRange("rs", 21, 5, 2, 0),
+                new BitRange("shamt", 6, 5, 2, 0)
             ],
             ["rd", "rt", "rs", "shamt"],
             [Parameter.register, Parameter.register, Parameter.register, Parameter.immediate],
@@ -524,7 +524,6 @@ function Oak_gen_MIPS(): InstructionSet
                 continue;
             }
             
-            //Calculate lengths
             if (text)
             {
                 if (directives[0] === ".data")
@@ -563,7 +562,7 @@ function Oak_gen_MIPS(): InstructionSet
 
                     for (var j = 0; j < bitRanges.length; j++)
                     {
-                        if (!bitRanges[j].instructionDefined)
+                        if (bitRanges[j].parameter != null)
                         {
                             var startBit = 0;
                             var endBit: number = null;
@@ -582,25 +581,32 @@ function Oak_gen_MIPS(): InstructionSet
 
                             var register = 0;
 
-                            if(paramTypes[index] !== Parameter.special)
+                            if (format.parameterConditions[index] != null && format.parameterConditions[index](machineCode))
                             {
-                                let processed = this.processParameter(address, args[index], paramTypes[index], bits, labels, addresses);
-                                if (processed.errorMessage !== null)
-                                {
-                                    result.errorMessage = "Line " + ((nester == null)? "": (nester + ":")) + i + ": " + processed.errorMessage;
-                                    return result;                            
-                                }
-                                register = processed.value;
+                                register = bitRanges[j].defaultValue;
                             }
                             else
                             {
-                                let processed = instruction.format.processSpecialParameter(address, args[index], bits, labels, addresses);
-                                if (processed.errorMessage !== null)
+                                if(paramTypes[index] !== Parameter.special)
                                 {
-                                    result.errorMessage = "Line " + ((nester == null)? "": (nester + ":")) + i + ": " + processed.errorMessage;
-                                    return result;                            
+                                    let processed = this.processParameter(address, args[bitRanges[j].parameter], paramTypes[index], bits, labels, addresses);
+                                    if (processed.errorMessage !== null)
+                                    {
+                                        result.errorMessage = "Line " + ((nester == null)? "": (nester + ":")) + i + ": " + processed.errorMessage;
+                                        return result;                            
+                                    }
+                                    register = processed.value;
                                 }
-                                register = processed.value;
+                                else
+                                {
+                                    let processed = instruction.format.processSpecialParameter(address, args[index], bits, labels, addresses);
+                                    if (processed.errorMessage !== null)
+                                    {
+                                        result.errorMessage = "Line " + ((nester == null)? "": (nester + ":")) + i + ": " + processed.errorMessage;
+                                        return result;                            
+                                    }
+                                    register = processed.value;
+                                }
                             }
 
                             if (limits != null)
@@ -721,7 +727,7 @@ function Oak_gen_MIPS(): InstructionSet
 
     let abiNames = ["$zero", "$at", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$k0", "$k1", "$gp", "$sp", "$fp", "$ra"];
 
-    return new InstructionSet(32, formats, instructions, pseudoInstructions, [".word", ".half", ".byte", ".string"], [4, 2, 1, 0], abiNames, null, null, null);
+    return new InstructionSet(32, formats, instructions, pseudoInstructions, [".word", ".half", ".byte", ".string"], [4, 2, 1, 0], abiNames, process, tokenize, assemble);
 }
 let MIPS = Oak_gen_MIPS();
 
@@ -915,7 +921,7 @@ class MIPSCore //: Core
 
         for (var i = 0; i < bitRanges.length; i++)
         {
-            if (!bitRanges[i].instructionDefined)
+            if (bitRanges[i].parameter != null)
             {
                 var limit = 0;
                 var field = bitRanges[i].field;
@@ -938,7 +944,7 @@ class MIPSCore //: Core
                     value = this.decoded.format.decodeSpecialParameter(value); //Unmangle...
                 }
 
-                this.arguments[index] = this.arguments[index] | value;
+                this.arguments[bitRanges[i].parameter] = this.arguments[bitRanges[i].parameter] | value;
             }
         }
 

@@ -17,15 +17,15 @@ class BitRange
     bits: number;
     defaultValue: number; //If it's a parameter and the condition to use it fails;
     limitlessBits: number;
-    instructionDefined: boolean;
+    parameter: number;
     
-    constructor(field: string, start: number, bits: number, instructionDefined: boolean = true,  defaultValue: number = null, limitlessBits: number = null)
+    constructor(field: string, start: number, bits: number, parameter: number = null,  defaultValue: number = null, limitlessBits: number = null)
     {
         this.field = field;
         this.start = start;
         this.bits = bits;
         this.defaultValue = defaultValue;
-        this.instructionDefined = instructionDefined;
+        this.parameter = parameter;
         this.limitlessBits = limitlessBits;
     }
 };
