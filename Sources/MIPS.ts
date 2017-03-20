@@ -122,6 +122,7 @@ function Oak_gen_MIPS(): InstructionSet
     let process = function(address: number, text: string, type: Parameter, bits: number, labels: string[], addresses: number[])
     {
         let array = text.split(""); //Character View
+        console.log(array);
         var result =
         {
             errorMessage: null,
@@ -142,7 +143,6 @@ function Oak_gen_MIPS(): InstructionSet
                     result.errorMessage = "Register " + text + " does not exist.";
                     return result;
                 }
-                console.log(array.splice(1, array.length - 1).join(""));
                 registerNo = parseInt(array.splice(1, array.length - 1).join(""));
                 if (0 <= registerNo && registerNo <= 31)
                 {
