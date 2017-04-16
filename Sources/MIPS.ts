@@ -207,9 +207,33 @@ function Oak_gen_MIPS(): InstructionSet
         }
     ));
 
+
+
+    //R-Jump Subtype
+    formats.push
+    (
+        new Format
+        (
+            [
+                new BitRange("opcode", 26, 6),
+                new BitRange("rs", 21, 5, 0),
+                new BitRange("rt", 16, 5, null, 0),
+                new BitRange("rd", 11, 5, null, 0),
+                new BitRange("shamt", 6, 5, null, 0),
+                new BitRange("funct", 0, 6)
+            ],
+            ["rs"],
+            [Parameter.register],
+            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)/,
+            "@mnem @arg0"
+        )
+    );
+
+    let rjSubtype = formats[formats.length - 1];
+
     instructions.push(new Instruction(
         "JR",
-        rType,
+        rjSubtype,
         ["opcode","funct"],
         [0x0, 0x08],
         function(core)
@@ -329,7 +353,7 @@ function Oak_gen_MIPS(): InstructionSet
     );
 
 
-    let iType = formats[formats.length - 1]
+    let iType = formats[formats.length - 1];
 
     //I-type instructions
     instructions.push
@@ -455,23 +479,6 @@ function Oak_gen_MIPS(): InstructionSet
     (
         new Instruction
         (
-            "LUI",
-            iType,
-            ["opcode"],
-            [0x0F],
-            function(core)
-            {
-                core.registerFile.write(core.arguments[0], (core.arguments[1] << 12));
-                return null;
-            }
-        )
-
-    );
-
-    instructions.push
-    (
-        new Instruction
-        (
             "BEQ",
             iType,
             ["opcode"],
@@ -509,7 +516,44 @@ function Oak_gen_MIPS(): InstructionSet
 
     );
 
-    //ILS Subtype
+    //I Load Upper Immediate Subtype
+    formats.push
+    (
+        new Format
+        (
+            [
+                new BitRange("opcode", 26, 6),
+                new BitRange("rs", 21, 5, null, 0),
+                new BitRange("rt", 16, 5, 0),
+                new BitRange("imm", 0, 16, 1)
+            ],
+            ["rt", "imm"],
+            [Parameter.register, Parameter.immediate],
+            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/,
+            "@mnem @arg0, @arg1"
+        )
+    );
+
+    let iluiSubtype = formats[formats.length - 1];
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "LUI",
+            iluiSubtype,
+            ["opcode"],
+            [0x0F],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], (core.arguments[1] << 16));
+                return null;
+            }
+        )
+
+    );
+
+    //I Load/Store Subtype
     formats.push
     (
         new Format
@@ -1260,6 +1304,8 @@ function Oak_gen_MIPS(): InstructionSet
                     let paramTypes = format.parameterTypes;                        
                     var machineCode = instruction.template();
 
+                    console.log(directives[0], machineCode.toString(16));
+
                     var match = regex.exec(lines[i]);
                     if (match == null)
                     {
@@ -1297,6 +1343,7 @@ function Oak_gen_MIPS(): InstructionSet
                                     result.errorMessage = "Line " + ((nester == null)? "": (nester + ":")) + i + ": " + processed.errorMessage;
                                     return result;                            
                                 }
+                                console.log(directives[0], processed);
                                 register = processed.value;
                             }
                             else
