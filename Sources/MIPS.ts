@@ -16,17 +16,16 @@ function Oak_gen_MIPS(): InstructionSet
         (
             [
                 new BitRange("opcode", 26, 6),
+                new BitRange("rs", 21, 5, 2),
                 new BitRange("rt", 16, 5, 1),
                 new BitRange("rd", 11, 5, 0),
-                new BitRange("funct", 0, 6),
-                new BitRange("rs", 21, 5, 2, 0),
-                new BitRange("shamt", 6, 5, 2, 0)
+                new BitRange("shamt", 6, 5, null, 0),
+                new BitRange("funct", 0, 6)
             ],
-            ["rd", "rt", "rs", "shamt"],
-            [Parameter.register, Parameter.register, Parameter.register, Parameter.immediate],
-            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(\$?[A-Za-z0-9]+)/,
-            "@mnem @arg0, @arg1, @arg2",
-            [null, null, function(machineCode: number) { return (machineCode & 63) <= 7 }, function(machineCode: number) { return (machineCode & 63) > 7 }]
+            ["rd", "rt", "rs"],
+            [Parameter.register, Parameter.register, Parameter.register],
+            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)/,
+            "@mnem @arg0, @arg1, @arg2"
         )
     );
 
@@ -96,16 +95,213 @@ function Oak_gen_MIPS(): InstructionSet
         )
     );
 
+    instructions.push
+    (
+        new Instruction
+        (
+            "AND",
+            rType,
+            ["opcode", "funct"],
+            [0x0, 0x24],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) & core.registerFile.read(core.arguments[2]));
+                return null;
+            }
+        )
+    );
 
+    instructions.push
+    (
+        new Instruction
+        (
+            "OR",
+            rType,
+            ["opcode", "funct"],
+            [0x0, 0x25],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) | core.registerFile.read(core.arguments[2]));
+                return null;
+            }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "NOR",
+            rType,
+            ["opcode", "funct"],
+            [0x0, 0x27],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], ~(core.registerFile.read(core.arguments[1]) | core.registerFile.read(core.arguments[2])));
+                return null;
+            }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "XOR",
+            rType,
+            ["opcode", "funct"],
+            [0x0, 0x26],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) ^ core.registerFile.read(core.arguments[2]));
+                return null;
+            }
+        )
+    );
+
+    instructions.push(new Instruction(
+       "SLT",
+       rType,
+       ["opcode","funct"],
+       [0x0,0x2A],
+       function(core)
+       {
+           core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) < core.registerFile.read(core.arguments[2]))? 1: 0);
+           return null;
+       }
+    ));
+
+    instructions.push(new Instruction(
+        "SLLV",
+        rType,
+        ["opcode","funct"],
+        [0x0,0x04],
+        function(core)
+        {
+            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) << core.registerFile.read(core.arguments[2]));
+                return null;
+        }
+    ));
+
+    instructions.push(new Instruction(
+        "SRLV",
+        rType,
+        ["opcode","funct"],
+        [0x0,0x06],
+        function(core)
+        {
+        core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >>> core.registerFile.read(core.arguments[2]));
+            return null;
+        }
+    ));
+    
+    instructions.push(new Instruction(
+        "SRAV",
+        rType,
+        ["opcode","funct"],
+        [0x0, 0x07],
+        function(core)
+        {
+            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >> core.registerFile.read(core.arguments[2]));
+            return null;
+        }
+    ));
+
+    instructions.push(new Instruction(
+        "JR",
+        rType,
+        ["opcode","funct"],
+        [0x0, 0x08],
+        function(core)
+        {
+            core.pc = core.registerFile.read(core.arguments[0]);
+            return null;
+        }
+    ));
+
+    //R-Shift Subtype
+    formats.push
+    (
+        new Format
+        (
+            [
+                new BitRange("opcode", 26, 6),
+                new BitRange("rs", 21, 5, null, 0),
+                new BitRange("rt", 16, 5, 1),
+                new BitRange("rd", 11, 5, 0),
+                new BitRange("shamt", 6, 5, 2),
+                new BitRange("funct", 0, 6)
+            ],
+            ["rd", "rt", "shamt"],
+            [Parameter.register, Parameter.register, Parameter.immediate],
+            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*([0-9]+)/,
+            "@mnem @arg0, @arg1, @arg2"
+        )
+    );
+
+    let rsSubtype = formats[formats.length - 1];
+
+    instructions.push(new Instruction(
+        "SLL",
+        rsSubtype,
+        ["opcode","funct"],
+        [0x0,0x00],
+        function(core)
+        {
+            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) << core.arguments[2]);
+                return null;
+        }
+    ));
+
+    instructions.push(new Instruction(
+        "SRL",
+        rsSubtype,
+        ["opcode","funct"],
+        [0x0,0x02],
+        function(core)
+        {
+        core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >>> core.arguments[2]);
+            return null;
+        }
+    ));
+
+    instructions.push(new Instruction(
+        "SRA",
+        rsSubtype,
+        ["opcode","funct"],
+        [0x0,0x02],
+        function(core)
+        {
+        core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >> core.arguments[2]);
+            return null;
+        }
+    ));
+
+    //R-Constant Subtype
+    formats.push
+    (
+        new Format
+        (
+            [
+                new BitRange("funct", 0, 32)
+            ],
+            [],
+            [],
+            /[a-zA-Z]+/,
+            "@mnem2"
+        )
+    );
+
+    let rcSubtype = formats[formats.length - 1];
 
     instructions.push
     (
         new Instruction
         (
             "SYSCALL",
-            rType,
-            ["opcode", "funct"],
-            [0x0, 0xC],
+            rcSubtype,
+            ["funct"],
+            [0xC],
             function(core)
             {
                 core.ecall();
@@ -114,7 +310,520 @@ function Oak_gen_MIPS(): InstructionSet
         )
     );
 
-     /*
+    //I-Type
+    formats.push
+    (
+        new Format
+        (
+            [
+                new BitRange("opcode", 26, 6),
+                new BitRange("rs", 21, 5, 1),
+                new BitRange("rt", 16, 5, 0),
+                new BitRange("imm", 0, 16, 2)
+            ],
+            ["rt", "rs", "imm"],
+            [Parameter.register, Parameter.register, Parameter.immediate],
+            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/,
+            "@mnem @arg0, @arg1, @arg2"
+        )
+    );
+
+
+    let iType = formats[formats.length - 1]
+
+    //I-type instructions
+    instructions.push
+    (
+        new Instruction
+        (
+            "ADDI",
+            iType,
+            ["opcode"],
+            [0x8],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) + core.arguments[2]);
+                return null;
+            }
+        )
+
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "ADDIU",
+            iType,
+            ["opcode"],
+            [0x9],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) + core.arguments[2]);
+                return null;
+            }
+        )
+
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "SLTI",
+            iType,
+            ["opcode"],
+            [0x0A],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) < core.arguments[2])? 1 : 0);
+                return null;
+            }
+        )
+
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "SLTIU",
+            iType,
+            ["opcode"],
+            [0x0B],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) < core.arguments[2])? 1 : 0);
+                return null;
+            }
+        )
+
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "ANDI",
+            iType,
+            ["opcode"],
+            [0x0C],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], ((core.registerFile.read(core.arguments[1]) >>> 0) & core.arguments[2]));
+                return null;
+            }
+        )
+
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "ORI",
+            iType,
+            ["opcode"],
+            [0x0D],
+            function(core)
+            {
+                    core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) >>> 0) | core.arguments[2]);
+                    return null;
+            }
+        )
+
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "XORI",
+            iType,
+            ["opcode"],
+            [0x0E],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) >>> 0) ^ core.arguments[2]);
+                return null;
+            }
+        )
+
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "LUI",
+            iType,
+            ["opcode"],
+            [0x0F],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], (core.arguments[1] << 12));
+                return null;
+            }
+        )
+
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "BEQ",
+            iType,
+            ["opcode"],
+            [0x04],
+            function(core)
+            {
+                if (core.registerFile.read(core.arguments[0]) === core.registerFile.read(core.arguments[1]))
+                {
+                    core.pc += core.arguments[2];
+                    core.pc -= 4;
+                }
+                return null;
+            }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "BNE",
+            iType,
+            ["opcode"],
+            [0x05],
+            function(core)
+            {
+                if (core.registerFile.read(core.arguments[0]) !== core.registerFile.read(core.arguments[1]))
+                {
+                    core.pc += core.arguments[2];
+                    core.pc -= 4;
+                }
+                return null;
+            }
+        )
+
+    );
+
+    //ILS Subtype
+    formats.push
+    (
+        new Format
+        (
+            [
+                new BitRange("opcode", 26, 6),
+                new BitRange("rs", 21, 5, 2),
+                new BitRange("rt", 16, 5, 0),
+                new BitRange("imm", 0, 16, 1)
+            ],
+            ["rt", "imm", "rs"],
+            [Parameter.register, Parameter.immediate, Parameter.register],
+            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(-?0?[boxd]?[0-9A-F]+)\(\s*(\$[A-Za-z0-9]+)\s*\)/,
+            "@mnem @arg0, @arg1(@arg2)"
+        )
+    );
+
+    let ilsSubtype = formats[formats.length - 1];
+
+
+    //TO-DO: Verify function(core) functionality
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "LB",
+            ilsSubtype,
+            ["opcode"],
+            [0x20],
+            function(core)
+            {
+                let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 1);
+                if (bytes === null)
+                {
+                    return "Illegal memory access.";
+                }
+                core.registerFile.write(core.arguments[0], signExt(bytes[0], 8));
+                return null;
+            }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "LH",
+            ilsSubtype,
+            ["opcode"],
+            [0x21],
+            function(core)
+            {
+                let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 2);
+                if (bytes === null)
+                {
+                    return "Illegal memory access.";
+                }
+                core.registerFile.write(core.arguments[0], signExt(catBytes(bytes), 16));
+                return null;
+            }
+        )
+    );
+    
+    instructions.push
+    (
+        new Instruction
+        (
+            "LW",
+            ilsSubtype,
+            ["opcode"],
+            [0x23],
+            function(core)
+            {
+                let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 4);
+                if (bytes === null)
+                {
+                    return "Illegal memory access.";
+                }
+                core.registerFile.write(core.arguments[0], catBytes(bytes));
+                return null;
+            }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "LBU",
+            ilsSubtype,
+            ["opcode"],
+            [0x24],
+            function(core)
+            {
+              let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 1);
+              if (bytes === null)
+              {
+                  return "Illegal memory access.";
+              }
+              core.registerFile.write(core.arguments[0], bytes[0]);
+              return null;
+          }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "LHU",
+            ilsSubtype,
+            ["opcode"],
+            [0x25],
+            function(core)
+            {
+             let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 2);
+             if (bytes === null)
+             {
+                 return "Illegal memory access.";
+             }
+             core.registerFile.write(core.arguments[0], catBytes(bytes));
+             return null;
+         }
+        )
+   );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "SB",
+            ilsSubtype,
+            ["opcode"],
+            [0x28],
+            function(core)
+            {
+                var bytes = [];
+                bytes.push(core.registerFile.read(core.arguments[0]) & 255);
+                if(core.memset(core.registerFile.read(core.arguments[2]) + core.arguments[1], bytes))
+                {
+                    return null;
+                }
+                return "Illegal memory access.";
+            }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "SH",
+            ilsSubtype,
+            ["opcode"],
+            [0x29],
+            function(core)
+            {
+              var bytes = [];
+              var value = core.registerFile.read(core.arguments[0]);
+              bytes.push(value & 255);
+              value = value >>> 8;
+              bytes.push(value & 255);
+              if(core.memset(core.registerFile.read(core.arguments[2]) + core.arguments[1], bytes))
+              {
+                  return null;
+              }
+              return "Illegal memory access.";
+            }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "SW",
+            ilsSubtype,
+            ["opcode"],
+            [0x2B],
+            function(core)
+            {
+                var bytes = [];
+                var value = core.registerFile.read(core.arguments[0]);
+                bytes.push(value & 255);
+                value = value >>> 8;
+                bytes.push(value & 255);
+                value = value >>> 8;
+                bytes.push(value & 255);
+                value = value >>> 8;
+                bytes.push(value & 255);
+                if(core.memset(core.registerFile.read(core.arguments[2]) + core.arguments[1], bytes))
+                {
+                    return null;
+                }
+                return "Illegal memory access.";
+            }
+        )
+    );
+
+    
+
+    //J-Type
+    formats.push
+    (
+        new Format
+        (
+            [
+                new BitRange("opcode", 26, 6),
+                new BitRange("imm", 0, 26, 0, 0, 32)
+            ],
+            ["imm"],
+            [Parameter.special],
+            /[A-z]+\s*[A-Za-z0-9_]+/,
+            "@mnem @arg0",
+            function(address: number, text: string, bits: number, labels: string[], addresses: number[])
+            {
+                let array = text.split(""); //Character View
+                var result =
+                {
+                    errorMessage: null,
+                    value: null
+                };
+
+                var int = NaN;
+                let labelLocation = labels.indexOf(text);
+                if (labelLocation !== -1)
+                {
+                    int = addresses[labelLocation];
+                }
+                else
+                {
+                    var radix = 10 >>> 0;
+                    var splice = false;
+                    
+                    if (array[0] === "0")
+                    {
+                        if (array[1] == "b")
+                        {
+                            radix = 2;
+                            splice = true;
+                        }
+                        if (array[1] == "o")
+                        {
+                            radix = 8;
+                            splice = true;
+                        }
+                        if (array[1] == "d")
+                        {
+                            radix = 10;
+                            splice = true;
+                        }
+                        if (array[1] == "x")
+                        {
+                            radix = 16;
+                            splice = true;
+                        }
+                    }
+
+                    var interpretable = text;
+                    if (splice)
+                    {
+                        interpretable = array.splice(2, array.length - 2).join("");
+                    }
+                    int = parseInt(interpretable, radix);
+                }
+                    
+                if (isNaN(int))
+                {     
+                    result.errorMessage = "Offset '" + text + "' is not a recognized label or literal.";
+                    return result;
+                }
+
+                if ((int >>> 28) == (address >>> 28))
+                {
+                    result.value = (int >>> 2) & 67108863;
+                    return result;
+                }
+                result.errorMessage = "The value of '" + text + "' is out of range.";
+                return result;
+            },
+            function(value: number, address: number)
+            {
+                return (address & 4026531840) | (value << 2);
+            }
+        )
+    );
+
+    let jType = formats[formats.length - 1];
+
+    instructions.push(new Instruction(
+        "J",
+        jType,
+        ["opcode"],
+        [0x2],
+        function(core) {
+            core.pc = core.arguments[0];
+            return null;
+        }
+    ));
+
+    instructions.push(new Instruction(
+        "JAL",
+        jType,
+        ["opcode"],
+        [0x3],
+        function(core) {
+            core.registerFile.write(31, core.pc);
+            core.pc = core.arguments[0];
+            return null;
+        }
+    ));
+
+    /*
         ARGUMENT PROCESSOR
         Does what it says on the tin. It needs quite a bit of information, but otherwise successfully interprets
         any MIPS argument.
@@ -131,12 +840,13 @@ function Oak_gen_MIPS(): InstructionSet
         switch(type)
         {
         case Parameter.register:
+                console.log(type);
                 var registerNo: number;
                 let index = this.abiNames.indexOf(text);
                 if (index !== -1)
                 {
                     result.value = index;
-                    return result; 
+                    return result;
                 }
                 if (array[0] !== "$")
                 {
@@ -172,7 +882,7 @@ function Oak_gen_MIPS(): InstructionSet
             {
                 var radix = 10 >>> 0;
                 var splice = false;
-                
+
                 if (array[0] === "0")
                 {
                     if (array[1] == "b")
@@ -207,7 +917,7 @@ function Oak_gen_MIPS(): InstructionSet
             }
 
             if (isNaN(int))
-            {     
+            {
                 result.errorMessage = "Immediate '" + text + "' is not a recognized label, literal or character.";
                 return result;
             }
@@ -232,7 +942,7 @@ function Oak_gen_MIPS(): InstructionSet
             {
                 var radix = 10 >>> 0;
                 var splice = false;
-                
+
                 if (array[0] === "0")
                 {
                     if (array[1] == "b")
@@ -265,9 +975,9 @@ function Oak_gen_MIPS(): InstructionSet
 
                 int = parseInt(interpretable, radix);
             }
-                
+
             if (isNaN(int))
-            {     
+            {
                 result.errorMessage = "Offset '" + text + "' is not a recognized label or literal.";
                 return result;
             }
@@ -578,33 +1288,26 @@ function Oak_gen_MIPS(): InstructionSet
                             let index = format.fieldParameterIndex(field);
 
                             var register = 0;
-
-                            if (format.parameterConditions[index] != null && format.parameterConditions[index](machineCode))
+                            
+                            if(paramTypes[index] !== Parameter.special)
                             {
-                                register = bitRanges[j].defaultValue;
+                                let processed = this.processParameter(address, args[bitRanges[j].parameter], paramTypes[index], bits, labels, addresses);
+                                if (processed.errorMessage !== null)
+                                {
+                                    result.errorMessage = "Line " + ((nester == null)? "": (nester + ":")) + i + ": " + processed.errorMessage;
+                                    return result;                            
+                                }
+                                register = processed.value;
                             }
                             else
                             {
-                                if(paramTypes[index] !== Parameter.special)
+                                let processed = instruction.format.processSpecialParameter(address, args[index], bits, labels, addresses);
+                                if (processed.errorMessage !== null)
                                 {
-                                    let processed = this.processParameter(address, args[bitRanges[j].parameter], paramTypes[index], bits, labels, addresses);
-                                    if (processed.errorMessage !== null)
-                                    {
-                                        result.errorMessage = "Line " + ((nester == null)? "": (nester + ":")) + i + ": " + processed.errorMessage;
-                                        return result;                            
-                                    }
-                                    register = processed.value;
+                                    result.errorMessage = "Line " + ((nester == null)? "": (nester + ":")) + i + ": " + processed.errorMessage;
+                                    return result;                            
                                 }
-                                else
-                                {
-                                    let processed = instruction.format.processSpecialParameter(address, args[index], bits, labels, addresses);
-                                    if (processed.errorMessage !== null)
-                                    {
-                                        result.errorMessage = "Line " + ((nester == null)? "": (nester + ":")) + i + ": " + processed.errorMessage;
-                                        return result;                            
-                                    }
-                                    register = processed.value;
-                                }
+                                register = processed.value;
                             }
 
                             if (limits != null)
@@ -939,7 +1642,7 @@ class MIPSCore //: Core
                 
                 if(paramTypes[index] === Parameter.special)
                 {
-                    value = this.decoded.format.decodeSpecialParameter(value); //Unmangle...
+                    value = this.decoded.format.decodeSpecialParameter(value, this.pc); //Unmangle...
                 }
 
                 this.arguments[bitRanges[i].parameter] = this.arguments[bitRanges[i].parameter] | value;

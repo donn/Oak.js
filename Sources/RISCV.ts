@@ -36,7 +36,8 @@ function Oak_gen_RISCV(): InstructionSet
         rType,
         ["opcode", "funct3", "funct7"],
         [parseInt("0110011", 2), parseInt("000", 2), parseInt("0000000", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) + core.registerFile.read(core.arguments[2]));
             return null;
         }
@@ -47,7 +48,8 @@ function Oak_gen_RISCV(): InstructionSet
         rType,
         ["opcode", "funct3", "funct7"],
         [parseInt("0110011", 2), parseInt("000", 2), parseInt("0100000", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) - core.registerFile.read(core.arguments[2]));
             return null;
         }
@@ -58,7 +60,8 @@ function Oak_gen_RISCV(): InstructionSet
         rType,
         ["opcode", "funct3", "funct7"],
         [parseInt("0110011", 2), parseInt("001", 2), parseInt("0000000", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) << core.registerFile.read(core.arguments[2]));
             return null;
         }
@@ -69,7 +72,8 @@ function Oak_gen_RISCV(): InstructionSet
         rType,
         ["opcode", "funct3", "funct7"],
         [parseInt("0110011", 2), parseInt("010", 2), parseInt("0000000", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) < core.registerFile.read(core.arguments[2]))? 1: 0);
             return null;
         }
@@ -80,7 +84,8 @@ function Oak_gen_RISCV(): InstructionSet
         rType,
         ["opcode", "funct3", "funct7"],
         [parseInt("0110011", 2), parseInt("011", 2), parseInt("0000000", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) < core.registerFile.read(core.arguments[2]))? 1: 0);
             return null;
         },
@@ -92,7 +97,8 @@ function Oak_gen_RISCV(): InstructionSet
         rType,
         ["opcode", "funct3", "funct7"],
         [parseInt("0110011", 2), parseInt("100", 2), parseInt("0000000", 2)],
-        function(core) {
+        function(core)
+        {
             //
             core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) ^ core.registerFile.read(core.arguments[2]));
             return null;
@@ -104,7 +110,8 @@ function Oak_gen_RISCV(): InstructionSet
         rType,
         ["opcode", "funct3", "funct7"],
         [parseInt("0110011", 2), parseInt("101", 2), parseInt("0000000", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >>> core.registerFile.read(core.arguments[2]));
             return null;
         }
@@ -115,7 +122,8 @@ function Oak_gen_RISCV(): InstructionSet
         rType,
         ["opcode", "funct3", "funct7"],
         [parseInt("0110011", 2), parseInt("101", 2), parseInt("0100000", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >> core.registerFile.read(core.arguments[2]));
             return null;
         }
@@ -126,7 +134,8 @@ function Oak_gen_RISCV(): InstructionSet
         rType,
         ["opcode", "funct3", "funct7"],
         [parseInt("0110011", 2), parseInt("110", 2), parseInt("0000000", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) | core.registerFile.read(core.arguments[2]));
             return null;
         }
@@ -137,7 +146,8 @@ function Oak_gen_RISCV(): InstructionSet
         rType,
         ["opcode", "funct3", "funct7"],
         [parseInt("0110011", 2), parseInt("111", 2), parseInt("0000000", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) & core.registerFile.read(core.arguments[2]));
             return null;
         }
@@ -169,7 +179,8 @@ function Oak_gen_RISCV(): InstructionSet
         iType,
         ["opcode", "funct3"],
         [parseInt("1100111", 2), parseInt("000", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], core.pc);
             core.pc = (core.registerFile.read(core.arguments[1]) + signExt(core.arguments[2], 12));
             return null;
@@ -181,7 +192,8 @@ function Oak_gen_RISCV(): InstructionSet
         iType,
         ["opcode", "funct3"],
         [parseInt("0010011", 2), parseInt("000", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) + core.arguments[2]);
             return null;
         }
@@ -192,7 +204,8 @@ function Oak_gen_RISCV(): InstructionSet
         iType,
         ["opcode", "funct3"],
         [parseInt("0010011", 2), parseInt("010", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) < core.arguments[2])? 1 : 0);
             return null;
         }
@@ -203,7 +216,8 @@ function Oak_gen_RISCV(): InstructionSet
         iType,
         ["opcode", "funct3"],
         [parseInt("0010011", 2), parseInt("011", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], ((core.registerFile.read(core.arguments[1]) >>> 0) < (core.arguments[2] >>> 0)? 1 : 0));
             return null;
         },
@@ -215,7 +229,8 @@ function Oak_gen_RISCV(): InstructionSet
         iType,
         ["opcode", "funct3"],
         [parseInt("0010011", 2), parseInt("100", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) >>> 0) ^ core.arguments[2]);
             return null;
         }
@@ -226,7 +241,8 @@ function Oak_gen_RISCV(): InstructionSet
         iType,
         ["opcode", "funct3"],
         [parseInt("0010011", 2), parseInt("110", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) >>> 0) | core.arguments[2]);
             return null;
         }
@@ -237,7 +253,8 @@ function Oak_gen_RISCV(): InstructionSet
         iType,
         ["opcode", "funct3"],
         [parseInt("0010011", 2), parseInt("111", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], ((core.registerFile.read(core.arguments[1]) >>> 0) & core.arguments[2]));
             return null;
         }
@@ -269,7 +286,8 @@ function Oak_gen_RISCV(): InstructionSet
         ilSubtype,
         ["opcode", "funct3"],
         [parseInt("0000011", 2), parseInt("000", 2)],
-        function(core) {
+        function(core)
+        {
             let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 1);
             if (bytes === null)
             {
@@ -285,7 +303,8 @@ function Oak_gen_RISCV(): InstructionSet
         ilSubtype,
         ["opcode", "funct3"],
         [parseInt("0000011", 2), parseInt("001", 2)],
-        function(core) {
+        function(core)
+        {
             let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 2);
             if (bytes === null)
             {
@@ -301,8 +320,9 @@ function Oak_gen_RISCV(): InstructionSet
         ilSubtype,
         ["opcode", "funct3"],
         [parseInt("0000011", 2), parseInt("010", 2)],
-        function(core) {
-            let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 2);
+        function(core)
+        {
+            let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 4);
             if (bytes === null)
             {
                 return "Illegal memory access.";
@@ -317,7 +337,8 @@ function Oak_gen_RISCV(): InstructionSet
         ilSubtype,
         ["opcode", "funct3"],
         [parseInt("0000011", 2), parseInt("100", 2)],
-        function(core) {
+        function(core)
+        {
             let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 1);
             if (bytes === null)
             {
@@ -333,7 +354,8 @@ function Oak_gen_RISCV(): InstructionSet
         ilSubtype,
         ["opcode", "funct3"],
         [parseInt("0000011", 2), parseInt("101", 2)],
-        function(core) {
+        function(core)
+        {
             let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 2);
             if (bytes === null)
             {
@@ -371,7 +393,8 @@ function Oak_gen_RISCV(): InstructionSet
         isSubtype,
         ["opcode", "funct3", "funct7"],
         [parseInt("0010011", 2), parseInt("001", 2), parseInt("0000000", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) << core.arguments[2]);
             return null;
         },
@@ -383,7 +406,8 @@ function Oak_gen_RISCV(): InstructionSet
         isSubtype,
         ["opcode", "funct3", "funct7"],
         [parseInt("0010011", 2), parseInt("101", 2), parseInt("0000000", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >>> core.arguments[2]);
             return null;
         },
@@ -395,7 +419,8 @@ function Oak_gen_RISCV(): InstructionSet
         isSubtype,
         ["opcode", "funct3", "funct7"],
         [parseInt("0010011", 2), parseInt("101", 2), parseInt("0100000", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >> core.arguments[2]);
             return null;
         },
@@ -409,11 +434,11 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm[11:5]", 25, 7, 0x70D0, null, 12),
+                new BitRange("imm[11:5]", 25, 7, 0x70D0, 12),
                 new BitRange("rs2", 20, 5, 0x70D0),
                 new BitRange("rs1", 15, 5, 0x70D0),
                 new BitRange("funct3", 12, 3),
-                new BitRange("imm[4:0]", 7, 5, 0x70D0, null, 12),
+                new BitRange("imm[4:0]", 7, 5, 0x70D0, 12),
                 new BitRange("opcode", 0, 7)
             ],
             ["rs2", "imm", "rs1"],
@@ -430,7 +455,8 @@ function Oak_gen_RISCV(): InstructionSet
         sType,
         ["opcode", "funct3"],
         [parseInt("0100011", 2), parseInt("000", 2)],
-        function(core) {
+        function(core)
+        {
             var bytes = [];
             bytes.push(core.registerFile.read(core.arguments[0]) & 255);
             if(core.memset(core.registerFile.read(core.arguments[2]) + core.arguments[1], bytes))
@@ -446,7 +472,8 @@ function Oak_gen_RISCV(): InstructionSet
         sType,
         ["opcode", "funct3"],
         [parseInt("0100011", 2), parseInt("001", 2)],
-        function(core) {
+        function(core)
+        {
             var bytes = [];
             var value = core.registerFile.read(core.arguments[0]);
             bytes.push(value & 255);
@@ -465,7 +492,8 @@ function Oak_gen_RISCV(): InstructionSet
         sType,
         ["opcode", "funct3"],
         [parseInt("0100011", 2), parseInt("010", 2)],
-        function(core) {
+        function(core)
+        {
             var bytes = [];
             var value = core.registerFile.read(core.arguments[0]);
             bytes.push(value & 255);
@@ -509,7 +537,8 @@ function Oak_gen_RISCV(): InstructionSet
         uType,
         ["opcode"],
         [parseInt("0110111", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], (core.arguments[1] << 12));
             return null;
         }
@@ -520,7 +549,8 @@ function Oak_gen_RISCV(): InstructionSet
         uType,
         ["opcode"],
         [parseInt("0010111", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], (core.arguments[1] << 12) + core.pc - 4);
             return null;
         }
@@ -532,18 +562,17 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm[11:5]", 25, 7, 0x70D0, null, 13),
-                new BitRange("rs2", 20, 5, 0x70D0),
-                new BitRange("rs1", 15, 5, 0x70D0),
+                new BitRange("imm[11:5]", 25, 7, 2, null, 13),
+                new BitRange("rs2", 20, 5, 1),
+                new BitRange("rs1", 15, 5, 0),
                 new BitRange("funct3", 12, 3),
-                new BitRange("imm[4:0]", 7, 5, 0x70D0, null, 13),
+                new BitRange("imm[4:0]", 7, 5, 2, null, 13),
                 new BitRange("opcode", 0, 7)
             ],
             ["rs1", "rs2", "imm"],
             [Parameter.register, Parameter.register, Parameter.special],
             /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)/,
             "@mnem @arg, @arg, @arg",
-            null,
             function(address: number, text: string, bits: number, labels: string[], addresses: number[])
             {
                 let array = text.split(""); //Character View
@@ -619,7 +648,6 @@ function Oak_gen_RISCV(): InstructionSet
                 unmangle = unmangle | ((value >>> 11) << 12); //unmangle[12] = value[12];
                 unmangle = unmangle | (value & 2046); //unmangle[10:1] = value[10:1];
                 return unmangle;
-
             }
         )
     );
@@ -640,7 +668,8 @@ function Oak_gen_RISCV(): InstructionSet
         sbType,
         ["opcode", "funct3"],
         [parseInt("1100011", 2), parseInt("000", 2)],
-        function(core) {
+        function(core)
+        {
             if (core.registerFile.read(core.arguments[0]) === core.registerFile.read(core.arguments[1]))
             {
                 core.pc += core.arguments[2];
@@ -655,7 +684,8 @@ function Oak_gen_RISCV(): InstructionSet
         sbType,
         ["opcode", "funct3"],
         [parseInt("1100011", 2), parseInt("001", 2)],
-        function(core) {
+        function(core)
+        {
             if (core.registerFile.read(core.arguments[0]) !== core.registerFile.read(core.arguments[1]))
             {
                 core.pc += core.arguments[2];
@@ -670,7 +700,8 @@ function Oak_gen_RISCV(): InstructionSet
         sbType,
         ["opcode", "funct3"],
         [parseInt("1100011", 2), parseInt("100", 2)],
-        function(core) {
+        function(core)
+        {
             if (core.registerFile.read(core.arguments[0]) < core.registerFile.read(core.arguments[1]))
             {
                 core.pc += core.arguments[2];
@@ -685,7 +716,8 @@ function Oak_gen_RISCV(): InstructionSet
         sbType,
         ["opcode", "funct3"],
         [parseInt("1100011", 2), parseInt("101", 2)],
-        function(core) {
+        function(core)
+        {
             if (core.registerFile.read(core.arguments[0]) >= core.registerFile.read(core.arguments[1]))
             {
                 core.pc += core.arguments[2];
@@ -700,7 +732,8 @@ function Oak_gen_RISCV(): InstructionSet
         sbType,
         ["opcode", "funct3"],
         [parseInt("1100011", 2), parseInt("110", 2)],
-        function(core) {
+        function(core)
+        {
             if ((core.registerFile.read(core.arguments[0]) >>> 0) < (core.registerFile.read(core.arguments[1]) >>> 0))
             {
                 core.pc += core.arguments[2];
@@ -715,7 +748,8 @@ function Oak_gen_RISCV(): InstructionSet
         sbType,
         ["opcode", "funct3"],
         [parseInt("1100011", 2), parseInt("111", 2)],
-        function(core) {
+        function(core)
+        {
             if ((core.registerFile.read(core.arguments[0]) >>> 0) >= (core.registerFile.read(core.arguments[1]) >>> 0))
             {
                 core.pc += core.arguments[2];
@@ -731,15 +765,14 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm", 12, 20, 0x70D0, null, 21),
-                new BitRange("rd", 7, 5, 0x70D0),
+                new BitRange("imm", 12, 20, 1, null, 21),
+                new BitRange("rd", 7, 5, 0),
                 new BitRange("opcode", 0, 7)
             ],
             ["rd", "imm"],
             [Parameter.register, Parameter.special],
             /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)/,
             "@mnem @arg, @arg",
-            null,
             function(address: number, text: string, bits: number, labels: string[], addresses: number[])
             {
                 let array = text.split(""); //Character View
@@ -835,7 +868,8 @@ function Oak_gen_RISCV(): InstructionSet
         ujType,
         ["opcode"],
         [parseInt("1101111", 2)],
-        function(core) {
+        function(core)
+        {
             core.registerFile.write(core.arguments[0], core.pc);
             //console.log(core.pc);
             core.pc += core.arguments[1];
@@ -909,7 +943,8 @@ function Oak_gen_RISCV(): InstructionSet
         mvPseudo,
         ["opcode", "funct3", "rs1", "funct7"],
         [parseInt("0110011", 2), parseInt("000", 2), parseInt("00000"), parseInt("0000000", 2)],
-        function(core) {
+        function(core)
+        {
             return null; //Captured by and
         }
     ));
@@ -940,7 +975,8 @@ function Oak_gen_RISCV(): InstructionSet
         liPseudo,
         ["opcode", "funct3", "rs1"],
         [parseInt("0010011", 2), parseInt("000", 2), parseInt("00000", 2)],
-        function(core) {
+        function(core)
+        {
             return null; //Captured by andi
         }
     ));
@@ -950,7 +986,8 @@ function Oak_gen_RISCV(): InstructionSet
         liPseudo,
         ["opcode", "funct3", "rs1"],
         [parseInt("0010011", 2), parseInt("000", 2), parseInt("00000", 2)],
-        function(core) {
+        function(core)
+        {
             return null; //Captured by andi
         }
     ));
@@ -981,7 +1018,8 @@ function Oak_gen_RISCV(): InstructionSet
         jrPseudo,
         ["opcode", "rd", "funct3", "imm"],
         [parseInt("1100111", 2), parseInt("00000",2), parseInt("000", 2), parseInt("000000000000", 2)],
-        function(core) {
+        function(core)
+        {
             return null; //captured by jalr
         }
     ));
@@ -1390,51 +1428,6 @@ function Oak_gen_RISCV(): InstructionSet
                                     address += 1;
                                 }
                                 address += 1;
-
-                                /*
-                                let array = lines[i].split(directives[0]).join("").split("");
-                                let started = false;
-                                let done = false;                                    
-
-                                for (var j = 0; j < array.length; j++)
-                                {
-                                    if (!started)
-                                    {
-                                        if (array[j] === "\"")
-                                        {
-                                            started = true;
-                                        }
-                                        else if (array[j] === " ")
-                                        {
-                                            continue;
-                                        }
-                                        else
-                                        {
-                                            result.errorMessage = "Line " + i + ": Character " + array[j] + " precedes string literal.";
-                                            return result;
-                                        }                                            
-                                    }
-                                    else if (!done) {
-                                        if (array[j] === "\"")
-                                        {                                                
-                                            done = true;
-                                        }                                            
-                                        else if (chars[j] == "\\")
-                                        {
-                                            j++; //Escape next character
-                                        }
-                                        address++;                                           
-                                        
-                                    }
-                                    else
-                                    {
-                                        if (array[j] !== " ")
-                                        {
-                                            result.errorMessage = "Line " + i + ": You cannot declare multiple strings on one line.";
-                                            return result;
-                                        }
-                                    }
-                                }*/
                         }
                     }
                 }
@@ -1665,73 +1658,6 @@ function Oak_gen_RISCV(): InstructionSet
                             }
                             result.machineCode.push(0 >>> 0);
                             address += 1;
-                            
-                            /*
-                            let array = lines[i].split(directives[0]).join("").split("");
-                            let started = false;
-                            let done = false;                                    
-
-                            for (var j = 0; j < array.length; j++)
-                            {
-                                if (!started)
-                                {
-                                    if (array[j] === "\"")
-                                    {
-                                        started = true;
-                                    }
-                                    else if (array[j] === " ")
-                                    {
-                                        continue;
-                                    }
-                                }
-                                else if (!done)
-                                {
-                                    address += 1;
-                                    if (array[j] === "\"")
-                                    {
-                                        result.machineCode.push(0 >>> 0);
-                                        done = true;
-                                    }
-                                    else if (array[j] === "\\")
-                                    {
-                                        if (j + 1 < array.length)
-                                        {
-                                            switch (array[j + 1])
-                                            {
-                                                case 'n':
-                                                    result.machineCode.push(10 >>> 0);
-                                                    break;
-                                                case '0':
-                                                    result.machineCode.push(0 >>> 0);
-                                                    break;
-                                                case "'":
-                                                    result.machineCode.push(39 >>> 0);
-                                                    break;
-                                                case "\\":
-                                                    result.machineCode.push(92 >>> 0);
-                                                    break;
-
-                                                // case "\n":
-                                                //     result.errorMessage = "Line " + ((nester == null)? "": (nester + ":")) + i + ": Nothing to escape at position " + j + ".";
-                                                //     return result;  
-                                                default:
-                                                    result.errorMessage = "Line " + ((nester == null)? "": (nester + ":")) + i + ": Unknown escape character '" + array[j + 1] + "'.";
-                                                    return result;                                                             
-                                            }
-                                        }
-                                        else
-                                        {
-                                            result.errorMessage = "Line " + ((nester == null)? "": (nester + ":")) + i + ": Nothing to escape at position " + j + ".";
-                                            return result;
-                                        }
-                                        j++;
-                                    }
-                                    else
-                                    {
-                                        result.machineCode.push(array[j].charCodeAt(0));
-                                    }
-                                }
-                            }*/
                         }
                     }
                 }
@@ -1957,7 +1883,7 @@ class RISCVCore //: Core
                 
                 if(paramTypes[index] === Parameter.special)
                 {
-                    value = this.decoded.format.decodeSpecialParameter(value); //Unmangle...
+                    value = this.decoded.format.decodeSpecialParameter(value, this.pc); //Unmangle...
                 }
 
                 this.arguments[index] = this.arguments[index] | value;

@@ -4,10 +4,9 @@ enum Parameter
 {
     immediate = 0,
     register = 1,
-    condition = 2, //Not in RISC-V
+    condition = 2,
     offset = 3,
-    special = 4, 
-    optional = 5 //Also Not in RISC-V,
+    special = 4
 };
 
 class BitRange
@@ -15,17 +14,17 @@ class BitRange
     field: string;
     start: number;
     bits: number;
-    defaultValue: number; //If it's a parameter and the condition to use it fails;
     limitlessBits: number;
+    constant: number;
     parameter: number;
     
-    constructor(field: string, start: number, bits: number, parameter: number = null,  defaultValue: number = null, limitlessBits: number = null)
+    constructor(field: string, start: number, bits: number, parameter: number = null, constant: number = null, limitlessBits: number = null)
     {
         this.field = field;
         this.start = start;
         this.bits = bits;
-        this.defaultValue = defaultValue;
         this.parameter = parameter;
+        this.constant = constant;
         this.limitlessBits = limitlessBits;
     }
 };
@@ -35,7 +34,6 @@ class Format
     ranges: BitRange[];
     parameters: string[];
     parameterTypes: Parameter[];
-    parameterConditions: ((machineCode: number) => (boolean))[];
     regex: RegExp;
     disassembly: string; 
 
@@ -88,7 +86,7 @@ class Format
     }
 
     processSpecialParameter: (address: number, text: string, bits: number, labels: string[], addresses: number[]) => ({errorMessage: string, value: number});
-    decodeSpecialParameter: (value: number) => number;
+    decodeSpecialParameter: (value: number, address: number) => number;
 
     constructor
     (
@@ -97,15 +95,13 @@ class Format
         parameterTypes: Parameter[],
         regex: RegExp,
         disassembly: string,
-        parameterConditions: ((machineCode: number) => (boolean))[] = null,
         processSpecialParameter: (address: number, text: string, bits: number, labels: string[], addresses: number[]) => ({errorMessage: string, value: number}) = null,
-        decodeSpecialParameter: (value: number) => number = null
+        decodeSpecialParameter: (value: number, address: number) => number = null
     )
     {
         this.parameters = parameters;
         this.ranges = ranges;
         this.parameterTypes = parameterTypes;
-        this.parameterConditions = parameterConditions;
         this.regex = regex;
         this.disassembly = disassembly;
         this.processSpecialParameter = processSpecialParameter;
@@ -144,6 +140,10 @@ class Instruction
             {
                 str += this.pad(this.constValues[index].toString(2), this.format.ranges[i].bits);
             }
+            else if (this.format.ranges[i].constant != null)
+            {
+                str += this.pad(this.format.ranges[i].constant.toString(2), this.format.ranges[i].bits);
+            }
             else
             {
                 for (var j = 0; j < this.format.ranges[i].bits; j++)
@@ -179,6 +179,17 @@ class Instruction
 
     template(): number
     {
+        var temp = 0 >>> 0;
+
+        for (var i = 0; i < this.format.ranges.length; i++)
+        {
+            let index = this.constants.indexOf(this.format.ranges[i].field);
+            if (index !== -1)
+            {
+                
+            }
+        }
+
         return parseInt(this.mask().split("X").join("0"), 2);
     };
 
