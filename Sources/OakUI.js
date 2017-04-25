@@ -294,8 +294,10 @@ function showRegisters() {
 function invokeEnvironmentCall() {
     var core = tabs[currentTab].core;
 
-    var type = registerRead(core, 17);
-    var arg = registerRead(core, 10);
+    var mips = (tabs[currentTab].core.instructionSet.name == "mips");
+
+    var type = registerRead(core, mips? 2: 17);
+    var arg = registerRead(core, mips? 4: 10);
 
     if (tabs[currentTab].inSimulation == true) {
         var log = $("#log > span:last-child").html();
@@ -326,8 +328,8 @@ function invokeEnvironmentCall() {
     case 5:
         updateRegAndMemory();
         var input = prompt("Please enter a number as input.");
-        tabs[currentTab].registers[17] = parseInt(input);
-        registerWrite(core, 17, parseInt(input));
+        tabs[currentTab].registers[mips? 2: 17] = parseInt(input);
+        registerWrite(core, mips? 2: 17, parseInt(input));
         $("#console").append("<span class='input insertable'> <<< "+input+"</span>");
         break;
     case 8:
@@ -337,7 +339,7 @@ function invokeEnvironmentCall() {
         for (var i = 0; i < input.length; i++) {
             bytes.push(input.charCodeAt(i) & 255);
         }
-        core.memset(tabs[currentTab].registers[10], bytes);
+        core.memset(tabs[currentTab].registers[mips? 4: 10], bytes);
         $("#console").append("<span class='input insertable'> <<< "+input+"</span>");
         break;
     case 10:

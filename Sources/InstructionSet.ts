@@ -235,6 +235,7 @@ class PseudoInstruction //We don't have to use this here but I should probably b
 
 class InstructionSet
 {
+    name: string;
     formats: Format[];   
     instructions: Instruction[];
     pseudoInstructions: PseudoInstruction[];
@@ -284,6 +285,7 @@ class InstructionSet
         InstructionSet initializer
     */
     constructor(
+        name: string,
         bits: number,
         formats: Format[],
         instructions: Instruction[],
@@ -296,15 +298,16 @@ class InstructionSet
         assemble: (nester: number, address: number, lines: string[], labels: string[], addresses: number[]) => ({errorMessage: string, machineCode: number[], size: number})
     )
     {
+        this.name = name
         this.bits = bits       
         this.formats = formats
         this.instructions = instructions
-        this.pseudoInstructions = pseudoInstructions;
+        this.pseudoInstructions = pseudoInstructions
         this.dataDirectives = dataDirectives
         this.dataDirectiveSizes = dataDirectiveSizes
-        this.abiNames = abiNames;
+        this.abiNames = abiNames
 
-        this.processParameter = process;        
+        this.processParameter = process       
         this.tokenize = tokenize
         this.assemble = assemble
     }

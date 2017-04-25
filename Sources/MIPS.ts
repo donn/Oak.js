@@ -25,7 +25,7 @@ function Oak_gen_MIPS(): InstructionSet
             ["rd", "rt", "rs"],
             [Parameter.register, Parameter.register, Parameter.register],
             /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)/,
-            "@mnem @arg0, @arg1, @arg2"
+            "@mnem @arg, @arg, @arg"
         )
     );
 
@@ -225,7 +225,7 @@ function Oak_gen_MIPS(): InstructionSet
             ["rs"],
             [Parameter.register],
             /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)/,
-            "@mnem @arg0"
+            "@mnem @arg"
         )
     );
 
@@ -259,7 +259,7 @@ function Oak_gen_MIPS(): InstructionSet
             ["rd", "rt", "shamt"],
             [Parameter.register, Parameter.register, Parameter.immediate],
             /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*([0-9]+)/,
-            "@mnem @arg0, @arg1, @arg2"
+            "@mnem @arg, @arg, @arg"
         )
     );
 
@@ -312,7 +312,7 @@ function Oak_gen_MIPS(): InstructionSet
             [],
             [],
             /[a-zA-Z]+/,
-            "@mnem2"
+            "@mnem"
         )
     );
 
@@ -348,7 +348,7 @@ function Oak_gen_MIPS(): InstructionSet
             ["rt", "rs", "imm"],
             [Parameter.register, Parameter.register, Parameter.immediate],
             /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/,
-            "@mnem @arg0, @arg1, @arg2"
+            "@mnem @arg, @arg, @arg"
         )
     );
 
@@ -458,6 +458,8 @@ function Oak_gen_MIPS(): InstructionSet
 
     );
 
+    
+
     instructions.push
     (
         new Instruction
@@ -475,12 +477,112 @@ function Oak_gen_MIPS(): InstructionSet
 
     );
 
+    //I-Branch Subtype
+    formats.push
+    (
+        new Format
+        (
+            [
+                new BitRange("opcode", 26, 6),
+                new BitRange("rs", 21, 5, 1),
+                new BitRange("rt", 16, 5, 0),
+                new BitRange("imm", 0, 16, 2)
+            ],
+            ["rt", "rs", "imm"],
+            [Parameter.register, Parameter.register, Parameter.special],
+            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/,
+            "@mnem @arg, @arg, @arg",
+            function(address: number, text: string, bits: number, labels: string[], addresses: number[])
+            {
+                let array = text.split(""); //Character View
+                var result =
+                {
+                    errorMessage: null,
+                    value: null
+                };
+
+                var int = NaN;
+                let labelLocation = labels.indexOf(text);
+                if (labelLocation !== -1)
+                {
+                    int = addresses[labelLocation];
+                }
+                else
+                {
+                    var radix = 10 >>> 0;
+                    var splice = false;
+                    
+                    if (array[0] === "0")
+                    {
+                        if (array[1] == "b")
+                        {
+                            radix = 2;
+                            splice = true;
+                        }
+                        if (array[1] == "o")
+                        {
+                            radix = 8;
+                            splice = true;
+                        }
+                        if (array[1] == "d")
+                        {
+                            radix = 10;
+                            splice = true;
+                        }
+                        if (array[1] == "x")
+                        {
+                            radix = 16;
+                            splice = true;
+                        }
+                    }
+
+                    var interpretable = text;
+                    if (splice)
+                    {
+                        interpretable = array.splice(2, array.length - 2).join("");
+                    }
+                    int = parseInt(interpretable, radix);
+                }
+                    
+                if (isNaN(int))
+                {     
+                    result.errorMessage = "Offset '" + text + "' is not a recognized label or literal.";
+                    return result;
+                }
+
+                if ((int & 3) != 0)
+                {
+                    result.errorMessage = "Branches must be word-aligned.";
+                    return result;
+                }
+                
+                int -= address;
+
+                int >>= 2;
+
+                if (rangeCheck(int, 16))
+                {
+                    result.value = int;
+                    return result;
+                }
+                result.errorMessage = "The value of '" + text + "' is out of range.";
+                return result;
+            },
+            function(value: number, address: number)
+            {
+                return value << 2;
+            }
+        )
+    );
+
+    let ibSubtype = formats[formats.length - 1];
+
     instructions.push
     (
         new Instruction
         (
             "BEQ",
-            iType,
+            ibSubtype,
             ["opcode"],
             [0x04],
             function(core)
@@ -488,7 +590,6 @@ function Oak_gen_MIPS(): InstructionSet
                 if (core.registerFile.read(core.arguments[0]) === core.registerFile.read(core.arguments[1]))
                 {
                     core.pc += core.arguments[2];
-                    core.pc -= 4;
                 }
                 return null;
             }
@@ -500,7 +601,7 @@ function Oak_gen_MIPS(): InstructionSet
         new Instruction
         (
             "BNE",
-            iType,
+            ibSubtype,
             ["opcode"],
             [0x05],
             function(core)
@@ -508,7 +609,6 @@ function Oak_gen_MIPS(): InstructionSet
                 if (core.registerFile.read(core.arguments[0]) !== core.registerFile.read(core.arguments[1]))
                 {
                     core.pc += core.arguments[2];
-                    core.pc -= 4;
                 }
                 return null;
             }
@@ -530,7 +630,7 @@ function Oak_gen_MIPS(): InstructionSet
             ["rt", "imm"],
             [Parameter.register, Parameter.immediate],
             /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/,
-            "@mnem @arg0, @arg1"
+            "@mnem @arg, @arg"
         )
     );
 
@@ -567,7 +667,7 @@ function Oak_gen_MIPS(): InstructionSet
             ["rt", "imm", "rs"],
             [Parameter.register, Parameter.immediate, Parameter.register],
             /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(-?0?[boxd]?[0-9A-F]+)\(\s*(\$[A-Za-z0-9]+)\s*\)/,
-            "@mnem @arg0, @arg1(@arg2)"
+            "@mnem @arg, @arg(@arg)"
         )
     );
 
@@ -763,12 +863,12 @@ function Oak_gen_MIPS(): InstructionSet
         (
             [
                 new BitRange("opcode", 26, 6),
-                new BitRange("imm", 0, 26, 0, 0, 32)
+                new BitRange("imm", 0, 26, 0, null, 32)
             ],
             ["imm"],
             [Parameter.special],
-            /[A-z]+\s*[A-Za-z0-9_]+/,
-            "@mnem @arg0",
+            /[A-z]+\s*([A-Za-z0-9_]+)/,
+            "@mnem @arg",
             function(address: number, text: string, bits: number, labels: string[], addresses: number[])
             {
                 let array = text.split(""); //Character View
@@ -829,7 +929,12 @@ function Oak_gen_MIPS(): InstructionSet
 
                 if ((int >>> 28) == (address >>> 28))
                 {
-                    result.value = (int >>> 2) & 67108863;
+                    if ((int & 3 ) == 0)
+                    {
+                        result.value = (int & 0x0ffffffc) >>> 2;
+                        return result;
+                    }
+                    result.errorMessage = "Jumps must be word-aligned.";
                     return result;
                 }
                 result.errorMessage = "The value of '" + text + "' is out of range.";
@@ -837,7 +942,7 @@ function Oak_gen_MIPS(): InstructionSet
             },
             function(value: number, address: number)
             {
-                return (address & 4026531840) | (value << 2);
+                return (value << 2) | (address & 0xf0000000);
             }
         )
     );
@@ -875,7 +980,6 @@ function Oak_gen_MIPS(): InstructionSet
     let process = function(address: number, text: string, type: Parameter, bits: number, labels: string[], addresses: number[])
     {
         let array = text.split(""); //Character View
-        console.log(array);
         var result =
         {
             errorMessage: null,
@@ -884,7 +988,6 @@ function Oak_gen_MIPS(): InstructionSet
         switch(type)
         {
         case Parameter.register:
-                console.log(type);
                 var registerNo: number;
                 let index = this.abiNames.indexOf(text);
                 if (index !== -1)
@@ -1304,8 +1407,6 @@ function Oak_gen_MIPS(): InstructionSet
                     let paramTypes = format.parameterTypes;                        
                     var machineCode = instruction.template();
 
-                    console.log(directives[0], machineCode.toString(16));
-
                     var match = regex.exec(lines[i]);
                     if (match == null)
                     {
@@ -1343,7 +1444,6 @@ function Oak_gen_MIPS(): InstructionSet
                                     result.errorMessage = "Line " + ((nester == null)? "": (nester + ":")) + i + ": " + processed.errorMessage;
                                     return result;                            
                                 }
-                                console.log(directives[0], processed);
                                 register = processed.value;
                             }
                             else
@@ -1475,7 +1575,7 @@ function Oak_gen_MIPS(): InstructionSet
 
     let abiNames = ["$zero", "$at", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$k0", "$k1", "$gp", "$sp", "$fp", "$ra"];
 
-    return new InstructionSet(32, formats, instructions, pseudoInstructions, [".word", ".half", ".byte", ".string"], [4, 2, 1, 0], abiNames, process, tokenize, assemble);
+    return new InstructionSet("mips", 32, formats, instructions, pseudoInstructions, [".word", ".half", ".byte", ".asciiz"], [4, 2, 1, 0], abiNames, process, tokenize, assemble);
 }
 let MIPS = Oak_gen_MIPS();
 
