@@ -1413,10 +1413,10 @@ function Oak_gen_MIPS(): InstructionSet
                         result.errorMessage = "Line " + ((nester == null)? "": (nester + ":")) + i + ": Argument format for " + directives[0] + " violated.";
                         return result;
                     }
-                    var args = match.splice(1, params.length);                      
+                    var args = match.splice(1, params.length);  
 
                     for (var j = 0; j < bitRanges.length; j++)
-                    {
+                    {                                             
                         if (bitRanges[j].parameter != null)
                         {
                             var startBit = 0;
@@ -1465,8 +1465,7 @@ function Oak_gen_MIPS(): InstructionSet
                                 register = register >>> startBit;
                                 register = register & ((1 << (endBit - startBit + 1)) - 1);
                             }
-
-                            machineCode = machineCode | (register << bitRanges[j].start);  
+                            machineCode = machineCode | ((register & ((1 << bitRanges[j].bits) - 1)) << bitRanges[j].start);  
 
                         }
                     }
