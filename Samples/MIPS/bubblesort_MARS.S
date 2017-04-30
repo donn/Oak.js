@@ -1,5 +1,5 @@
 main:
-addiu $s0, $zero, array
+la $s0, array
 addiu $t0, $s0, 40
 
 loop1:
@@ -10,12 +10,11 @@ syscall
 addiu $s0, $s0, 4
 j loop1
 
-exit1:
-addiu $a0, $zero, array
+exit1:la $a0, array
 addiu $a1, $zero, 10
 jal bubblesort
 
-addiu $s0, $zero, array
+la $s0, array
 addiu $t0, $s0, 40
 
 loop2:
