@@ -16,8 +16,8 @@ function Oak_gen_MIPS(): InstructionSet
         (
             [
                 new BitRange("opcode", 26, 6),
-                new BitRange("rs", 21, 5, 2),
-                new BitRange("rt", 16, 5, 1),
+                new BitRange("rs", 21, 5, 1),
+                new BitRange("rt", 16, 5, 2),
                 new BitRange("rd", 11, 5, 0),
                 new BitRange("shamt", 6, 5, null, 0),
                 new BitRange("funct", 0, 6)
@@ -484,8 +484,8 @@ function Oak_gen_MIPS(): InstructionSet
         (
             [
                 new BitRange("opcode", 26, 6),
-                new BitRange("rs", 21, 5, 1),
-                new BitRange("rt", 16, 5, 0),
+                new BitRange("rs", 21, 5, 0),
+                new BitRange("rt", 16, 5, 1),
                 new BitRange("imm", 0, 16, 2)
             ],
             ["rt", "rs", "imm"],
