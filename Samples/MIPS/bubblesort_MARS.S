@@ -1,1 +1,0 @@
-slt $at, $zero, $a1 

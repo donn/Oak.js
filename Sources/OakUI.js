@@ -207,6 +207,10 @@ function switchModes(type) {
 }
 
 function createCore(type, size, ecallback, dcallback) {
+    if (typeof(size) != 'number')
+    {
+        size = parseInt(size)
+    }    
     switch(type) {
         case ISA_MIPS:
             return new MIPSCore(size, ecallback, dcallback);

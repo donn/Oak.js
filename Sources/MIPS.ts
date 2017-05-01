@@ -1670,8 +1670,7 @@ class MIPSCore //: Core
 
     //Instruction Callback
     instructionCallback: (data: string) => void;
-
-
+    
     reset()
     {
         this.pc = 0;
