@@ -1,8 +1,8 @@
 /// <reference path="InstructionSet.ts"/>
 /// <reference path="Utils.ts" />
-//The RISC-V Instruction Set Architecture, Version 2.1
+//The MIPS Instruction Set Architecture
 
-function Oak_gen_RISCV(): InstructionSet
+function Oak_gen_MIPS(): InstructionSet
 {
     //Formats and Instructions
     var formats: Format[] = [];
@@ -15,113 +15,191 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("funct7", 25, 7),
-                new BitRange("rs2", 20, 5, 2),
-                new BitRange("rs1", 15, 5, 1),
-                new BitRange("funct3", 12, 3),
-                new BitRange("rd", 7, 5, 0),
-                new BitRange("opcode", 0, 7)
+                new BitRange("opcode", 26, 6),
+                new BitRange("rs", 21, 5, 1),
+                new BitRange("rt", 16, 5, 2),
+                new BitRange("rd", 11, 5, 0),
+                new BitRange("shamt", 6, 5, null, 0),
+                new BitRange("funct", 0, 6)
             ],
-            ["rd", "rs1", "rs2"],
+            ["rd", "rt", "rs"],
             [Parameter.register, Parameter.register, Parameter.register],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)/,
+            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)/,
             "@mnem @arg, @arg, @arg"
         )
     );
-    
+
     let rType = formats[formats.length - 1];
 
+    instructions.push
+    (
+        new Instruction
+        (
+            "ADD",
+            rType,
+            ["opcode", "funct"],
+            [0x0, 0x20],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) + core.registerFile.read(core.arguments[2]));
+                return null;
+            }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "ADDU",
+            rType,
+            ["opcode", "funct"],
+            [0x0, 0x21],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) + core.registerFile.read(core.arguments[2]));
+                return null;
+            }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "SUB",
+            rType,
+            ["opcode", "funct"],
+            [0x0, 0x22],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) - core.registerFile.read(core.arguments[2]));
+                return null;
+            }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "SUBU",
+            rType,
+            ["opcode", "funct"],
+            [0x0, 0x23],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) - core.registerFile.read(core.arguments[2]));
+                return null;
+            }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "AND",
+            rType,
+            ["opcode", "funct"],
+            [0x0, 0x24],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) & core.registerFile.read(core.arguments[2]));
+                return null;
+            }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "OR",
+            rType,
+            ["opcode", "funct"],
+            [0x0, 0x25],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) | core.registerFile.read(core.arguments[2]));
+                return null;
+            }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "NOR",
+            rType,
+            ["opcode", "funct"],
+            [0x0, 0x27],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], ~(core.registerFile.read(core.arguments[1]) | core.registerFile.read(core.arguments[2])));
+                return null;
+            }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "XOR",
+            rType,
+            ["opcode", "funct"],
+            [0x0, 0x26],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) ^ core.registerFile.read(core.arguments[2]));
+                return null;
+            }
+        )
+    );
+
     instructions.push(new Instruction(
-        "ADD",
-        rType,
-        ["opcode", "funct3", "funct7"],
-        [parseInt("0110011", 2), parseInt("000", 2), parseInt("0000000", 2)],
-        function(core)
-        {
-            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) + core.registerFile.read(core.arguments[2]));
-            return null;
-        }
+       "SLT",
+       rType,
+       ["opcode","funct"],
+       [0x0,0x2A],
+       function(core)
+       {
+           core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) < core.registerFile.read(core.arguments[2]))? 1: 0);
+           return null;
+       }
     ));
 
     instructions.push(new Instruction(
-        "SUB",
+        "SLLV",
         rType,
-        ["opcode", "funct3", "funct7"],
-        [parseInt("0110011", 2), parseInt("000", 2), parseInt("0100000", 2)],
-        function(core)
-        {
-            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) - core.registerFile.read(core.arguments[2]));
-            return null;
-        }
-    ));
-
-    instructions.push(new Instruction(
-        "SLL",
-        rType,
-        ["opcode", "funct3", "funct7"],
-        [parseInt("0110011", 2), parseInt("001", 2), parseInt("0000000", 2)],
+        ["opcode","funct"],
+        [0x0,0x04],
         function(core)
         {
             core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) << core.registerFile.read(core.arguments[2]));
-            return null;
+                return null;
         }
     ));
 
     instructions.push(new Instruction(
-        "SLT",
+        "SRLV",
         rType,
-        ["opcode", "funct3", "funct7"],
-        [parseInt("0110011", 2), parseInt("010", 2), parseInt("0000000", 2)],
+        ["opcode","funct"],
+        [0x0,0x06],
         function(core)
         {
-            core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) < core.registerFile.read(core.arguments[2]))? 1: 0);
+        core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >>> core.registerFile.read(core.arguments[2]));
             return null;
         }
     ));
-
+    
     instructions.push(new Instruction(
-        "SLTU",
+        "SRAV",
         rType,
-        ["opcode", "funct3", "funct7"],
-        [parseInt("0110011", 2), parseInt("011", 2), parseInt("0000000", 2)],
-        function(core)
-        {
-            core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) < core.registerFile.read(core.arguments[2]))? 1: 0);
-            return null;
-        },
-        false
-    ));
-
-    instructions.push(new Instruction(
-        "XOR",
-        rType,
-        ["opcode", "funct3", "funct7"],
-        [parseInt("0110011", 2), parseInt("100", 2), parseInt("0000000", 2)],
-        function(core)
-        {
-            //
-            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) ^ core.registerFile.read(core.arguments[2]));
-            return null;
-        }
-    ));
-
-    instructions.push(new Instruction(
-        "SRL",
-        rType,
-        ["opcode", "funct3", "funct7"],
-        [parseInt("0110011", 2), parseInt("101", 2), parseInt("0000000", 2)],
-        function(core)
-        {
-            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >>> core.registerFile.read(core.arguments[2]));
-            return null;
-        }
-    ));
-
-    instructions.push(new Instruction(
-        "SRA",
-        rType,
-        ["opcode", "funct3", "funct7"],
-        [parseInt("0110011", 2), parseInt("101", 2), parseInt("0100000", 2)],
+        ["opcode","funct"],
+        [0x0, 0x07],
         function(core)
         {
             core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >> core.registerFile.read(core.arguments[2]));
@@ -129,29 +207,132 @@ function Oak_gen_RISCV(): InstructionSet
         }
     ));
 
+
+
+    //R-Jump Subtype
+    formats.push
+    (
+        new Format
+        (
+            [
+                new BitRange("opcode", 26, 6),
+                new BitRange("rs", 21, 5, 0),
+                new BitRange("rt", 16, 5, null, 0),
+                new BitRange("rd", 11, 5, null, 0),
+                new BitRange("shamt", 6, 5, null, 0),
+                new BitRange("funct", 0, 6)
+            ],
+            ["rs"],
+            [Parameter.register],
+            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)/,
+            "@mnem @arg"
+        )
+    );
+
+    let rjSubtype = formats[formats.length - 1];
+
     instructions.push(new Instruction(
-        "OR",
-        rType,
-        ["opcode", "funct3", "funct7"],
-        [parseInt("0110011", 2), parseInt("110", 2), parseInt("0000000", 2)],
+        "JR",
+        rjSubtype,
+        ["opcode","funct"],
+        [0x0, 0x08],
         function(core)
         {
-            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) | core.registerFile.read(core.arguments[2]));
+            core.pc = core.registerFile.read(core.arguments[0]);
+            return null;
+        }
+    ));
+
+    //R-Shift Subtype
+    formats.push
+    (
+        new Format
+        (
+            [
+                new BitRange("opcode", 26, 6),
+                new BitRange("rs", 21, 5, null, 0),
+                new BitRange("rt", 16, 5, 1),
+                new BitRange("rd", 11, 5, 0),
+                new BitRange("shamt", 6, 5, 2),
+                new BitRange("funct", 0, 6)
+            ],
+            ["rd", "rt", "shamt"],
+            [Parameter.register, Parameter.register, Parameter.immediate],
+            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*([0-9]+)/,
+            "@mnem @arg, @arg, @arg"
+        )
+    );
+
+    let rsSubtype = formats[formats.length - 1];
+
+    instructions.push(new Instruction(
+        "SLL",
+        rsSubtype,
+        ["opcode","funct"],
+        [0x0,0x00],
+        function(core)
+        {
+            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) << core.arguments[2]);
+                return null;
+        }
+    ));
+
+    instructions.push(new Instruction(
+        "SRL",
+        rsSubtype,
+        ["opcode","funct"],
+        [0x0,0x02],
+        function(core)
+        {
+        core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >>> core.arguments[2]);
             return null;
         }
     ));
 
     instructions.push(new Instruction(
-        "AND",
-        rType,
-        ["opcode", "funct3", "funct7"],
-        [parseInt("0110011", 2), parseInt("111", 2), parseInt("0000000", 2)],
+        "SRA",
+        rsSubtype,
+        ["opcode","funct"],
+        [0x0,0x02],
         function(core)
         {
-            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) & core.registerFile.read(core.arguments[2]));
+        core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >> core.arguments[2]);
             return null;
         }
     ));
+
+    //R-Constant Subtype
+    formats.push
+    (
+        new Format
+        (
+            [
+                new BitRange("funct", 0, 32)
+            ],
+            [],
+            [],
+            /[a-zA-Z]+/,
+            "@mnem"
+        )
+    );
+
+    let rcSubtype = formats[formats.length - 1];
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "SYSCALL",
+            rcSubtype,
+            ["funct"],
+            [0xC],
+            function(core)
+            {
+                core.ecall();
+                return null;
+            }
+        )
+    );
 
     //I-Type
     formats.push
@@ -159,419 +340,157 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm", 20, 12, 2),
-                new BitRange("rs1", 15, 5, 1),
-                new BitRange("funct3", 12, 3),
-                new BitRange("rd", 7, 5, 0),
-                new BitRange("opcode", 0, 7)
+                new BitRange("opcode", 26, 6),
+                new BitRange("rs", 21, 5, 1),
+                new BitRange("rt", 16, 5, 0),
+                new BitRange("imm", 0, 16, 2)
             ],
-            ["rd", "rs1", "imm"],
+            ["rt", "rs", "imm"],
             [Parameter.register, Parameter.register, Parameter.immediate],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+),\s*(-?[a-zA-Z0-9_]+)/,
+            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/,
             "@mnem @arg, @arg, @arg"
         )
     );
+
 
     let iType = formats[formats.length - 1];
 
-    instructions.push(new Instruction(
-        "JALR",
-        iType,
-        ["opcode", "funct3"],
-        [parseInt("1100111", 2), parseInt("000", 2)],
-        function(core)
-        {
-            core.registerFile.write(core.arguments[0], core.pc);
-            core.pc = (core.registerFile.read(core.arguments[1]) + signExt(core.arguments[2], 12));
-            return null;
-        }
-    ));
-
-    instructions.push(new Instruction(
-        "ADDI",
-        iType,
-        ["opcode", "funct3"],
-        [parseInt("0010011", 2), parseInt("000", 2)],
-        function(core)
-        {
-            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) + core.arguments[2]);
-            return null;
-        }
-    ));
-
-    instructions.push(new Instruction(
-        "SLTI",
-        iType,
-        ["opcode", "funct3"],
-        [parseInt("0010011", 2), parseInt("010", 2)],
-        function(core)
-        {
-            core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) < core.arguments[2])? 1 : 0);
-            return null;
-        }
-    ));
-
-    instructions.push(new Instruction(
-        "SLTIU",
-        iType,
-        ["opcode", "funct3"],
-        [parseInt("0010011", 2), parseInt("011", 2)],
-        function(core)
-        {
-            core.registerFile.write(core.arguments[0], ((core.registerFile.read(core.arguments[1]) >>> 0) < (core.arguments[2] >>> 0)? 1 : 0));
-            return null;
-        },
-        false
-    ));
-
-    instructions.push(new Instruction(
-        "XORI",
-        iType,
-        ["opcode", "funct3"],
-        [parseInt("0010011", 2), parseInt("100", 2)],
-        function(core)
-        {
-            core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) >>> 0) ^ core.arguments[2]);
-            return null;
-        }
-    ));
-
-    instructions.push(new Instruction(
-        "ORI",
-        iType,
-        ["opcode", "funct3"],
-        [parseInt("0010011", 2), parseInt("110", 2)],
-        function(core)
-        {
-            core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) >>> 0) | core.arguments[2]);
-            return null;
-        }
-    ));
-
-    instructions.push(new Instruction(
-        "ANDI",
-        iType,
-        ["opcode", "funct3"],
-        [parseInt("0010011", 2), parseInt("111", 2)],
-        function(core)
-        {
-            core.registerFile.write(core.arguments[0], ((core.registerFile.read(core.arguments[1]) >>> 0) & core.arguments[2]));
-            return null;
-        }
-    ));
-
-    //IL Subtype
-    formats.push
+    //I-type instructions
+    instructions.push
     (
-        new Format
+        new Instruction
         (
-            [
-                new BitRange("imm", 20, 12, 1),
-                new BitRange("rs1", 15, 5, 2),
-                new BitRange("funct3", 12, 3),
-                new BitRange("rd", 7, 5, 0),
-                new BitRange("opcode", 0, 7)
-            ],
-            ["rd", "imm", "rs1"],
-            [Parameter.register, Parameter.immediate, Parameter.register],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*(-?0?[boxd]?[0-9A-F]+)\s*\(\s*([A-Za-z0-9]+)\s*\)/,
-            "@mnem @arg, @arg(@arg)"
-        )
-    );
-
-    let ilSubtype = formats[formats.length - 1];
-
-    instructions.push(new Instruction(
-        "LB",
-        ilSubtype,
-        ["opcode", "funct3"],
-        [parseInt("0000011", 2), parseInt("000", 2)],
-        function(core)
-        {
-            let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 1);
-            if (bytes === null)
+            "ADDI",
+            iType,
+            ["opcode"],
+            [0x8],
+            function(core)
             {
-                return "Illegal memory access.";
-            }
-            core.registerFile.write(core.arguments[0], signExt(bytes[0], 8));
-            return null;
-        }
-    ));
-
-    instructions.push(new Instruction(
-        "LH",
-        ilSubtype,
-        ["opcode", "funct3"],
-        [parseInt("0000011", 2), parseInt("001", 2)],
-        function(core)
-        {
-            let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 2);
-            if (bytes === null)
-            {
-                return "Illegal memory access.";
-            }
-            core.registerFile.write(core.arguments[0], signExt(catBytes(bytes), 16));
-            return null;
-        }
-    ));
-
-    instructions.push(new Instruction(
-        "LW",
-        ilSubtype,
-        ["opcode", "funct3"],
-        [parseInt("0000011", 2), parseInt("010", 2)],
-        function(core)
-        {
-            let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 4);
-            if (bytes === null)
-            {
-                return "Illegal memory access.";
-            }
-            core.registerFile.write(core.arguments[0], catBytes(bytes));
-            return null;
-        }
-    ));
-
-    instructions.push(new Instruction(
-        "LBU",
-        ilSubtype,
-        ["opcode", "funct3"],
-        [parseInt("0000011", 2), parseInt("100", 2)],
-        function(core)
-        {
-            let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 1);
-            if (bytes === null)
-            {
-                return "Illegal memory access.";
-            }
-            core.registerFile.write(core.arguments[0], bytes[0]);
-            return null;
-        }
-    ));
-
-    instructions.push(new Instruction(
-        "LHU",
-        ilSubtype,
-        ["opcode", "funct3"],
-        [parseInt("0000011", 2), parseInt("101", 2)],
-        function(core)
-        {
-            let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 2);
-            if (bytes === null)
-            {
-                return "Illegal memory access.";
-            }
-            core.registerFile.write(core.arguments[0], catBytes(bytes));
-            return null;
-        }
-    ));
-
-    // IS Subtype
-    formats.push
-    (
-        new Format
-        (
-            [
-                new BitRange("funct7", 25, 7),
-                new BitRange("shamt", 20, 5, 2),
-                new BitRange("rs1", 15, 5, 1),
-                new BitRange("funct3", 12, 3),
-                new BitRange("rd", 7, 5, 0),
-                new BitRange("opcode", 0, 7)
-            ],
-            ["rd", "rs1", "shamt"],
-            [Parameter.register, Parameter.register, Parameter.immediate],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+),\s*(-?0?[boxd]?[0-9A-F]+)/,
-            "@mnem @arg, @arg, @arg"
-        )
-    );
-
-    let isSubtype = formats[formats.length - 1];
-
-    instructions.push(new Instruction(
-        "SLLI",
-        isSubtype,
-        ["opcode", "funct3", "funct7"],
-        [parseInt("0010011", 2), parseInt("001", 2), parseInt("0000000", 2)],
-        function(core)
-        {
-            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) << core.arguments[2]);
-            return null;
-        },
-        false
-    ));
-
-    instructions.push(new Instruction(
-        "SRLI",
-        isSubtype,
-        ["opcode", "funct3", "funct7"],
-        [parseInt("0010011", 2), parseInt("101", 2), parseInt("0000000", 2)],
-        function(core)
-        {
-            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >>> core.arguments[2]);
-            return null;
-        },
-        false
-    ));
-
-    instructions.push(new Instruction(
-        "SRAI",
-        isSubtype,
-        ["opcode", "funct3", "funct7"],
-        [parseInt("0010011", 2), parseInt("101", 2), parseInt("0100000", 2)],
-        function(core)
-        {
-            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >> core.arguments[2]);
-            return null;
-        },
-        false
-    ));
-
-
-    //S-Type
-    formats.push
-    (
-        new Format
-        (
-            [
-                new BitRange("imm[11:5]", 25, 7, 1, null, 12),
-                new BitRange("rs2", 20, 5, 0),
-                new BitRange("rs1", 15, 5, 2),
-                new BitRange("funct3", 12, 3),
-                new BitRange("imm[4:0]", 7, 5, 1, null, 12),
-                new BitRange("opcode", 0, 7)
-            ],
-            ["rs2", "imm", "rs1"],
-            [Parameter.register, Parameter.immediate, Parameter.register],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*(-?0?[boxd]?[0-9A-F]+)\(\s*([A-Za-z0-9]+)\s*\)/,
-            "@mnem @arg, @arg(@arg)"
-        )
-    );
-
-    let sType = formats[formats.length - 1];
-
-    instructions.push(new Instruction(
-        "SB",
-        sType,
-        ["opcode", "funct3"],
-        [parseInt("0100011", 2), parseInt("000", 2)],
-        function(core)
-        {
-            var bytes = [];
-            bytes.push(core.registerFile.read(core.arguments[0]) & 255);
-            if(core.memset(core.registerFile.read(core.arguments[2]) + core.arguments[1], bytes))
-            {
+                core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) + core.arguments[2]);
                 return null;
             }
-            return "Illegal memory access.";
-        }
-    ));
-
-    instructions.push(new Instruction(
-        "SH",
-        sType,
-        ["opcode", "funct3"],
-        [parseInt("0100011", 2), parseInt("001", 2)],
-        function(core)
-        {
-            var bytes = [];
-            var value = core.registerFile.read(core.arguments[0]);
-            bytes.push(value & 255);
-            value = value >>> 8;
-            bytes.push(value & 255);
-            if(core.memset(core.registerFile.read(core.arguments[2]) + core.arguments[1], bytes))
-            {
-                return null;
-            }
-            return "Illegal memory access.";
-        }
-    ));
-
-    instructions.push(new Instruction(
-        "SW",
-        sType,
-        ["opcode", "funct3"],
-        [parseInt("0100011", 2), parseInt("010", 2)],
-        function(core)
-        {
-            var bytes = [];
-            var value = core.registerFile.read(core.arguments[0]);
-            bytes.push(value & 255);
-            value = value >>> 8;
-            bytes.push(value & 255);
-            value = value >>> 8;
-            bytes.push(value & 255);
-            value = value >>> 8;
-            bytes.push(value & 255);
-            if(core.memset(core.registerFile.read(core.arguments[2]) + core.arguments[1], bytes))
-            {
-                return null;
-            }
-            return "Illegal memory access.";
-        }
-    ));
-
-
-
-    //U-Type
-    formats.push
-    (
-        new Format
-        (
-            [
-                new BitRange("imm", 12, 20, 1),
-                new BitRange("rd", 7, 5, 0),
-                new BitRange("opcode", 0, 7)
-            ],
-            ["rd", "imm"],
-            [Parameter.register, Parameter.offset],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)/,
-            "@mnem @arg, @arg"
         )
+
     );
 
-    let uType = formats[formats.length - 1];
+    instructions.push
+    (
+        new Instruction
+        (
+            "ADDIU",
+            iType,
+            ["opcode"],
+            [0x9],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) + core.arguments[2]);
+                return null;
+            }
+        )
 
-    instructions.push(new Instruction(
-        "LUI",
-        uType,
-        ["opcode"],
-        [parseInt("0110111", 2)],
-        function(core)
-        {
-            core.registerFile.write(core.arguments[0], (core.arguments[1] << 12));
-            return null;
-        }
-    ));
+    );
 
-    instructions.push(new Instruction(
-        "AUIPC",
-        uType,
-        ["opcode"],
-        [parseInt("0010111", 2)],
-        function(core)
-        {
-            core.registerFile.write(core.arguments[0], (core.arguments[1] << 12) + core.pc - 4);
-            return null;
-        }
-    ));
+    instructions.push
+    (
+        new Instruction
+        (
+            "SLTI",
+            iType,
+            ["opcode"],
+            [0x0A],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) < core.arguments[2])? 1 : 0);
+                return null;
+            }
+        )
 
-    //SB-Type
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "SLTIU",
+            iType,
+            ["opcode"],
+            [0x0B],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) < core.arguments[2])? 1 : 0);
+                return null;
+            }
+        )
+
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "ANDI",
+            iType,
+            ["opcode"],
+            [0x0C],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], ((core.registerFile.read(core.arguments[1]) >>> 0) & core.arguments[2]));
+                return null;
+            }
+        )
+
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "ORI",
+            iType,
+            ["opcode"],
+            [0x0D],
+            function(core)
+            {
+                    core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) >>> 0) | core.arguments[2]);
+                    return null;
+            }
+        )
+
+    );
+
+    
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "XORI",
+            iType,
+            ["opcode"],
+            [0x0E],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) >>> 0) ^ core.arguments[2]);
+                return null;
+            }
+        )
+
+    );
+
+    //I-Branch Subtype
     formats.push
     (
         new Format
         (
             [
-                new BitRange("imm[11:5]", 25, 7, 2, null, 13),
-                new BitRange("rs2", 20, 5, 1),
-                new BitRange("rs1", 15, 5, 0),
-                new BitRange("funct3", 12, 3),
-                new BitRange("imm[4:0]", 7, 5, 2, null, 13),
-                new BitRange("opcode", 0, 7)
+                new BitRange("opcode", 26, 6),
+                new BitRange("rs", 21, 5, 0),
+                new BitRange("rt", 16, 5, 1),
+                new BitRange("imm", 0, 16, 2)
             ],
-            ["rs1", "rs2", "imm"],
+            ["rt", "rs", "imm"],
             [Parameter.register, Parameter.register, Parameter.special],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)/,
+            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/,
             "@mnem @arg, @arg, @arg",
             function(address: number, text: string, bits: number, labels: string[], addresses: number[])
             {
@@ -586,7 +505,7 @@ function Oak_gen_RISCV(): InstructionSet
                 let labelLocation = labels.indexOf(text);
                 if (labelLocation !== -1)
                 {
-                    int = addresses[labelLocation] - address + 4;
+                    int = addresses[labelLocation];
                 }
                 else
                 {
@@ -631,148 +550,325 @@ function Oak_gen_RISCV(): InstructionSet
                     return result;
                 }
 
-                if (rangeCheck(int, 13))
+                if ((int & 3) != 0)
                 {
-                    var mangle = int & 2046; //mangle[10:1] = int[10:1];
-                    mangle = mangle | ((int >>> 11) & 1); //mangle[0] = int[11]
-                    mangle = mangle | ((int >>> 12) & 1) << 11; //mangle[11] = int[12];
-                    result.value = mangle;
+                    result.errorMessage = "Branches must be word-aligned.";
+                    return result;
+                }
+                
+                int -= address;
+
+                int >>= 2;
+
+                if (rangeCheck(int, 16))
+                {
+                    result.value = int;
                     return result;
                 }
                 result.errorMessage = "The value of '" + text + "' is out of range.";
                 return result;
             },
-            function(value: number)
+            function(value: number, address: number)
             {
-                var unmangle = (value & 1) << 11; //unmangle[11]; = value[0];
-                unmangle = unmangle | ((value >>> 11) << 12); //unmangle[12] = value[12];
-                unmangle = unmangle | (value & 2046); //unmangle[10:1] = value[10:1];
-                return unmangle;
+                return value << 2;
             }
         )
     );
 
+    let ibSubtype = formats[formats.length - 1];
 
-    let sbType = formats[formats.length - 1];
-
-
-    // var test = 24;
-    // console.log(test.toString(2));
-    // var mangled = sbType.processSpecialParameter(0, test.toString(), 0, [], []);
-    // console.log(mangled.errorMessage);
-    // console.log(mangled.value.toString(2));
-    // console.log(sbType.decodeSpecialParameter(mangled.value).toString(2));
-
-    instructions.push(new Instruction(
-        "BEQ",
-        sbType,
-        ["opcode", "funct3"],
-        [parseInt("1100011", 2), parseInt("000", 2)],
-        function(core)
-        {
-            if (core.registerFile.read(core.arguments[0]) === core.registerFile.read(core.arguments[1]))
+    instructions.push
+    (
+        new Instruction
+        (
+            "BEQ",
+            ibSubtype,
+            ["opcode"],
+            [0x04],
+            function(core)
             {
-                core.pc += core.arguments[2];
-                core.pc -= 4;
+                if (core.registerFile.read(core.arguments[0]) === core.registerFile.read(core.arguments[1]))
+                {
+                    core.pc += core.arguments[2];
+                }
+                return null;
             }
-            return null;
-        }
-    ));
+        )
+    );
 
-    instructions.push(new Instruction(
-        "BNE",
-        sbType,
-        ["opcode", "funct3"],
-        [parseInt("1100011", 2), parseInt("001", 2)],
-        function(core)
-        {
-            if (core.registerFile.read(core.arguments[0]) !== core.registerFile.read(core.arguments[1]))
+    instructions.push
+    (
+        new Instruction
+        (
+            "BNE",
+            ibSubtype,
+            ["opcode"],
+            [0x05],
+            function(core)
             {
-                core.pc += core.arguments[2];
-                core.pc -= 4;
+                if (core.registerFile.read(core.arguments[0]) !== core.registerFile.read(core.arguments[1]))
+                {
+                    core.pc += core.arguments[2];
+                }
+                return null;
             }
-            return null;
-        }
-    ));
+        )
 
-    instructions.push(new Instruction(
-        "BLT",
-        sbType,
-        ["opcode", "funct3"],
-        [parseInt("1100011", 2), parseInt("100", 2)],
-        function(core)
-        {
-            if (core.registerFile.read(core.arguments[0]) < core.registerFile.read(core.arguments[1]))
-            {
-                core.pc += core.arguments[2];
-                core.pc -= 4;
-            }
-            return null;
-        }
-    ));
+    );
 
-    instructions.push(new Instruction(
-        "BGE",
-        sbType,
-        ["opcode", "funct3"],
-        [parseInt("1100011", 2), parseInt("101", 2)],
-        function(core)
-        {
-            if (core.registerFile.read(core.arguments[0]) >= core.registerFile.read(core.arguments[1]))
-            {
-                core.pc += core.arguments[2];
-                core.pc -= 4;
-            }
-            return null;
-        }
-    ));
-
-    instructions.push(new Instruction(
-        "BLTU",
-        sbType,
-        ["opcode", "funct3"],
-        [parseInt("1100011", 2), parseInt("110", 2)],
-        function(core)
-        {
-            if ((core.registerFile.read(core.arguments[0]) >>> 0) < (core.registerFile.read(core.arguments[1]) >>> 0))
-            {
-                core.pc += core.arguments[2];
-                core.pc -= 4;
-            }
-            return null;
-        }
-    ));
-
-    instructions.push(new Instruction(
-        "BGEU",
-        sbType,
-        ["opcode", "funct3"],
-        [parseInt("1100011", 2), parseInt("111", 2)],
-        function(core)
-        {
-            if ((core.registerFile.read(core.arguments[0]) >>> 0) >= (core.registerFile.read(core.arguments[1]) >>> 0))
-            {
-                core.pc += core.arguments[2];
-                core.pc -= 4;
-            }
-            return null;
-        }
-    ));
-
-    //UJ-Type
+    //I Load Upper Immediate Subtype
     formats.push
     (
         new Format
         (
             [
-                new BitRange("imm", 12, 20, 1, null, 21),
-                new BitRange("rd", 7, 5, 0),
-                new BitRange("opcode", 0, 7)
+                new BitRange("opcode", 26, 6),
+                new BitRange("rs", 21, 5, null, 0),
+                new BitRange("rt", 16, 5, 0),
+                new BitRange("imm", 0, 16, 1)
             ],
-            ["rd", "imm"],
-            [Parameter.register, Parameter.special],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)/,
-            "@mnem @arg, @arg",
+            ["rt", "imm"],
+            [Parameter.register, Parameter.immediate],
+            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/,
+            "@mnem @arg, @arg"
+        )
+    );
+
+    let iluiSubtype = formats[formats.length - 1];
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "LUI",
+            iluiSubtype,
+            ["opcode"],
+            [0x0F],
+            function(core)
+            {
+                core.registerFile.write(core.arguments[0], (core.arguments[1] << 16));
+                return null;
+            }
+        )
+
+    );
+
+    //I Load/Store Subtype
+    formats.push
+    (
+        new Format
+        (
+            [
+                new BitRange("opcode", 26, 6),
+                new BitRange("rs", 21, 5, 2),
+                new BitRange("rt", 16, 5, 0),
+                new BitRange("imm", 0, 16, 1)
+            ],
+            ["rt", "imm", "rs"],
+            [Parameter.register, Parameter.immediate, Parameter.register],
+            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(-?0?[boxd]?[0-9A-F]+)\(\s*(\$[A-Za-z0-9]+)\s*\)/,
+            "@mnem @arg, @arg(@arg)"
+        )
+    );
+
+    let ilsSubtype = formats[formats.length - 1];
+
+
+    //TO-DO: Verify function(core) functionality
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "LB",
+            ilsSubtype,
+            ["opcode"],
+            [0x20],
+            function(core)
+            {
+                let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 1);
+                if (bytes === null)
+                {
+                    return "Illegal memory access.";
+                }
+                core.registerFile.write(core.arguments[0], signExt(bytes[0], 8));
+                return null;
+            }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "LH",
+            ilsSubtype,
+            ["opcode"],
+            [0x21],
+            function(core)
+            {
+                let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 2);
+                if (bytes === null)
+                {
+                    return "Illegal memory access.";
+                }
+                core.registerFile.write(core.arguments[0], signExt(catBytes(bytes), 16));
+                return null;
+            }
+        )
+    );
+    
+    instructions.push
+    (
+        new Instruction
+        (
+            "LW",
+            ilsSubtype,
+            ["opcode"],
+            [0x23],
+            function(core)
+            {
+                let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 4);
+                if (bytes === null)
+                {
+                    return "Illegal memory access.";
+                }
+                core.registerFile.write(core.arguments[0], catBytes(bytes));
+                return null;
+            }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "LBU",
+            ilsSubtype,
+            ["opcode"],
+            [0x24],
+            function(core)
+            {
+              let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 1);
+              if (bytes === null)
+              {
+                  return "Illegal memory access.";
+              }
+              core.registerFile.write(core.arguments[0], bytes[0]);
+              return null;
+          }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "LHU",
+            ilsSubtype,
+            ["opcode"],
+            [0x25],
+            function(core)
+            {
+             let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 2);
+             if (bytes === null)
+             {
+                 return "Illegal memory access.";
+             }
+             core.registerFile.write(core.arguments[0], catBytes(bytes));
+             return null;
+         }
+        )
+   );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "SB",
+            ilsSubtype,
+            ["opcode"],
+            [0x28],
+            function(core)
+            {
+                var bytes = [];
+                bytes.push(core.registerFile.read(core.arguments[0]) & 255);
+                if(core.memset(core.registerFile.read(core.arguments[2]) + core.arguments[1], bytes))
+                {
+                    return null;
+                }
+                return "Illegal memory access.";
+            }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "SH",
+            ilsSubtype,
+            ["opcode"],
+            [0x29],
+            function(core)
+            {
+              var bytes = [];
+              var value = core.registerFile.read(core.arguments[0]);
+              bytes.push(value & 255);
+              value = value >>> 8;
+              bytes.push(value & 255);
+              if(core.memset(core.registerFile.read(core.arguments[2]) + core.arguments[1], bytes))
+              {
+                  return null;
+              }
+              return "Illegal memory access.";
+            }
+        )
+    );
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "SW",
+            ilsSubtype,
+            ["opcode"],
+            [0x2B],
+            function(core)
+            {
+                var bytes = [];
+                var value = core.registerFile.read(core.arguments[0]);
+                bytes.push(value & 255);
+                value = value >>> 8;
+                bytes.push(value & 255);
+                value = value >>> 8;
+                bytes.push(value & 255);
+                value = value >>> 8;
+                bytes.push(value & 255);
+                if(core.memset(core.registerFile.read(core.arguments[2]) + core.arguments[1], bytes))
+                {
+                    return null;
+                }
+                return "Illegal memory access.";
+            }
+        )
+    );
+
+    
+
+    //J-Type
+    formats.push
+    (
+        new Format
+        (
+            [
+                new BitRange("opcode", 26, 6),
+                new BitRange("imm", 0, 26, 0, null, 32)
+            ],
+            ["imm"],
+            [Parameter.special],
+            /[A-z]+\s*([A-Za-z0-9_]+)/,
+            "@mnem @arg",
             function(address: number, text: string, bits: number, labels: string[], addresses: number[])
             {
                 let array = text.split(""); //Character View
@@ -786,7 +882,7 @@ function Oak_gen_RISCV(): InstructionSet
                 let labelLocation = labels.indexOf(text);
                 if (labelLocation !== -1)
                 {
-                    int = addresses[labelLocation] - address + 4;
+                    int = addresses[labelLocation];
                 }
                 else
                 {
@@ -831,238 +927,55 @@ function Oak_gen_RISCV(): InstructionSet
                     return result;
                 }
 
-                if (rangeCheck(int, 21))
+                if ((int >>> 28) == (address >>> 28))
                 {
-                    var mangle = ((int >> 12) & 255); //mangle[7:0] = int[19:12] 
-                    mangle = mangle | (((int >> 11) & 1) << 8); //mangle[8] = int[11];
-                    mangle = mangle | (((int >> 1) & 1023) << 9); //mangle[18:9] = int[10:1];
-                    mangle = mangle | (((int >> 20) & 1) << 19 ); //mangle[19] = int[20];
-                    result.value = mangle;
+                    if ((int & 3 ) == 0)
+                    {
+                        result.value = (int & 0x0ffffffc) >>> 2;
+                        return result;
+                    }
+                    result.errorMessage = "Jumps must be word-aligned.";
                     return result;
                 }
-                result.errorMessage = "The value of '" + text + "' (" + int.toString() + ")is out of range.";
+                result.errorMessage = "The value of '" + text + "' is out of range.";
                 return result;
             },
-            function(value: number)
+            function(value: number, address: number)
             {
-                var unmangle = ((value >> 8) & 1) << 11; //unmangle[11]; = value[8];
-                unmangle = unmangle | (((value >>> 19) & 1) << 20); //unmangle[20] = value[19];
-                unmangle = unmangle | (((value >>> 0) & 255) << 12); //unmangle[19:12] = value[7:0];
-                unmangle = unmangle | (((value >>> 9) & 1023) << 1); //unmangle[10:1] = value[18:9];
-                return unmangle;
-
+                return (value << 2) | (address & 0xf0000000);
             }
         )
     );
 
-    let ujType = formats[formats.length - 1];
-
-    // let test = parseInt("4", 16);
-    // console.log("before", test.toString(2));
-    // let op = ujType.processSpecialParameter(0, test.toString(), 0, [], []);
-    // console.log(op.value.toString(2));
-    // console.log("after", ujType.decodeSpecialParameter(op.value).toString(2));
+    let jType = formats[formats.length - 1];
 
     instructions.push(new Instruction(
-        "JAL",
-        ujType,
+        "J",
+        jType,
         ["opcode"],
-        [parseInt("1101111", 2)],
-        function(core)
-        {
-            core.registerFile.write(core.arguments[0], core.pc);
-            //console.log(core.pc);
-            core.pc += core.arguments[1];
-            core.pc -= 4;
-            //console.log(core.arguments[1]);
+        [0x2],
+        function(core) {
+            core.pc = core.arguments[0];
             return null;
         }
     ));
 
-    //System Type
-    //All-Const Type
-    formats.push
-    (
-        new Format
-        (
-            [
-                new BitRange("const", 0, 32)
-            ],
-            [],
-            [],
-            /[a-zA-Z]+/,
-            "@mnem"
-        )
-    );
-
-    let allConstSubtype = formats[formats.length - 1];
-
-    instructions.push
-    (
-        new Instruction
-        (
-            "ECALL",
-            allConstSubtype,
-            ["const"],
-            [parseInt("00000000000000000000000001110011", 2)],
-            function(core)
-            {
-                core.ecall();
-                return null;
-            }
-            
-        )
-    )
-
-    //PseudoInstructions
-    //This is a far from ideal implementation of pseudoinstructions and is only there for demo purposes.
-    //MV
-    formats.push
-    (
-        new Format
-        (
-            [
-                new BitRange("funct7", 25, 7),
-                new BitRange("rs2", 20, 5, 1),
-                new BitRange("rs1", 15, 5),
-                new BitRange("funct3", 12, 3),
-                new BitRange("rd", 7, 5, 0),
-                new BitRange("opcode", 0, 7)
-            ],
-            ["rd", "rs2"],
-            [Parameter.register, Parameter.register],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)/,
-            "@mnem @arg, @arg"
-        )
-    );
-
-    let mvPseudo = formats[formats.length - 1];
-
     instructions.push(new Instruction(
-        "MV",
-        mvPseudo,
-        ["opcode", "funct3", "rs1", "funct7"],
-        [parseInt("0110011", 2), parseInt("000", 2), parseInt("00000"), parseInt("0000000", 2)],
-        function(core)
-        {
-            return null; //Captured by and
+        "JAL",
+        jType,
+        ["opcode"],
+        [0x3],
+        function(core) {
+            core.registerFile.write(31, core.pc);
+            core.pc = core.arguments[0];
+            return null;
         }
     ));
-
-    //LI
-    formats.push
-    (
-        new Format
-        (
-            [
-                new BitRange("imm", 20, 12, 1),
-                new BitRange("rs1", 15, 5),
-                new BitRange("funct3", 12, 3),
-                new BitRange("rd", 7, 5, 0),
-                new BitRange("opcode", 0, 7)
-            ],
-            ["rd", "imm"],
-            [Parameter.register, Parameter.immediate],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/,
-            "@mnem @arg, @arg"
-        )
-    );
-
-    let liPseudo = formats[formats.length - 1];
-
-    instructions.push(new Instruction(
-        "LI",
-        liPseudo,
-        ["opcode", "funct3", "rs1"],
-        [parseInt("0010011", 2), parseInt("000", 2), parseInt("00000", 2)],
-        function(core)
-        {
-            return null; //Captured by andi
-        }
-    ));
-
-    instructions.push(new Instruction(
-        "LA",
-        liPseudo,
-        ["opcode", "funct3", "rs1"],
-        [parseInt("0010011", 2), parseInt("000", 2), parseInt("00000", 2)],
-        function(core)
-        {
-            return null; //Captured by andi
-        }
-    ));
-
-    //JR pseudo
-    formats.push
-    (
-        new Format
-        (
-            [
-                new BitRange("imm", 20, 12),
-                new BitRange("rs1", 15, 5, 0),
-                new BitRange("funct3", 12, 3),
-                new BitRange("rd", 7, 5),
-                new BitRange("opcode", 0, 7)
-            ],
-            ["rs1"],
-            [Parameter.register],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)/,
-            "@mnem @arg"
-        )
-    );
-
-    let jrPseudo = formats[formats.length - 1];
-
-    instructions.push(new Instruction(
-        "JR",
-        jrPseudo,
-        ["opcode", "rd", "funct3", "imm"],
-        [parseInt("1100111", 2), parseInt("00000",2), parseInt("000", 2), parseInt("000000000000", 2)],
-        function(core)
-        {
-            return null; //captured by jalr
-        }
-    ));
-    
-    //Scall, Syscall both as PseudoInstructions
-
-    instructions.push
-    (
-        new Instruction
-        (
-            "SCALL",
-            allConstSubtype,
-            ["const"],
-            [parseInt("00000000000000000000000001110011", 2)],
-            function(core)
-            {
-                return null; //captured by ecall
-            }
-            
-        )
-    )
-
-    instructions.push
-    (
-        new Instruction
-        (
-            "SYSCALL",
-            allConstSubtype,
-            ["const"],
-            [parseInt("00000000000000000000000001110011", 2)],
-            function(core)
-            {
-                return null; //captured by ecall
-            }
-            
-        )
-    )
-    
 
     /*
         ARGUMENT PROCESSOR
         Does what it says on the tin. It needs quite a bit of information, but otherwise successfully interprets
-        any RISC-V argument.
+        any MIPS argument.
     */
     let process = function(address: number, text: string, type: Parameter, bits: number, labels: string[], addresses: number[])
     {
@@ -1074,18 +987,15 @@ function Oak_gen_RISCV(): InstructionSet
         };
         switch(type)
         {
-        case Parameter.register:                
-                let registerNo = parseInt(text);                    
-                if (isNaN(registerNo))
+        case Parameter.register:
+                var registerNo: number;
+                let index = this.abiNames.indexOf(text);
+                if (index !== -1)
                 {
-                    let index = this.abiNames.indexOf(text);
-                    if (index !== -1)
-                    {
-                        result.value = index;
-                        return result; 
-                    }
+                    result.value = index;
+                    return result;
                 }
-                if (array[0] !== "x")
+                if (array[0] !== "$")
                 {
                     result.errorMessage = "Register " + text + " does not exist.";
                     return result;
@@ -1119,7 +1029,7 @@ function Oak_gen_RISCV(): InstructionSet
             {
                 var radix = 10 >>> 0;
                 var splice = false;
-                
+
                 if (array[0] === "0")
                 {
                     if (array[1] == "b")
@@ -1154,12 +1064,10 @@ function Oak_gen_RISCV(): InstructionSet
             }
 
             if (isNaN(int))
-            {     
+            {
                 result.errorMessage = "Immediate '" + text + "' is not a recognized label, literal or character.";
                 return result;
             }
-
-            console.log(text, int, bits);
 
             if (rangeCheck(int, bits))
             {
@@ -1175,13 +1083,13 @@ function Oak_gen_RISCV(): InstructionSet
             let labelLocation = labels.indexOf(text);
             if (labelLocation !== -1)
             {
-                int = addresses[labelLocation] - address + 4;
+                int = addresses[labelLocation] - address;
             }
             else
             {
                 var radix = 10 >>> 0;
                 var splice = false;
-                
+
                 if (array[0] === "0")
                 {
                     if (array[1] == "b")
@@ -1214,9 +1122,9 @@ function Oak_gen_RISCV(): InstructionSet
 
                 int = parseInt(interpretable, radix);
             }
-                
+
             if (isNaN(int))
-            {     
+            {
                 result.errorMessage = "Offset '" + text + "' is not a recognized label or literal.";
                 return result;
             }
@@ -1364,24 +1272,12 @@ function Oak_gen_RISCV(): InstructionSet
                 }
                 else 
                 {
+                    address += 4;
                     let instructionIndex = this.mnemonicSearch(directives[0].toUpperCase());
                     if (instructionIndex === -1)
-                    {
-                        let pseudoInstructionIndex = this.pseudoMnemonicSearch(directives[0].toUpperCase());
-                        if (pseudoInstructionIndex !== -1)
-                        {
-                            address += this.pseudoInstructions[pseudoInstructionIndex].expansion.length * 4;
-                        }
-                        else
-                        {         
-                            result.errorMessage = "Line " + i + ": Instruction " + directives[0] + " not found.";
-                            return result;
-                        }             
-                                        
-                    }
-                    else
-                    {
-                        address += 4;
+                    {     
+                        result.errorMessage = "Line " + i + ": Instruction " + directives[0] + " not found.";
+                        return result;
                     }
                 }                    
             }
@@ -1412,9 +1308,10 @@ function Oak_gen_RISCV(): InstructionSet
                     else
                     {
                         switch (directives[0])
-                        {
-                            case ".string":
-                                var match = /.string\s*\"(.*)\"\s*(#.*)?$/.exec(lines[i]);
+                        {   
+                            case ".asciiz":
+                            case ".ascii":
+                                var match = /.([A-Za-z]+?)\s*\"(.*)\"\s*(#.*)?$/.exec(lines[i]);
                                 if (match == null)
                                 {
                                     result.errorMessage = "Line " + i + ": Malformed string directive.";
@@ -1429,7 +1326,10 @@ function Oak_gen_RISCV(): InstructionSet
                                     }
                                     address += 1;
                                 }
+                            if (directives[0] == ".asciiz")
+                            {
                                 address += 1;
+                            }
                         }
                     }
                 }
@@ -1450,7 +1350,7 @@ function Oak_gen_RISCV(): InstructionSet
         return result;
     };
 
-    /*
+     /*
         ASSEMBLER
         This is the fun part.
     */
@@ -1479,7 +1379,6 @@ function Oak_gen_RISCV(): InstructionSet
                 continue;
             }
             
-            //Calculate lengths
             if (text)
             {
                 if (directives[0] === ".data")
@@ -1514,10 +1413,10 @@ function Oak_gen_RISCV(): InstructionSet
                         result.errorMessage = "Line " + ((nester == null)? "": (nester + ":")) + i + ": Argument format for " + directives[0] + " violated.";
                         return result;
                     }
-                    var args = match.splice(1, params.length);                      
+                    var args = match.splice(1, params.length);  
 
                     for (var j = 0; j < bitRanges.length; j++)
-                    {
+                    {                                             
                         if (bitRanges[j].parameter != null)
                         {
                             var startBit = 0;
@@ -1536,10 +1435,10 @@ function Oak_gen_RISCV(): InstructionSet
                             let index = format.fieldParameterIndex(field);
 
                             var register = 0;
-
+                            
                             if(paramTypes[index] !== Parameter.special)
                             {
-                                let processed = this.processParameter(address, args[index], paramTypes[index], bits, labels, addresses);
+                                let processed = this.processParameter(address, args[bitRanges[j].parameter], paramTypes[index], bits, labels, addresses);
                                 if (processed.errorMessage !== null)
                                 {
                                     result.errorMessage = "Line " + ((nester == null)? "": (nester + ":")) + i + ": " + processed.errorMessage;
@@ -1566,8 +1465,7 @@ function Oak_gen_RISCV(): InstructionSet
                                 register = register >>> startBit;
                                 register = register & ((1 << (endBit - startBit + 1)) - 1);
                             }
-
-                            machineCode = machineCode | (register << bitRanges[j].start);  
+                            machineCode = machineCode | ((register & ((1 << bitRanges[j].bits) - 1)) << bitRanges[j].start);  
 
                         }
                     }
@@ -1612,9 +1510,10 @@ function Oak_gen_RISCV(): InstructionSet
                     else
                     {
                         switch (directives[0])
-                        {
-                        case ".string":
-                            var stringMatch = /.string\s*\"(.*)\"\s*(#.*)?$/.exec(lines[i]);
+                        {   
+                            case ".asciiz":
+                            case ".ascii":
+                            var stringMatch = /.([A-Za-z]+?)\s*\"(.*)\"\s*(#.*)?$/.exec(lines[i]);
                             if (stringMatch == null)
                             {
                                 result.errorMessage = "Line " + i + ": Malformed string directive.";
@@ -1658,8 +1557,11 @@ function Oak_gen_RISCV(): InstructionSet
                                 
                                 address += 1;
                             }
-                            result.machineCode.push(0 >>> 0);
-                            address += 1;
+                            if (directives[0] == ".asciiz")
+                            {
+                                result.machineCode.push(0 >>> 0);
+                                address += 1;
+                            }
                         }
                     }
                 }
@@ -1669,13 +1571,14 @@ function Oak_gen_RISCV(): InstructionSet
         return result;
     };
 
-    let abiNames = ['zero', 'ra', 'sp', 'gp', 'tp', 't0', 't1', 't2', 's0', 's1', 'a0', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10', 's11', 't3', 't4', 't5', 't6'];
 
-    return new InstructionSet("rv32i", 32, formats, instructions, pseudoInstructions, [".word", ".half", ".byte", ".string"], [4, 2, 1, 0], abiNames, process, tokenize, assemble);
+    let abiNames = ["$zero", "$at", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$k0", "$k1", "$gp", "$sp", "$fp", "$ra"];
+
+    return new InstructionSet("mips", 32, formats, instructions, pseudoInstructions, [".word", ".half", ".byte", ".asciiz"], [4, 2, 1, 0], abiNames, process, tokenize, assemble);
 }
-let RISCV = Oak_gen_RISCV();
+let MIPS = Oak_gen_MIPS();
 
-class RISCVRegisterFile
+class MIPSRegisterFile
 {
     private memorySize: number;
     physicalFile: number[];
@@ -1687,7 +1590,7 @@ class RISCVRegisterFile
         console.log("Registers\n------");
         for (var i = 0; i < 32; i++)
         {
-            console.log("x" + i.toString(), this.abiNames[i], this.physicalFile[i].toString(), (this.physicalFile[i] >>> 0).toString(16).toUpperCase());
+            console.log("$" + i.toString(), this.abiNames[i], this.physicalFile[i].toString(), (this.physicalFile[i] >>> 0).toString(16).toUpperCase());
         }
         console.log("------");
     }
@@ -1732,7 +1635,7 @@ class RISCVRegisterFile
             this.physicalFile[i] = 0;
             this.modifiedRegisters[i] = false;
         }
-        this.physicalFile[2] = this.memorySize;
+        this.physicalFile[29] = this.memorySize;
 
     }
 
@@ -1746,16 +1649,16 @@ class RISCVRegisterFile
             this.modifiedRegisters.push(false);
         }
         this.memorySize = memorySize;
-        this.physicalFile[2] = memorySize; //stack pointer
+        this.physicalFile[29] = memorySize; //stack pointer
         this.abiNames = abiNames;
     }
 };
 
-class RISCVCore //: Core
+class MIPSCore //: Core
 {
     //Permanent
     instructionSet: InstructionSet;
-    registerFile: RISCVRegisterFile;
+    registerFile: MIPSRegisterFile;
     memorySize: number;
 
     //Transient
@@ -1767,8 +1670,7 @@ class RISCVCore //: Core
 
     //Instruction Callback
     instructionCallback: (data: string) => void;
-
-
+    
     reset()
     {
         this.pc = 0;
@@ -1888,7 +1790,7 @@ class RISCVCore //: Core
                     value = this.decoded.format.decodeSpecialParameter(value, this.pc); //Unmangle...
                 }
 
-                this.arguments[index] = this.arguments[index] | value;
+                this.arguments[bitRanges[i].parameter] = this.arguments[bitRanges[i].parameter] | value;
             }
         }
 
@@ -1925,12 +1827,12 @@ class RISCVCore //: Core
 
     constructor(memorySize: number, ecall: () => void, instructionCallback: (data: string) => void)
     {
-        this.instructionSet = RISCV;
+        this.instructionSet = MIPS;
         this.pc = 0 >>> 0;
         this.memorySize = memorySize;
         this.ecall = ecall;
         this.instructionCallback = instructionCallback;
-        this.registerFile = new RISCVRegisterFile(memorySize, RISCV.abiNames);
+        this.registerFile = new MIPSRegisterFile(memorySize, MIPS.abiNames);
         
         this.memory = new Array(memorySize);
         for (var i = 0; i < memorySize; i++)

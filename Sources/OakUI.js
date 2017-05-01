@@ -1,3 +1,6 @@
+var ISA_RISCV = 0;
+var ISA_MIPS = 1;
+
 function Tab(_name, _content, _machinecode) {
     return {
         name: _name,
@@ -5,9 +8,9 @@ function Tab(_name, _content, _machinecode) {
         machinecode: _machinecode,
         console: "",
         instructionLog: "",
-        instructionSet: 0,
+        instructionSet: ISA_RISCV,
         memorySize: 4096,
-        core: new RISCVCore(4096, invokeEnvironmentCall, decodeCallback),
+        core: null,
         inSimulation: false,
         registers: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
         regStates: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
@@ -191,19 +194,45 @@ function uiSimulate() {
     }
 }
 
+function switchModes(type) {
+    switch(type) {
+        case ISA_MIPS:
+            editor.getSession().setMode("ace/mode/mips");
+            return;
+        default:
+        case ISA_RISCV:
+            editor.getSession().setMode("ace/mode/riscv");
+            return;
+    }
+}
+
+function createCore(type, size, ecallback, dcallback) {
+    if (typeof(size) != 'number')
+    {
+        size = parseInt(size)
+    }    
+    switch(type) {
+        case ISA_MIPS:
+            return new MIPSCore(size, ecallback, dcallback);
+        default:
+        case ISA_RISCV:
+            return new RISCVCore(size, ecallback, dcallback);
+    }
+}
+
 function updateMemorySize(newSize) {
     if (newSize != tabs[currentTab].memorySize) {
-        if (newSize < 8) {
-            addConsoleMsg("<b>ERROR: </b> Please make the memory at least 8 bits. It should be enough to contain all instructions.", CONSOLE_ERROR);
+        if (newSize <= 0) {
+            addConsoleMsg("<b>ERROR: </b> Memory size cannot be less than one byte.", CONSOLE_ERROR);
             return;
         }
 
         tabs[currentTab].memorySize = newSize;
         delete tabs[currentTab].core;
-        tabs[currentTab].core = new RISCVCore(newSize, invokeEnvironmentCall, decodeCallback);
+        tabs[currentTab].core = createCore(tabs[currentTab].instructionSet, newSize, invokeEnvironmentCall, decodeCallback);
         updateRegAndMemory();
         $("#console").html("");
-        addConsoleMsg("<b>Success: </b> Memory has been resized. (Please make sure the new memory size fits your program!)", CONSOLE_SUCCESS);
+        addConsoleMsg("<b>Success: </b> Memory has been resized. (Please make sure the new memory size fits your program.)", CONSOLE_SUCCESS);
     }
 }
 
@@ -269,8 +298,10 @@ function showRegisters() {
 function invokeEnvironmentCall() {
     var core = tabs[currentTab].core;
 
-    var type = registerRead(core, 17);
-    var arg = registerRead(core, 10);
+    var mips = (tabs[currentTab].core.instructionSet.name == "mips");
+
+    var type = registerRead(core, mips? 2: 17);
+    var arg = registerRead(core, mips? 4: 10);
 
     if (tabs[currentTab].inSimulation == true) {
         var log = $("#log > span:last-child").html();
@@ -301,8 +332,8 @@ function invokeEnvironmentCall() {
     case 5:
         updateRegAndMemory();
         var input = prompt("Please enter a number as input.");
-        tabs[currentTab].registers[17] = parseInt(input);
-        registerWrite(core, 17, parseInt(input));
+        tabs[currentTab].registers[mips? 2: 17] = parseInt(input);
+        registerWrite(core, mips? 2: 17, parseInt(input));
         $("#console").append("<span class='input insertable'> <<< "+input+"</span>");
         break;
     case 8:
@@ -312,7 +343,7 @@ function invokeEnvironmentCall() {
         for (var i = 0; i < input.length; i++) {
             bytes.push(input.charCodeAt(i) & 255);
         }
-        core.memset(tabs[currentTab].registers[10], bytes);
+        core.memset(tabs[currentTab].registers[mips? 4: 10], bytes);
         $("#console").append("<span class='input insertable'> <<< "+input+"</span>");
         break;
     case 10:
@@ -705,15 +736,10 @@ function converter() {
 
     var defaultTab = "<div class='selected'><span></span><div></div></div>";
     var defaultCode = "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"";
-    var riscvRegNames = ["zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s0", "s11", "t3", "t4", "t5", "t6"];
-    var mipsRegNames = ["$zero", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$gp", "$sp", "$fp", "$ra"];
 
     function setRegisterNames() {
-        var regNames;
-        if (tabs[currentTab].instructionSet == 0) 
-            regNames = riscvRegNames;
-        else
-            regNames = mipsRegNames;
+        var regNames = tabs[currentTab].core.instructionSet.abiNames;
+        //alert(tabs[currentTab].core.instructionSet.abiNames);
 
         // When we add non-32 reg ISAs, here we should resize the table.
         var cells = $("table tr > td:first-child");
@@ -749,12 +775,15 @@ function converter() {
             showRegisters();
         });
         $("#filename").val(name);
-        $("#isa").val(0);
         $("#memsize").val(4096);
         $("#console").html("");
         $("#memory").html("");
         $("#log").html("");
         tabs.push(Tab(name, code, machinecode));
+        tabs[currentTab].instructionSet = ISA_RISCV;
+        tabs[currentTab].core = createCore(tabs[currentTab].instructionSet, 4096, invokeEnvironmentCall, decodeCallback);
+        $("#isa").val(tabs[currentTab].instructionSet);
+        switchModes(tabs[currentTab].instructionSet);
         editor.setValue(code);
         mcEditor.val(machinecode);
         setRegisterNames();
@@ -775,6 +804,7 @@ function converter() {
         $("#memsize").val(tabs[num].memorySize);
         $("#console").html(tabs[num].console);
         $("#log").html(tabs[num].instructionLog);
+        switchModes(tabs[num].instructionSet);
 
         currentTab = num;
         displayMemory();
@@ -800,6 +830,7 @@ function converter() {
                 var tabsEl = $("section nav > div");
                 tabsEl.removeClass("selected");
                 tabsEl.eq(currentTab).addClass("selected");
+                switchModes(tabs[currentTab].instructionSet);
                 $("#filename").val(tabs[currentTab].name);
                 $("#isa").val(tabs[currentTab].instructionSet);
                 $("#memsize").val(tabs[currentTab].memorySize);
@@ -892,14 +923,19 @@ function converter() {
             $("nav .selected span").html(name);
             tabs[currentTab].name = name;
             
-            var isa = $("#isa").val();
-            if (tabs[currentTab].instructionSet != isa) {
-                tabs[currentTab].instructionSet = isa;
-                setRegisterNames();
-            }
-            
+            // TODO: The core may be created twice if both memory size and ISA change. We can fix this later.
             var memsize = $("#memsize").val();
             updateMemorySize(memsize);
+            
+            var isa = parseInt($("#isa").val());
+            if (tabs[currentTab].instructionSet != isa) {
+                tabs[currentTab].instructionSet = isa;
+                delete tabs[currentTab].core;
+                tabs[currentTab].core = createCore(isa, memsize, invokeEnvironmentCall, decodeCallback);
+                switchModes(isa);
+                setRegisterNames();
+                updateRegAndMemory();
+            }
         });
         
         $('#sideGrabber').on('mousedown', function(e){

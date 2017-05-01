@@ -8,6 +8,8 @@
         <link rel="stylesheet" type="text/css" href="Styles/light.css" id="theme0"></link>
 
         <link rel="icon" type="image/png" sizes="16x16" href="Images/favicon.ico">
+
+        <meta charset="utf-8"/>
     </head>
     <body class='noTab'>
         <header>
@@ -45,7 +47,7 @@
             <div id='noTab'>
                 <div>
                     <h2>Welcome to Oak.js!</h2>
-                    <p>Oak.js is a simulator and assembler for RISC-V, MIPS.</p>
+                    <p>Oak.js is a simulator and assembler for RISC-V, and MIPS.</p>
                     <button class='addTab'>Add Tab</button><button class='loadAsm'>Load Assembly</button><button class='loadBin'>Load Binary</button>
                 </div>
             </div>
@@ -63,6 +65,7 @@
                             <span>Instruction Set</span>
                             <select id='isa'>
                                 <option value='0'>RISC-V</option>
+                                <option selected="selected" value='1'>MIPS</option>
                             </select>
                         </div><div>
                             <span>Memory Size (Bytes)</span>
@@ -179,6 +182,7 @@
         <script type="text/javascript" charset="utf-8" src="Scripts/jquery.js"></script>
         <script type="text/javascript" charset="utf-8" src="Scripts/oak.min.js"></script>
         <script type="text/javascript" charset="utf-8" src="Scripts/ace.min.js"></script>
+        <script type="text/javascript" charset="utf-8" src="Scripts/Ace/mode-mips.js"></script>
         <script type="text/javascript" charset="utf-8" src="Scripts/Ace/mode-riscv.js"></script>
         <script type="text/javascript" charset="utf-8" src="Scripts/Ace/theme-oak.js"></script>
         <script type="text/javascript" charset="utf-8" src="Scripts/oakui.min.js"></script>
