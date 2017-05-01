@@ -8,7 +8,7 @@ function Tab(_name, _content, _machinecode) {
         machinecode: _machinecode,
         console: "",
         instructionLog: "",
-        instructionSet: ISA_MIPS,
+        instructionSet: ISA_RISCV,
         memorySize: 4096,
         core: null,
         inSimulation: false,
@@ -222,8 +222,8 @@ function createCore(type, size, ecallback, dcallback) {
 
 function updateMemorySize(newSize) {
     if (newSize != tabs[currentTab].memorySize) {
-        if (newSize < 8) {
-            addConsoleMsg("<b>ERROR: </b> Please make the memory at least 8 bits. It should be enough to contain all instructions.", CONSOLE_ERROR);
+        if (newSize <= 0) {
+            addConsoleMsg("<b>ERROR: </b> Memory size cannot be less than one byte.", CONSOLE_ERROR);
             return;
         }
 
@@ -232,7 +232,7 @@ function updateMemorySize(newSize) {
         tabs[currentTab].core = createCore(tabs[currentTab].instructionSet, newSize, invokeEnvironmentCall, decodeCallback);
         updateRegAndMemory();
         $("#console").html("");
-        addConsoleMsg("<b>Success: </b> Memory has been resized. (Please make sure the new memory size fits your program!)", CONSOLE_SUCCESS);
+        addConsoleMsg("<b>Success: </b> Memory has been resized. (Please make sure the new memory size fits your program.)", CONSOLE_SUCCESS);
     }
 }
 
@@ -735,8 +735,7 @@ function converter() {
     }
 
     var defaultTab = "<div class='selected'><span></span><div></div></div>";
-    //var defaultCode = "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"";
-    var defaultCode = "add $0, $0, $0"
+    var defaultCode = "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"";
 
     function setRegisterNames() {
         var regNames = tabs[currentTab].core.instructionSet.abiNames;
@@ -781,7 +780,7 @@ function converter() {
         $("#memory").html("");
         $("#log").html("");
         tabs.push(Tab(name, code, machinecode));
-        tabs[currentTab].instructionSet = ISA_MIPS;
+        tabs[currentTab].instructionSet = ISA_RISCV;
         tabs[currentTab].core = createCore(tabs[currentTab].instructionSet, 4096, invokeEnvironmentCall, decodeCallback);
         $("#isa").val(tabs[currentTab].instructionSet);
         switchModes(tabs[currentTab].instructionSet);

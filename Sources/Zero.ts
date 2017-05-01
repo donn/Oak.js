@@ -89,7 +89,7 @@ function simulateStep(core: Core): string
         //core.registerFile.print();
     }
     
-    if (decode == "ECALL")
+    if (decode == "ECALL" || decode == "SYSCALL")
     {
         return "@Oak_Ecall";
     }

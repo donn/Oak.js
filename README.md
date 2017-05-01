@@ -1,10 +1,12 @@
 ![Oak.js](Images/logo.png)
 
-A port of [Oak](https://github.com/Skyus/Oak) to TypeScript used for multiple school projects.
+A port of [Oak](https://github.com/Skyus/Oak) to TypeScript used for multiple school projects. It supports both RISCV (RV32I) and MIPS (Core Instruction Set).
 
-Unlike the Swift version, the TypeScript version is less flexible, but works better for less serious tasks. Also, as a result of reuse for school projects, is developed faster.
+Unlike the Swift version, the TypeScript version is less flexible, but developed faster.
 
 The assembler and simulator were designed by [@skyus](https://github.com/skyus) and the user interface was designed by [@KarimIO](https://github.com/KarimIO).
+
+Special thanks to [@alikhaled96](https://github.com/alikhaled96) for helping me implement MIPS.
 
 Oak.js is a sister project of [RiscBEE](https://github.com/skyus/RiscBEE).
 
@@ -29,6 +31,8 @@ TypeScript 2 or above, UglifyJS 2 or above, and a compatible version of Node.js.
 If you just want to use Oak.js, it should work fine on any modern browser, bar modern versions of Internet Explorer.
 
 ## Dependencies
+(aka how to use Node.js 101)
+
 ### macOS
 It is recommended to use the [Homebrew package manager](https://brew.sh). Type in your terminal:
 
