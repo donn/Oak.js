@@ -392,6 +392,7 @@ function invokeEnvironmentCall() {
         var time = performance.now() - startSim;
         var numInstructions = $("#log > span").length;
         var ips = numInstructions*1000.0/time;
+        updateRegAndMemory();
         addConsoleMsg("<b>Complete:</b> Simulation completed in "+Math.round(time)+" ms, "+numInstructions+" instructions, "+Math.round(ips)+" instructions/second.", CONSOLE_SUCCESS);
     } else if (tabs[currentTab].inSimulation == false) {
         var output = continueSim(core);
