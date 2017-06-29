@@ -12,7 +12,7 @@
     </head>
     <body>
         <header>
-            <a href="https://skyus.github.io/Oak.js/"><img src='Images/iconShadow.png' /></a><a class='noFloat' href="https://github.com/Skyus/Oak.js">Source</a>
+            <a href="index.html"><img src='Images/iconShadow.png' /></a><a class='noFloat' href="https://github.com/Skyus/Oak.js">Source</a>
             <select id='themes'>
                 <option value='0'>Light Theme</option>
                 <option value='1'>Dark Theme</option>
@@ -37,22 +37,22 @@
             </i></p>
             <h4>MIPS</h4>
             <p>
-                MIPS support is in progress.
+                The entire MIPS core integer instruction set is supported.
             </p>
             <h4>Pseudoinstructions</h4>
             <p>
-                As a limitation of Oak.js's architecture, very few pseudoinstructions are supported, and they all expand into only one instruction. The currently supported pseudoinstructions are li, mv, la, jr, scall, and syscall (the last two just mirror ecall).
+                As a limitation of Oak.js's architecture, very few pseudoinstructions are supported, and they all expand into only one instruction. The currently supported pseudoinstructions for RISC-V are li, mv, la, jr, scall, and syscall (the last two just mirror ecall). MIPS does not support pseudoinstructions.
             </p>
             <h4>Environment Calls</h4>
             <p>
-                The calling convention for RISC-V is as follows:
+                The calling convention is as follows:
             </p>
             <p>
-                a7 - Service Number <br />
-                a0-a6 - Arguments
+                a7<sup>RISC-V</sup>/v0<sup>MIPS</sup> - Service Number <br />
+                a0-a3 - Arguments
             </p>
             <p>
-                The return value will be placed in a7 as well. This was a project requirement- ideally the return value would be in another register.
+                The return value will be placed in the same register as the service number.
             </p>
             <p>
                 Oak.js supports four environment calls at the moment.
