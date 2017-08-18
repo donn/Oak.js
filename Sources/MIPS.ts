@@ -972,6 +972,98 @@ function Oak_gen_MIPS(): InstructionSet
         }
     ));
 
+    //Pseudoinstructions
+    //MV
+    formats.push
+    (
+        new Format
+        (
+            [
+                new BitRange("opcode", 26, 6),
+                new BitRange("rs", 21, 5, 1),
+                new BitRange("rt", 16, 5, null, 0),
+                new BitRange("rd", 11, 5, 0),
+                new BitRange("shamt", 6, 5, null, 0),
+                new BitRange("funct", 0, 6)
+            ],
+            ["rd", "rs"],
+            [Parameter.register, Parameter.register],
+            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)/,
+            "@mnem @arg, @arg"
+        )
+    );
+
+    let mvPseudo = formats[formats.length - 1];    
+    instructions.push
+    (
+        new Instruction
+        (
+            "MV",
+            mvPseudo,
+            ["opcode", "funct"],
+            [0x0, 0x20],
+            function(core)
+            {
+                //Captured by ADD
+                return null;
+            }
+        )
+    );
+
+    //LI/LA
+    formats.push
+    (
+        new Format
+        (
+            [
+                new BitRange("opcode", 26, 6),
+                new BitRange("rs", 21, 5, null, 0),
+                new BitRange("rt", 16, 5, 0),
+                new BitRange("imm", 0, 16, 1)
+            ],
+            ["rt", "imm"],
+            [Parameter.register, Parameter.immediate],
+            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/,
+            "@mnem @arg, @arg"
+        )
+    );
+    let liPseudo = formats[formats.length - 1];
+
+    instructions.push
+    (
+        new Instruction
+        (
+            "LI",
+            liPseudo,
+            ["opcode"],
+            [0x8],
+            function(core)
+            {
+                //Captured by ADDI
+                return null;
+            }
+        )
+
+    );
+    
+    instructions.push
+    (
+        new Instruction
+        (
+            "LA",
+            liPseudo,
+            ["opcode"],
+            [0x8],
+            function(core)
+            {
+                //Captured by ADDI
+                return null;
+            }
+        )
+
+    );
+
+
     /*
         ARGUMENT PROCESSOR
         Does what it says on the tin. It needs quite a bit of information, but otherwise successfully interprets
@@ -1513,17 +1605,17 @@ function Oak_gen_MIPS(): InstructionSet
                         {   
                             case ".asciiz":
                             case ".ascii":
-                            var stringMatch = /.([A-Za-z]+?)\s*\"(.*)\"\s*(#.*)?$/.exec(lines[i]);
+                            var stringMatch = /\s*(\.asciiz?)\s*\"(.*)\"\s*(#.*)?$/.exec(lines[i]);
                             if (stringMatch == null)
                             {
                                 result.errorMessage = "Line " + i + ": Malformed string directive.";
                                 return result;
                             }
-                            if (stringMatch[1] == undefined)
+                            if (stringMatch[2] == undefined)
                             {
-                                stringMatch[1] = "";
+                                stringMatch[2] = "";
                             }
-                            let characters = stringMatch[1].split("");
+                            let characters = stringMatch[2].split("");
                             for (var j = 0; j < characters.length; j++)
                             {
                                 if (characters[j] == "\\")
@@ -1557,7 +1649,7 @@ function Oak_gen_MIPS(): InstructionSet
                                 
                                 address += 1;
                             }
-                            if (directives[0] == ".asciiz")
+                            if (stringMatch[1] == ".asciiz")
                             {
                                 result.machineCode.push(0 >>> 0);
                                 address += 1;
