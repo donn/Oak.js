@@ -49,3 +49,6 @@ To compile and clean, `make` or `make clean` respectively.
 
 # License
 Mozilla Public License 2.0. Check LICENSE.
+
+# Note
+Yes, I did patch the Ace text editor to support 0-based numbering. No, I don't remember how.

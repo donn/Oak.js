@@ -371,11 +371,15 @@ function invokeEnvironmentCall() {
                 link = "https://youtube.com/watch?v=yKNxeF4KMsY";
                 break;
         }
-        var win = window.open(link, '_blank');
+        var win = window.open(link, "_blank");
         win.focus();        
         break;
     case 1776:
-        var win = window.open("https://www.youtube.com/watch?v=TOygO4n-CtQ", '_blank');
+        var win = window.open("https://youtu.be/TOygO4n-CtQ", "_blank");
+        win.focus();
+        break;
+    case 24601:
+        var win = window.open("https://youtu.be/IZdjz6lLngU?t=150", "_blank");
         win.focus();
         break;
     default:
