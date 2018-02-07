@@ -546,3 +546,49 @@ footer span {
 footer span b {
     font-family: monospace;
 }
+
+/* Overlay */
+.overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 2000;
+    display: none;
+}
+
+.overlay > div {
+    width: 30em;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 50%;
+    margin-left: -15em;
+    background: #f9f9f9;
+    vertical-align: middle;
+    padding-bottom: 1em;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 0 8px rgba(0,0,0,0.7);
+}
+
+.overlay > div > div {
+    padding: 0.8em;
+    background: #526681;
+    color: white;
+    margin-bottom: 1em;
+}
+
+.overlay > div > input, .overlay > div > button, .overlay > div > select {
+    display: inline-block;
+    box-sizing: border-box;
+    width: 46%;
+    height: 3em;
+    vertical-align: middle;
+    padding: 0.5em;
+    margin: 1% 2%;
+    border-radius: 2px;
+    border: 1px solid #eee;
+}
