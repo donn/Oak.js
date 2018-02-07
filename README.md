@@ -41,7 +41,7 @@ Please use Bash on Ubuntu on Windows 10 and follow the instructions for Debian-b
     npm install -g typescript
     npm install -g uglify-js
 
-Like Debian-based OSes, you may neeed administrative privileges for this.
+Like Debian-based OSes, you may need administrative privileges for this.
 
 # Usage
 To use Oak.js, either visit the [GitHub Page](https://skyus.github.io/Oak.js) or download this repository and open index.html using your web browser.

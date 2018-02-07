@@ -8,14 +8,18 @@ header {
     background-color: #74849a;
 }
 
-header > a, header > div > span, header > select {
+header a, header > div span, header select {
     background: #526681;
     color: #ddd;
 }
 
-header > a:hover, header > div > span:hover {
+header a:hover, header > div span:hover {
     background-color: #63758d;
     color: white;
+}
+
+a + .dropdown {
+    background: #eee;
 }
 
 /* Mains */
@@ -147,7 +151,7 @@ header > div > div {
     background: #ddd;
 }
 
-header > div > div > a, header > div > div > label {
+header > div > div a, header > div > div label {
     color: #333;
 }
 

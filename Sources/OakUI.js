@@ -202,7 +202,8 @@ function createCore(type, size, ecallback, dcallback) {
     if (typeof(size) != 'number')
     {
         size = parseInt(size)
-    }    
+    }
+
     switch(type) {
         case ISA_MIPS:
             return new MIPSCore(size, ecallback, dcallback);
@@ -780,10 +781,10 @@ function converter() {
         $("#memory").html("");
         $("#log").html("");
         tabs.push(Tab(name, "", ""));
-        tabs[currentTab].instructionSet = isa_type;
+        tabs[currentTab].instructionSet = parseInt(isa_type);
         tabs[currentTab].core = createCore(tabs[currentTab].instructionSet, 4096, invokeEnvironmentCall, decodeCallback);
         $("#isa").val(tabs[currentTab].instructionSet);
-        switchModes(tabs[currentTab].core.defaultCode);
+        switchModes(tabs[currentTab].core.aceStyle);
         setRegisterNames();
     }
 
@@ -860,6 +861,25 @@ function converter() {
         removeTab(currentTab);
     }
 
+    function addTabWindow() {
+        $("#overlay > div > div").html("New File");
+            $("#overlay input").val("Untitled");
+            $("#overlay select").val(0);
+            $("#overlay").fadeIn(200);
+            $("#overlayAccept").click(function(e) {
+                var n = $("#overlay input").val();
+                var isa = $("#overlay select").val();
+                addTabDefault(n, isa);
+                $("#overlay").fadeOut(200);
+                $(this).unbind('click');
+            });
+
+            $("#overlayCancel").click(function(e) {
+                $("#overlay").fadeOut(200);
+                $(this).unbind('click');
+            });
+    }
+
     function uploadBin(e) {
         var files = $("#fileInputElement")[0].files;
         if (!files.length) {
@@ -883,7 +903,22 @@ function converter() {
                 }
             }
 
-            addTab(file.name, ISA_RISCV, "", hexer);
+            $("#overlay > div > div").html("Load Binary File");
+            $("#overlay input").val(file.name);
+            $("#overlay select").val(0);
+            $("#overlay").fadeIn(200);
+            $("#overlayAccept").click(function(e) {
+                var n = $("#overlay input").val();
+                var isa = $("#overlay select").val();
+                addTab(n, isa, "Check Machine Code.", hexer);
+                $("#overlay").fadeOut(200);
+                $(this).unbind('click');
+            });
+
+            $("#overlayCancel").click(function(e) {
+                $("#overlay").fadeOut(200);
+                $(this).unbind('click');
+            });
         });
         fr.readAsArrayBuffer(blob);
         $("#fileInputElement").val("");
@@ -901,7 +936,23 @@ function converter() {
         var blob = file.slice(0, file.size);
         var fr = new FileReader();
         fr.addEventListener('load', function () {
-            addTab(file.name, ISA_RISCV, this.result, "");
+            var res = this.result;
+            $("#overlay > div > div").html("Load Assembly File");
+            $("#overlay input").val(file.name);
+            $("#overlay select").val(0);
+            $("#overlay").fadeIn(200);
+            $("#overlayAccept").click(function(e) {
+                var n = $("#overlay input").val();
+                var isa = $("#overlay select").val();
+                addTab(n, isa, res, "");
+                $("#overlay").fadeOut(200);
+                $(this).unbind('click');
+            });
+
+            $("#overlayCancel").click(function(e) {
+                $("#overlay").fadeOut(200);
+                $(this).unbind('click');
+            });
         });
         fr.readAsText(blob);
         $("#asmInputElement").val("");
@@ -923,7 +974,7 @@ function converter() {
 
         addTabOfType(ISA_RISCV);
         $(".addTabOfType").on("click", function() {addTabOfType($(this).data("value"));});
-        $(".addTab").on("click", function() {addTabOfType(ISA_RISCV);});
+        $(".addTab").on("click", function() {addTabWindow();});
         $(".removeTab").on("click", function() {removeTabThis();});
         $("#convertBtn").on("click", function() {converter()});
         $("#consoleSel").on("change", function() {setConsoleMode($(this).val());});

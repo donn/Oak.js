@@ -12,12 +12,12 @@ header {
     background-color: #526681;
 }
 
-header > a, header > div > span, header > select {
+header > a, header > div span, header select {
     background: #39475a;
     color: #ddd;
 }
 
-header > a:hover, header > div > span:hover {
+header a:hover, header > div span:hover {
     background-color: #415167;
     color: white;
 }
@@ -151,15 +151,15 @@ tr.alt, thead > tr, table select {
     color: #ddd;
 }
 
-header > div > div {
+header > div div {
     background: #333;
 }
 
-header > div > div > a, header > div > div > label {
+header > div > div a, header > div > div label {
     color: #eee;
 }
 
-header > div > div > a:hover, header > div > div > label:hover {
+header > div > div a:hover, header > div > div label:hover {
     background: #526681;
     color: #fff;
 }

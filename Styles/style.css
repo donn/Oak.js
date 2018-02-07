@@ -449,7 +449,6 @@ header > div > div {
     display: none;
     width: 200%;
     border-radius: 0 0 4px 4px;
-    overflow: hidden;
     z-index: 100;
     position: absolute;
     top: 100%;
@@ -470,7 +469,7 @@ header > div > div > input {
     display: none;
 }
 
-header > div > div > a, header > div > div > label {
+header > div > div a, header > div > div label {
     display: block;
     background: transparent;
     padding: 1em;
@@ -480,8 +479,24 @@ header > div > div > a, header > div > div > label {
     cursor: pointer;
 }
 
-header > div > div > a:hover, header > div > div > label:hover {
+header > div > div a:hover, header > div > div label:hover {
     padding-left: 2em;
+}
+
+a + .dropdown {
+    display: none;
+    position: absolute;
+    width: 100%;
+    left: 100%;
+    top: 0;
+    box-shadow: 0 0 8px black;
+    border-radius: 0 4px 4px 0;
+    clip-path: inset(-5px -5px -5px 0px);
+}
+
+a:hover + .dropdown, 
+.dropdown:hover {
+    display: block;
 }
 
 .tooltip {
