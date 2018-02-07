@@ -1754,12 +1754,12 @@ class MIPSCore //: Core
     memorySize: number;
 
     // Default Environment Call Regs
-    default_ecall_reg_type: number;
-    default_ecall_reg_arg: number;
-    default_ecall_reg_write: number;
+    defaultEcallRegType: number;
+    defaultEcallRegArg: number;
 
-    // ACE Editor Style Theme
-    ace_style: string;
+    // Editor Info
+    aceStyle: string;
+    defaultCode: string;
 
     //Transient
     pc: number;
@@ -1927,9 +1927,10 @@ class MIPSCore //: Core
 
     constructor(memorySize: number, ecall: () => void, instructionCallback: (data: string) => void)
     {
-        this.default_ecall_reg_type     = 2;
-        this.default_ecall_reg_arg      = 4;
-        this.ace_style = "ace/mode/mips";
+        this.defaultEcallRegType     = 2;
+        this.defaultEcallRegArg      = 4;
+        this.aceStyle = "ace/mode/mips";
+        this.defaultCode = "    la $a0, str\n    li $v0, 4 #4 is the string print service number...\n    syscall\n    li $v0, 10 #...and 10 is the program termination service number!\n    syscall\n.data\nstr:\    .asciiz \"Hello, World!\"";
 
         this.instructionSet = MIPS;
         this.pc = 0 >>> 0;

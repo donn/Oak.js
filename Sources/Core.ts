@@ -7,9 +7,10 @@ interface Core
     instructionSet: InstructionSet;
     pc: number;
     memory: number[];
-    default_ecall_reg_type: number;
-    default_ecall_reg_arg: number;
-    ace_style: string;
+    defaultEcallRegType: number;
+    defaultEcallRegArg: number;
+    aceStyle: string;
+    defaultCode: string;
 
     memcpy(address: number, bytes: number): number[];
     memset(address: number, bytes: number[]): boolean;    

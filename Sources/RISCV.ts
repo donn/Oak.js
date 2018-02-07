@@ -1759,12 +1759,12 @@ class RISCVCore //: Core
     memorySize: number;
 
     // Default Environment Call Regs
-    default_ecall_reg_type: number;
-    default_ecall_reg_arg: number;
-    default_ecall_reg_write: number;
+    defaultEcallRegType: number;
+    defaultEcallRegArg: number;
 
-    // ACE Editor Style Theme
-    ace_style: string;
+    // Editor Info
+    aceStyle: string;
+    defaultCode: string;
 
     //Transient
     pc: number;
@@ -1933,9 +1933,10 @@ class RISCVCore //: Core
 
     constructor(memorySize: number, ecall: () => void, instructionCallback: (data: string) => void)
     {
-        this.default_ecall_reg_type     = 17;
-        this.default_ecall_reg_arg      = 10;
-        this.ace_style = "ace/mode/riscv";
+        this.defaultEcallRegType     = 17;
+        this.defaultEcallRegArg      = 10;
+        this.aceStyle = "ace/mode/riscv";
+        this.defaultCode = "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"";
         this.instructionSet = RISCV;
         this.pc = 0 >>> 0;
         this.memorySize = memorySize;

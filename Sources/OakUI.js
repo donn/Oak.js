@@ -291,8 +291,8 @@ function invokeEnvironmentCall() {
     var core = tabs[currentTab].core;
 
     var core = tabs[currentTab].core;
-    var reg_type = core.default_ecall_reg_type;
-    var reg_arg  = core.default_ecall_reg_arg;
+    var reg_type = core.defaultEcallRegType;
+    var reg_arg  = core.defaultEcallRegArg;
     var type = registerRead(core, reg_type);
     var arg = registerRead(core, reg_arg);
 
@@ -732,7 +732,6 @@ function converter() {
     }
 
     var defaultTab = "<div class='selected'><span></span><div></div></div>";
-    var defaultCode = "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"";
 
     function setRegisterNames() {
         var regNames = tabs[currentTab].core.instructionSet.abiNames;
@@ -746,7 +745,11 @@ function converter() {
         showRegisters();
     }
 
-    function addTab(name, code, machinecode) {
+    function addTabOfType(type) {
+        addTabDefault("Untitled", type);
+    }
+
+    function addTabSimple(name, isa_type) {
         if (tabs.length != 0) {
             tabs[currentTab].content = editor.getValue();
             tabs[currentTab].machinecode = mcEditor.val();
@@ -776,14 +779,27 @@ function converter() {
         $("#console").html("");
         $("#memory").html("");
         $("#log").html("");
-        tabs.push(Tab(name, code, machinecode));
-        tabs[currentTab].instructionSet = ISA_RISCV;
+        tabs.push(Tab(name, "", ""));
+        tabs[currentTab].instructionSet = isa_type;
         tabs[currentTab].core = createCore(tabs[currentTab].instructionSet, 4096, invokeEnvironmentCall, decodeCallback);
         $("#isa").val(tabs[currentTab].instructionSet);
-        switchModes(tabs[currentTab].core.ace_style);
+        switchModes(tabs[currentTab].core.defaultCode);
+        setRegisterNames();
+    }
+
+    function addTabDefault(name, isa_type) {
+        addTabSimple(name, isa_type);
+        var core = tabs[currentTab].core;
+        tabs[currentTab].content = core.defaultCode;
+        editor.setValue(core.defaultCode);
+    }
+
+    function addTab(name, isa_type, code, machinecode) {
+        addTabSimple(name, isa_type);
+        tabs[currentTab].content = code;
+        tabs[currentTab].machinecode = machinecode;
         editor.setValue(code);
         mcEditor.val(machinecode);
-        setRegisterNames();
     }
 
     function switchToTab(num) {
@@ -801,7 +817,7 @@ function converter() {
         $("#memsize").val(tabs[num].memorySize);
         $("#console").html(tabs[num].console);
         $("#log").html(tabs[num].instructionLog);
-        switchModes(tabs[num].core.ace_style);
+        switchModes(tabs[num].core.aceStyle);
 
         currentTab = num;
         displayMemory();
@@ -827,7 +843,7 @@ function converter() {
                 var tabsEl = $("section nav > div");
                 tabsEl.removeClass("selected");
                 tabsEl.eq(currentTab).addClass("selected");
-                switchModes(tabs[currentTab].core.ace_style);
+                switchModes(tabs[currentTab].core.aceStyle);
                 $("#filename").val(tabs[currentTab].name);
                 $("#isa").val(tabs[currentTab].instructionSet);
                 $("#memsize").val(tabs[currentTab].memorySize);
@@ -867,7 +883,7 @@ function converter() {
                 }
             }
 
-            addTab(file.name, "", hexer);
+            addTab(file.name, ISA_RISCV, "", hexer);
         });
         fr.readAsArrayBuffer(blob);
         $("#fileInputElement").val("");
@@ -885,7 +901,7 @@ function converter() {
         var blob = file.slice(0, file.size);
         var fr = new FileReader();
         fr.addEventListener('load', function () {
-            addTab(file.name, this.result, "");
+            addTab(file.name, ISA_RISCV, this.result, "");
         });
         fr.readAsText(blob);
         $("#asmInputElement").val("");
@@ -905,8 +921,9 @@ function converter() {
 
         mcEditor = $("#machineCode");
 
-        addTab("Untitled", defaultCode, "");
-        $(".addTab").on("click", function() {addTab("Untitled", defaultCode, "")});
+        addTabOfType(ISA_RISCV);
+        $(".addTabOfType").on("click", function() {addTabOfType($(this).data("value"));});
+        $(".addTab").on("click", function() {addTabOfType(ISA_RISCV);});
         $(".removeTab").on("click", function() {removeTabThis();});
         $("#convertBtn").on("click", function() {converter()});
         $("#consoleSel").on("change", function() {setConsoleMode($(this).val());});
@@ -929,7 +946,7 @@ function converter() {
                 tabs[currentTab].instructionSet = isa;
                 delete tabs[currentTab].core;
                 tabs[currentTab].core = createCore(isa, memsize, invokeEnvironmentCall, decodeCallback);
-                switchModes(tabs[currentTab].core.ace_style);
+                switchModes(tabs[currentTab].core.aceStyle);
                 setRegisterNames();
                 updateRegAndMemory();
             }
