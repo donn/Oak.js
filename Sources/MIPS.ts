@@ -1753,6 +1753,14 @@ class MIPSCore //: Core
     registerFile: MIPSRegisterFile;
     memorySize: number;
 
+    // Default Environment Call Regs
+    default_ecall_reg_type: number;
+    default_ecall_reg_arg: number;
+    default_ecall_reg_write: number;
+
+    // ACE Editor Style Theme
+    ace_style: string;
+
     //Transient
     pc: number;
     memory: number[];
@@ -1919,6 +1927,10 @@ class MIPSCore //: Core
 
     constructor(memorySize: number, ecall: () => void, instructionCallback: (data: string) => void)
     {
+        this.default_ecall_reg_type     = 2;
+        this.default_ecall_reg_arg      = 4;
+        this.ace_style = "ace/mode/mips";
+
         this.instructionSet = MIPS;
         this.pc = 0 >>> 0;
         this.memorySize = memorySize;

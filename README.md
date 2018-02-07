@@ -33,6 +33,7 @@ Again, in the terminal:
     sudo npm install -g uglify-js   
 
 For other Linux-based OSes, substitute aptitudes's syntax with that of your package manager's.
+If you get errors about node not being found, try running the following: `ln -s /usr/bin/nodejs /usr/bin/node`.
     
 ### Windows
 Please use Bash on Ubuntu on Windows 10 and follow the instructions for Debian-based OSes for a supported and tested workflow. If you do not wish to use the Linux subsystem, try first installing Node.js from [their website](http://nodejs.org/) and then, in PowerShell:

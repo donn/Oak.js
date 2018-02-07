@@ -195,15 +195,7 @@ function uiSimulate() {
 }
 
 function switchModes(type) {
-    switch(type) {
-        case ISA_MIPS:
-            editor.getSession().setMode("ace/mode/mips");
-            return;
-        default:
-        case ISA_RISCV:
-            editor.getSession().setMode("ace/mode/riscv");
-            return;
-    }
+    editor.getSession().setMode(type);
 }
 
 function createCore(type, size, ecallback, dcallback) {
@@ -298,10 +290,11 @@ function showRegisters() {
 function invokeEnvironmentCall() {
     var core = tabs[currentTab].core;
 
-    var mips = (tabs[currentTab].core.instructionSet.name == "mips");
-
-    var type = registerRead(core, mips? 2: 17);
-    var arg = registerRead(core, mips? 4: 10);
+    var core = tabs[currentTab].core;
+    var reg_type = core.default_ecall_reg_type;
+    var reg_arg  = core.default_ecall_reg_arg;
+    var type = registerRead(core, reg_type);
+    var arg = registerRead(core, reg_arg);
 
     if (tabs[currentTab].inSimulation == true) {
         var log = $("#log > span:last-child").html();
@@ -332,8 +325,8 @@ function invokeEnvironmentCall() {
     case 5:
         updateRegAndMemory();
         var input = prompt("Please enter a number as input.");
-        tabs[currentTab].registers[mips? 2: 17] = parseInt(input);
-        registerWrite(core, mips? 2: 17, parseInt(input));
+        tabs[currentTab].registers[reg_type] = parseInt(input);
+        registerWrite(core, reg_type, parseInt(input));
         $("#console").append("<span class='input insertable'> <<< "+input+"</span>");
         break;
     case 8:
@@ -343,7 +336,7 @@ function invokeEnvironmentCall() {
         for (var i = 0; i < input.length; i++) {
             bytes.push(input.charCodeAt(i) & 255);
         }
-        core.memset(tabs[currentTab].registers[mips? 4: 10], bytes);
+        core.memset(tabs[currentTab].registers[reg_arg], bytes);
         $("#console").append("<span class='input insertable'> <<< "+input+"</span>");
         break;
     case 10:
@@ -787,7 +780,7 @@ function converter() {
         tabs[currentTab].instructionSet = ISA_RISCV;
         tabs[currentTab].core = createCore(tabs[currentTab].instructionSet, 4096, invokeEnvironmentCall, decodeCallback);
         $("#isa").val(tabs[currentTab].instructionSet);
-        switchModes(tabs[currentTab].instructionSet);
+        switchModes(tabs[currentTab].core.ace_style);
         editor.setValue(code);
         mcEditor.val(machinecode);
         setRegisterNames();
@@ -808,7 +801,7 @@ function converter() {
         $("#memsize").val(tabs[num].memorySize);
         $("#console").html(tabs[num].console);
         $("#log").html(tabs[num].instructionLog);
-        switchModes(tabs[num].instructionSet);
+        switchModes(tabs[num].core.ace_style);
 
         currentTab = num;
         displayMemory();
@@ -834,7 +827,7 @@ function converter() {
                 var tabsEl = $("section nav > div");
                 tabsEl.removeClass("selected");
                 tabsEl.eq(currentTab).addClass("selected");
-                switchModes(tabs[currentTab].instructionSet);
+                switchModes(tabs[currentTab].core.ace_style);
                 $("#filename").val(tabs[currentTab].name);
                 $("#isa").val(tabs[currentTab].instructionSet);
                 $("#memsize").val(tabs[currentTab].memorySize);
@@ -936,7 +929,7 @@ function converter() {
                 tabs[currentTab].instructionSet = isa;
                 delete tabs[currentTab].core;
                 tabs[currentTab].core = createCore(isa, memsize, invokeEnvironmentCall, decodeCallback);
-                switchModes(isa);
+                switchModes(tabs[currentTab].core.ace_style);
                 setRegisterNames();
                 updateRegAndMemory();
             }
