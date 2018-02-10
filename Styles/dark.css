@@ -8,6 +8,10 @@
     color: #9eb2d0;
 }
 
+.cross {
+    background-image: url(../Images/closeDark.png);
+}
+
 main.helpMain {
     padding: 2em;
     background: #222;

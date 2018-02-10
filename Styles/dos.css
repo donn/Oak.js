@@ -9,6 +9,10 @@
     color: green;
 }
 
+.cross {
+    background-image: url(../Images/closeDark.png);
+}
+
 main.helpMain {
     padding: 2em;
     background: black;
