@@ -79,6 +79,21 @@ function uiAssemble() {
     tabs[currentTab].inSimulation = false;
 }
 
+function editorHasCode() {
+    var code = editor.getValue();
+    var codeLen = code.replace(/\s/g, "").length;
+    return codeLen > 0;
+}
+
+function editorChange() {
+    if (editorHasCode()) {
+        $("#playtooltip").html("Simulate");
+    }
+    else {
+        $("#playtooltip").html("Assemble and Simulate");
+    }
+}
+
 function prepareSim() {
     var core = tabs[currentTab].core;
     var consoleContents = $("#console").html();
@@ -184,8 +199,7 @@ function uiSimulate() {
         }
     }
     else {
-        var val = editor.getValue();
-        if (val != "") {
+        if (editorHasCode()) {
             uiAssemble();
         }
         var core = tabs[currentTab].core;
@@ -1021,8 +1035,8 @@ function converter() {
                 $("#theme"+i).prop('disabled', themeID != i);
             }
         }
-
         editor = ace.edit("editor");
+        editor.getSession().on('change', editorChange);
         editor.setOption("firstLineNumber", 0);
         editor.setTheme("ace/theme/oak");
         editor.getSession().setMode("ace/mode/riscv");
