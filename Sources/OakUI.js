@@ -823,7 +823,9 @@ function converter() {
         addTabSimple(name, isa_type);
         var core = tabs[currentTab].core;
         tabs[currentTab].content = core.defaultCode;
+        tabs[currentTab].machinecode = core.defaultMachineCode;
         editor.setValue(core.defaultCode);
+        mcEditor.val(core.defaultMachineCode);
     }
 
     function addTab(name, isa_type, code, machinecode) {

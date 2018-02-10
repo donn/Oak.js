@@ -1760,6 +1760,7 @@ class MIPSCore //: Core
     // Editor Info
     aceStyle: string;
     defaultCode: string;
+    defaultMachineCode: string;
 
     //Transient
     pc: number;
@@ -1931,6 +1932,7 @@ class MIPSCore //: Core
         this.defaultEcallRegArg      = 4;
         this.aceStyle = "ace/mode/mips";
         this.defaultCode = "    la $a0, str\n    li $v0, 4 #4 is the string print service number...\n    syscall\n    li $v0, 10 #...and 10 is the program termination service number!\n    syscall\n.data\nstr:\    .asciiz \"Hello, World!\"";
+        this.defaultMachineCode = "14 00 04 20 04 00 02 20 0C 00 00 00 0A 00 02 20 0C 00 00 00 48 65 6C 6C 6F 2C 20 57 6F 72 6C 64 21 00 ";
 
         this.instructionSet = MIPS;
         this.pc = 0 >>> 0;
