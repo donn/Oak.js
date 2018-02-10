@@ -985,7 +985,7 @@ function converter() {
 
     function enableCookies() {
         useCookies = true;
-        setCookie("theme", 0, 60);
+        setCookie("theme", $("#themes").val(), 60);
         $(".cookie").fadeOut(200);
     }
 
