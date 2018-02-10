@@ -87,10 +87,12 @@ function editorHasCode() {
 
 function editorChange() {
     if (editorHasCode()) {
-        $("#playtooltip").html("Simulate");
+        $("#playbutton img").attr('src', "Images/assemblePlay.png");
+        $("#playbutton span").html("Assemble and Simulate");
     }
     else {
-        $("#playtooltip").html("Assemble and Simulate");
+        $("#playbutton img").attr('src', "Images/play.png");
+        $("#playbutton span").html("Simulate");
     }
 }
 
