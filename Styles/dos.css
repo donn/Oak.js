@@ -1,3 +1,14 @@
+.toast {
+    background-color: black;
+    color: white;
+    border-radius: 0;
+    border: 2px solid white;
+}
+
+.toast a {
+    color: green;
+}
+
 main.helpMain {
     padding: 2em;
     background: black;
@@ -50,6 +61,7 @@ main nav::-webkit-scrollbar-track {
 main nav::-webkit-scrollbar-thumb {
     border-radius: 3px;
     -webkit-box-shadow: inset 0 0 6px rgba(255,255,255,0.5); 
+    box-shadow: inset 0 0 6px rgba(255,255,255,0.5); 
     height: 3px;
 }
 
