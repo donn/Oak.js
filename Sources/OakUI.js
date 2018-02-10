@@ -1190,3 +1190,24 @@ function converter() {
     });
 
 })();
+
+var keyboardShortcuts ={assemble: 119,
+                        simulate: 120,
+                        stepbystep: 121};
+
+$(document).keydown(function(event){
+    switch(event.which) {
+        case keyboardShortcuts.assemble:
+            event.preventDefault();
+            uiAssemble();
+            break;
+        case keyboardShortcuts.simulate:
+            event.preventDefault();
+            uiSimulate();
+            break;
+        case keyboardShortcuts.stepbystep:
+            event.preventDefault();
+            uiStepbystep();
+            break;
+    }
+});
