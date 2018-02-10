@@ -184,6 +184,10 @@ function uiSimulate() {
         }
     }
     else {
+        var val = editor.getValue();
+        if (val != "") {
+            uiAssemble();
+        }
         var core = tabs[currentTab].core;
         var bytes = prepareSim();
         var output = simulate(core, bytes);
