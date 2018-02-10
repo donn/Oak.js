@@ -958,10 +958,64 @@ function converter() {
         $("#asmInputElement").val("");
     }
 
+    function setCookie(cname, cvalue, exdays) {
+        var d = new Date();
+        d.setTime(d.getTime() + (exdays*24*60*60*1000));
+        var expires = "expires="+ d.toUTCString();
+        document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+    }
+
+    function getCookie(cname) {
+        var name = cname + "=";
+        var decodedCookie = decodeURIComponent(document.cookie);
+        var ca = decodedCookie.split(';');
+        for(var i = 0; i <ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return "";
+    }
+
+    var useCookies = false;
+
+    function enableCookies() {
+        useCookies = true;
+        setCookie("theme", 0, 60);
+        $(".cookie").fadeOut(200);
+    }
+
+    function disableCookies() {
+        $(".cookie").fadeOut(200);
+    }
+
+    function addCookieToast() {
+        var info = "<div class='toast cookie'>Hey there and welcome to Oak.js! We use cookies to store your theme. If that's okay, please press <a href='javascript:void(0)'>here</a>. If not, please press <a href='javascript:void(0)'>here</a>.</div>";
+        $("body").prepend(info);
+        $(".cookie a:first-child").click(enableCookies);
+        $(".cookie a:nth-child(2)").click(disableCookies);
+    }
+
     $(document).ready(function() {
-        $('select').val(0);
-        for (var i = 1; i < 3; i++)
-            $("#theme"+i).prop('disabled', true);
+        var theme = getCookie("theme");
+        if (theme == "") {
+            addCookieToast();
+            $('#themes').val(0);
+            for (var i = 1; i < 3; i++)
+                $("#theme"+i).prop('disabled', true);
+        }
+        else {
+            useCookies = true;
+            var themeID = parseInt(theme);
+            $('#themes').val(themeID);
+            for (var i = 0; i < 3; i++) {
+                $("#theme"+i).prop('disabled', themeID != i);
+            }
+        }
 
         editor = ace.edit("editor");
         editor.setOption("firstLineNumber", 0);
@@ -1081,8 +1135,12 @@ function converter() {
 
     $("#themes").change(function() {
         var themeID = $(this).val();
-        for (var i = 0; i < 3; i++)
+        for (var i = 0; i < 3; i++) {
             $("#theme"+i).prop('disabled', i!=themeID);
+        }
+
+        if (useCookies)
+            setCookie("theme", themeID, 60);
     });
 
     $("#editorSel").change(function() {

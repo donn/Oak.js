@@ -1,3 +1,12 @@
+.toast {
+    background-color: #63758d;
+    color: white;
+}
+
+.toast a {
+    color: #9eb2d0;
+}
+
 main.helpMain {
     padding: 2em;
     background: #eee;
