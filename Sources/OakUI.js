@@ -994,7 +994,7 @@ function converter() {
     }
 
     function addCookieToast() {
-        var info = "<div class='toast cookie'><a href='javascript:void()' class='cross'></a> Hello there. Oak.js uses local cookies to store your theme. If that's okay with you, press <a href='javascript:void(0)'>here</a>. If not, press <a href='javascript:void(0)'>here</a> and we'll disable them.";
+        var info = "<div class='toast cookie'><a href='javascript:void(0)' class='cross'></a> Hello there. Oak.js uses local cookies to store your theme. If that's okay with you, press <a href='javascript:void(0)'>here</a>. If not, press <a href='javascript:void(0)'>here</a> and we'll disable them.";
         $("body").prepend(info);
         $(".cookie a:first-child").click(enableCookies);
         $(".cookie a:nth-child(2)").click(enableCookies);
