@@ -44,6 +44,17 @@ function resize() {
     resizeRAM();
 }
 
+function setMachineCodeState(state) {
+    if (state) {
+        $("section > #editor").css({width: "50%"});
+        $("section > aside").css({width: "50%"});
+    }
+    else {
+        $("section > #editor").css({width: "100%"});
+        $("section > aside").css({width: "0%"});
+    }
+}
+
 function addConsoleMsg(msg, type) {
     var typeStr = "";
     if (type == CONSOLE_ERROR)
@@ -930,7 +941,8 @@ function converter() {
             $("#overlayAccept").click(function(e) {
                 var n = $("#overlay input").val();
                 var isa = $("#overlay select").val();
-                addTab(n, isa, "Check Machine Code.", hexer);
+                addTab(n, isa, "", hexer);
+                setMachineCodeState(true);
                 $("#overlay").fadeOut(200);
                 $(this).unbind('click');
             });
@@ -1168,12 +1180,10 @@ function converter() {
         var v = $(this).val();
         
         if (v == 1) {
-            $("section > #editor").css({width: "50%"});
-            $("section > aside").css({width: "50%"});
+            setMachineCodeState(true);
         }
         else {
-            $("section > #editor").css({width: "100%"});
-            $("section > aside").css({width: "0%"});
+            setMachineCodeState(false);
         }
     });
 
