@@ -1098,7 +1098,7 @@ function converter() {
 
         mcEditor = $("#machineCode");
 
-        addTabOfType(ISA_RISCV);
+        addTabOfType(parseInt(settings.defaultISA));
         $(".addTabOfType").on("click", function() {addTabOfType($(this).data("value"));});
         $(".addTab").on("click", function() {addTabWindow();});
         $(".removeTab").on("click", function() {removeTabThis();});
