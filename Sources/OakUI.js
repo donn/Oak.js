@@ -1,6 +1,14 @@
 var ISA_RISCV = 0;
 var ISA_MIPS = 1;
 
+var settings = {
+    theme:      0,
+    defaultISA: ISA_RISCV,
+    hotkeyAssemble: 119,
+    hotkeySimulate: 120,
+    hotkeyStepbystep: 121
+};
+
 function Tab(_name, _content, _machinecode) {
     return {
         name: _name,
@@ -897,7 +905,7 @@ function converter() {
     function addTabWindow() {
         $("#overlay > div > div").html("New File");
             $("#overlay input").val("Untitled");
-            $("#overlay select").val(0);
+            $("#overlay select").val(settings.defaultISA);
             $("#overlay").fadeIn(200);
             $("#overlayAccept").click(function(e) {
                 var n = $("#overlay input").val();
@@ -938,7 +946,7 @@ function converter() {
 
             $("#overlay > div > div").html("Load Binary File");
             $("#overlay input").val(file.name);
-            $("#overlay select").val(0);
+            $("#overlay select").val(settings.defaultISA);
             $("#overlay").fadeIn(200);
             $("#overlayAccept").click(function(e) {
                 var n = $("#overlay input").val();
@@ -973,7 +981,7 @@ function converter() {
             var res = this.result;
             $("#overlay > div > div").html("Load Assembly File");
             $("#overlay input").val(file.name);
-            $("#overlay select").val(0);
+            $("#overlay select").val(settings.defaultISA);
             $("#overlay").fadeIn(200);
             $("#overlayAccept").click(function(e) {
                 var n = $("#overlay input").val();
@@ -992,11 +1000,23 @@ function converter() {
         $("#asmInputElement").val("");
     }
 
+    var useCookies = false;
+
     function setCookie(cname, cvalue, exdays) {
         var d = new Date();
         d.setTime(d.getTime() + (exdays*24*60*60*1000));
         var expires = "expires="+ d.toUTCString();
         document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+    }
+
+    function setSettingsCookie() {
+        if (useCookies) {
+            for (var key in settings) {
+                if (settings.hasOwnProperty(key)) {
+                    setCookie(key, settings[key], 60);
+                }
+            }
+        }
     }
 
     function getCookie(cname) {
@@ -1015,11 +1035,20 @@ function converter() {
         return "";
     }
 
-    var useCookies = false;
+    function getCookies() {
+        useCookies = false;
+        for (var key in settings) {
+            settings[key] = getCookie(key);
+            if (settings[key] != "") {
+                useCookies = true;
+            }
+        }
+        console.log(settings);
+    }
 
     function enableCookies() {
         useCookies = true;
-        setCookie("theme", $("#themes").val(), 60);
+        setSettingsCookie();
         $(".cookie").fadeOut(200);
     }
 
@@ -1036,21 +1065,29 @@ function converter() {
     }
 
     $(document).ready(function() {
-        var theme = getCookie("theme");
-        if (theme == "") {
+        getCookies();
+        if (!useCookies) {
             addCookieToast();
             $('#themes').val(0);
             for (var i = 1; i < 3; i++)
                 $("#theme"+i).prop('disabled', true);
+                
+            settings.theme = 0;
+            settings.defaultISA = 0;
+            settings.hotkeyAssemble = 119;
+            settings.hotkeySimulate = 120;
+            settings.hotkeyStepbystep = 121;
         }
         else {
-            useCookies = true;
-            var themeID = parseInt(theme);
+            var themeID = parseInt(settings.theme);
             $('#themes').val(themeID);
             for (var i = 0; i < 3; i++) {
                 $("#theme"+i).prop('disabled', themeID != i);
             }
         }
+
+        $("#defaultISA").val(parseInt(settings.defaultISA));
+
         editor = ace.edit("editor");
         editor.getSession().on('change', editorChange);
         editor.setOption("firstLineNumber", 0);
@@ -1174,8 +1211,15 @@ function converter() {
             $("#theme"+i).prop('disabled', i!=themeID);
         }
 
-        if (useCookies)
-            setCookie("theme", themeID, 60);
+        settings.theme = themeID;
+        setSettingsCookie();
+        
+    });
+
+    $("#defaultISA").change(function() {
+        var isa = $(this).val();
+        settings.defaultISA = isa;
+        setSettingsCookie();
     });
 
     $("#editorSel").change(function() {
@@ -1191,21 +1235,26 @@ function converter() {
 
 })();
 
-var keyboardShortcuts ={assemble: 119,
-                        simulate: 120,
-                        stepbystep: 121};
+function displaySettings(state) {
+    if (state) {
+        $("#settingsOverlay").fadeIn(200);
+    }
+    else {
+        $("#settingsOverlay").fadeOut(200);
+    }
+}
 
 $(document).keydown(function(event){
     switch(event.which) {
-        case keyboardShortcuts.assemble:
+        case parseInt(settings.hotkeyAssemble):
             event.preventDefault();
             uiAssemble();
             break;
-        case keyboardShortcuts.simulate:
+        case parseInt(settings.hotkeySimulate):
             event.preventDefault();
             uiSimulate();
             break;
-        case keyboardShortcuts.stepbystep:
+        case parseInt(settings.hotkeyStepbystep):
             event.preventDefault();
             uiStepbystep();
             break;
