@@ -1050,9 +1050,11 @@ function converter() {
         useCookies = true;
         setSettingsCookie();
         $(".cookie").fadeOut(200);
+        $("#toggleCookies").html("Remove Cookies");
     }
 
     function disableCookies() {
+        $("#toggleCookies").html("Use Cookies");
         $(".cookie").fadeOut(200);
     }
 
@@ -1084,6 +1086,8 @@ function converter() {
             for (var i = 0; i < 3; i++) {
                 $("#theme"+i).prop('disabled', themeID != i);
             }
+
+            $("#toggleCookies").html("Remove Cookies");
         }
 
         $("#defaultISA").val(parseInt(settings.defaultISA));
@@ -1242,6 +1246,22 @@ function displaySettings(state) {
     else {
         $("#settingsOverlay").fadeOut(200);
     }
+}
+
+function toggleCookies() {
+    if (!useCookies) {
+        $("#toggleCookies").html("Use Cookies");
+        setSettingsCookie();
+    }
+    else {
+        $("#toggleCookies").html("Remove Cookies");
+
+        var cookies = document.cookie.split(";");
+        for (var i = 0; i < cookies.length; i++)
+          eraseCookie(cookies[i].split("=")[0]);
+    }
+
+    useCookies = !useCookies;        
 }
 
 $(document).keydown(function(event){

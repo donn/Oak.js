@@ -642,7 +642,7 @@ footer span b {
     text-align: right;
 }
 
-#settingsAccept {
+#toggleCookies, #settingsAccept {
     width: 96%;
     margin: 1% 2%;
 }

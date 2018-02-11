@@ -112,6 +112,26 @@ header > div > div a:hover {
     color: #0f0;
 }
 
+#tabs {
+    border-bottom: 2px solid white;
+}
+
+#editor {
+    margin-top: 4px;
+}
+
+#tabs .selected {
+    background: white;
+}
+
+#tabs .selected div {
+    background-image: url(../Images/closeLight.png);
+}
+
+#tabs .selected span {
+    color: black;
+}
+
 .optionTabs > div {
     color: #666;
 }

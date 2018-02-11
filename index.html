@@ -22,7 +22,7 @@
             </div>
         </div><div class='overlay' id="settingsOverlay">
             <div>
-                <div>Preferences</div>
+                <div>Settings</div>
                 <span>Default Instruction Set</span><select id='defaultISA'>
                     <option value=0>RISC-V</option>
                     <option value=1>MIPS</option>
@@ -32,7 +32,8 @@
                     <option value='1'>Dark Theme</option>
                     <option value='2'>DOS</option>
                 </select>
-                <button id="settingsAccept" onclick='displaySettings(false)'>Accept Options</button>
+                <button id="toggleCookies" onclick='toggleCookies()'>Use Cookies</button>
+                <button id="settingsAccept" onclick='displaySettings(false)'>Accept</button>
             </div>
         </div>
         <header>
