@@ -1,3 +1,5 @@
+var useCookies = false;
+
 var ISA_RISCV = 0;
 var ISA_MIPS = 1;
 
@@ -72,6 +74,66 @@ function addConsoleMsg(msg, type) {
     else if (type == CONSOLE_WARNING)
         typeStr = " class='warning'";
     $("#console").append("<span"+typeStr+">"+msg+"</span>");
+}
+
+function daysToMs(ex) {
+    return ex*24*60*60*1000;
+}
+
+function setCookie(cname, cvalue, ex) {
+    var d = new Date();
+    d.setTime(d.getTime() + ex);
+    var expires = "expires="+ d.toUTCString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for(var i = 0; i <ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+
+function setSettingsCookie() {
+    if (useCookies) {
+        for (var key in settings) {
+            if (settings.hasOwnProperty(key)) {
+                setCookie(key, settings[key], daysToMs(120));
+            }
+        }
+    }
+}
+
+function getCookies() {
+    useCookies = false;
+    for (var key in settings) {
+        settings[key] = getCookie(key);
+        if (settings[key] != "") {
+            useCookies = true;
+        }
+    }
+    console.log(settings);
+}
+
+function enableCookies() {
+    useCookies = true;
+    setSettingsCookie();
+    $("#toggleCookies").html("Remove Cookies");
+    $(".cookie").fadeOut(200);
+}
+
+function disableCookies() {
+    $("#toggleCookies").html("Use Cookies");
+    $(".cookie").fadeOut(200);
 }
 
 /* Calls */
@@ -1000,64 +1062,6 @@ function converter() {
         $("#asmInputElement").val("");
     }
 
-    var useCookies = false;
-
-    function setCookie(cname, cvalue, exdays) {
-        var d = new Date();
-        d.setTime(d.getTime() + (exdays*24*60*60*1000));
-        var expires = "expires="+ d.toUTCString();
-        document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
-    }
-
-    function setSettingsCookie() {
-        if (useCookies) {
-            for (var key in settings) {
-                if (settings.hasOwnProperty(key)) {
-                    setCookie(key, settings[key], 60);
-                }
-            }
-        }
-    }
-
-    function getCookie(cname) {
-        var name = cname + "=";
-        var decodedCookie = decodeURIComponent(document.cookie);
-        var ca = decodedCookie.split(';');
-        for(var i = 0; i <ca.length; i++) {
-            var c = ca[i];
-            while (c.charAt(0) == ' ') {
-                c = c.substring(1);
-            }
-            if (c.indexOf(name) == 0) {
-                return c.substring(name.length, c.length);
-            }
-        }
-        return "";
-    }
-
-    function getCookies() {
-        useCookies = false;
-        for (var key in settings) {
-            settings[key] = getCookie(key);
-            if (settings[key] != "") {
-                useCookies = true;
-            }
-        }
-        console.log(settings);
-    }
-
-    function enableCookies() {
-        useCookies = true;
-        setSettingsCookie();
-        $(".cookie").fadeOut(200);
-        $("#toggleCookies").html("Remove Cookies");
-    }
-
-    function disableCookies() {
-        $("#toggleCookies").html("Use Cookies");
-        $(".cookie").fadeOut(200);
-    }
-
     function addCookieToast() {
         var info = "<div class='toast cookie'><a href='javascript:void(0)' class='cross'></a> Hello there. Oak.js uses local cookies to store your theme. If that's okay with you, press <a href='javascript:void(0)'>here</a>. If not, press <a href='javascript:void(0)'>here</a> and we'll disable them.";
         $("body").prepend(info);
@@ -1065,29 +1069,42 @@ function converter() {
         $(".cookie a:nth-child(2)").click(enableCookies);
         $(".cookie a:nth-child(3)").click(disableCookies);
     }
+    
+    function are_cookies_enabled() {
+        document.cookie="testcookie=valid";
+        var cookieEnabled = (document.cookie.indexOf("testcookie") != -1) ? true : false;
+
+        if(cookieEnabled) {
+            document.cookie = "testcookie=; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+        }
+
+        return cookieEnabled;
+    }
 
     $(document).ready(function() {
-        getCookies();
-        if (!useCookies) {
-            addCookieToast();
-            $('#themes').val(0);
-            for (var i = 1; i < 3; i++)
-                $("#theme"+i).prop('disabled', true);
-                
-            settings.theme = 0;
-            settings.defaultISA = 0;
-            settings.hotkeyAssemble = 119;
-            settings.hotkeySimulate = 120;
-            settings.hotkeyStepbystep = 121;
-        }
-        else {
-            var themeID = parseInt(settings.theme);
-            $('#themes').val(themeID);
-            for (var i = 0; i < 3; i++) {
-                $("#theme"+i).prop('disabled', themeID != i);
+        if (are_cookies_enabled()) {
+            getCookies();
+            if (!useCookies) {
+                addCookieToast();
+                $('#themes').val(0);
+                for (var i = 1; i < 3; i++)
+                    $("#theme"+i).prop('disabled', true);
+                    
+                settings.theme = 0;
+                settings.defaultISA = 0;
+                settings.hotkeyAssemble = 119;
+                settings.hotkeySimulate = 120;
+                settings.hotkeyStepbystep = 121;
             }
+            else {
+                var themeID = parseInt(settings.theme);
+                $('#themes').val(themeID);
+                for (var i = 0; i < 3; i++) {
+                    $("#theme"+i).prop('disabled', themeID != i);
+                }
 
-            $("#toggleCookies").html("Remove Cookies");
+                $("#toggleCookies").html("Remove Cookies");
+            }
         }
 
         $("#defaultISA").val(parseInt(settings.defaultISA));
@@ -1236,7 +1253,6 @@ function converter() {
             setMachineCodeState(false);
         }
     });
-
 })();
 
 function displaySettings(state) {
@@ -1248,20 +1264,22 @@ function displaySettings(state) {
     }
 }
 
+function eraseCookie(name) {
+    setCookie(name,"",-1);
+}
+
 function toggleCookies() {
     if (!useCookies) {
-        $("#toggleCookies").html("Use Cookies");
-        setSettingsCookie();
+        enableCookies();
     }
     else {
-        $("#toggleCookies").html("Remove Cookies");
+        useCookies = false;
+        $("#toggleCookies").html("Use Cookies");
 
         var cookies = document.cookie.split(";");
         for (var i = 0; i < cookies.length; i++)
           eraseCookie(cookies[i].split("=")[0]);
-    }
-
-    useCookies = !useCookies;        
+    }       
 }
 
 $(document).keydown(function(event){

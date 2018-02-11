@@ -167,14 +167,14 @@ hr {
     border: 2px solid white;
 }
 
-.overlay > div > div {
+.overlay .header {
     background: black;
     border-radius: 0;
     border-bottom: 2px solid white;
     color: white;
 }
 
-.overlay > div > input, .overlay > div > button, .overlay > div > select {
+.overlay input, .overlay button, .overlay select, .overlay .hotkeyCapture {
     border: 1px solid white;
     color: white;
     background: black;

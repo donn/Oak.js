@@ -13,11 +13,6 @@
     <body>
         <header>
             <a href="index.html"><img src='Images/iconShadow.png' /></a><a class='noFloat' href="https://github.com/Skyus/Oak.js">Source</a>
-            <select id='themes'>
-                <option value='0'>Light Theme</option>
-                <option value='1'>Dark Theme</option>
-                <option value='2'>DOS</option>
-            </select>
         </header>
         <main class='helpMain'>
             <h2>Oak.js Manual</h2>
@@ -97,14 +92,32 @@
         </main>
         <script type="text/javascript" charset="utf-8" src="Scripts/jquery.js"></script>
         <script type="text/javascript" charset="utf-8">
-            for (var i = 1; i < 3; i++)
-                $("#theme"+i).prop('disabled', true);
+            function getCookie(cname) {
+                var name = cname + "=";
+                var decodedCookie = decodeURIComponent(document.cookie);
+                var ca = decodedCookie.split(';');
+                for(var i = 0; i <ca.length; i++) {
+                    var c = ca[i];
+                    while (c.charAt(0) == ' ') {
+                        c = c.substring(1);
+                    }
+                    if (c.indexOf(name) == 0) {
+                        return c.substring(name.length, c.length);
+                    }
+                }
+                return "";
+            }
 
-            $("#themes").change(function() {
-                var themeID = $(this).val();
-                for (var i = 0; i < 3; i++)
-                    $("#theme"+i).prop('disabled', i!=themeID);
-            });
+            var theme = getCookie("theme");
+            var themeID = 0;
+            if (theme == "")
+                themeID = 0;
+            else
+                themeID = parseInt(theme);
+                
+            for (var i = 0; i < 3; i++) {
+                $("#theme"+i).prop('disabled', themeID != i);
+            }
         </script>
     </body>
 </html>

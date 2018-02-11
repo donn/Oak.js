@@ -228,12 +228,12 @@ header > div > div > a:hover, header > div > div > label:hover {
     background: #f9f9f9;
 }
 
-.overlay > div > div {
+.overlay .header, .overlay .hotkeyCapture {
     background: #526681;
     color: white;
 }
 
-.overlay > div > input, .overlay > div > button, .overlay > div > select {
+.overlay input, .overlay button, .overlay select {
     border: 1px solid #eee;
 }
 

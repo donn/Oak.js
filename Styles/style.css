@@ -1,7 +1,7 @@
 body {
     margin: 0;
     width: 100%;
-    overflow: hidden;
+    overflow-x: hidden;
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 }
 
@@ -608,14 +608,16 @@ footer span b {
     border-radius: 4px;
     overflow: hidden;
     box-shadow: 0 0 8px rgba(0,0,0,0.7);
+
+    max-height: 80%;
+    overflow-y: auto;
 }
 
-.overlay > div > div {
+.overlay .header {
     padding: 0.8em;
-    margin-bottom: 1em;
 }
 
-.overlay > div > input, .overlay > div > button, .overlay > div > select {
+.overlay input, .overlay button, .overlay select, .hotkeyCapture {
     display: inline-block;
     box-sizing: border-box;
     width: 46%;
@@ -624,6 +626,15 @@ footer span b {
     padding: 0.5em;
     margin: 1% 2%;
     border-radius: 2px;
+}
+
+.overlay .hotkeyCapture {
+    height: 2em;
+}
+
+.overlay h4 {
+    padding: 0;
+    margin: 2%;
 }
 
 #settingsOverlay select {

@@ -14,7 +14,7 @@
     <body class='noTab'>
         <div class='overlay' id="overlay">
             <div>
-                <div>New Tab</div>
+                <div class='header'>New Tab</div>
                 <input placeholder="File Name.s" /><select>
                     <option value=0>RISC-V</option>
                     <option value=1>MIPS</option>
@@ -22,18 +22,28 @@
             </div>
         </div><div class='overlay' id="settingsOverlay">
             <div>
-                <div>Settings</div>
-                <span>Default Instruction Set</span><select id='defaultISA'>
-                    <option value=0>RISC-V</option>
-                    <option value=1>MIPS</option>
-                </select>
-                <span>Theme</span><select id='themes'>
-                    <option value='0'>Light Theme</option>
-                    <option value='1'>Dark Theme</option>
-                    <option value='2'>DOS</option>
-                </select>
-                <button id="toggleCookies" onclick='toggleCookies()'>Use Cookies</button>
-                <button id="settingsAccept" onclick='displaySettings(false)'>Accept</button>
+                <div class='header'>Settings</div>
+                <div class='overlaybody'>
+                    <span>Default Instruction Set</span><select id='defaultISA'>
+                        <option value=0>RISC-V</option>
+                        <option value=1>MIPS</option>
+                    </select>
+                    <span>Theme</span><select id='themes'>
+                        <option value='0'>Light Theme</option>
+                        <option value='1'>Dark Theme</option>
+                        <option value='2'>DOS</option>
+                    </select>
+                    <h4>Hotkeys (Some browser keys cannot be used)</h4>
+                    <hr />
+                    <span>New Tab</span><div class='hotkeyCapture' onclick='hotkeyCapture(0)'>Alt + n</div>
+                    <span>Load Assembly</span><div class='hotkeyCapture' onclick='hotkeyCapture(1)'>Alt + o</div>
+                    <span>Save Assembly</span><div class='hotkeyCapture' onclick='hotkeyCapture(2)'>Alt + s</div>
+                    <span>Assemble</span><div class='hotkeyCapture' onclick='hotkeyCapture(3)'>f8</div>
+                    <span>Simulate</span><div class='hotkeyCapture' onclick='hotkeyCapture(4)'>f9</div>
+                    <span>Step-by-Step</span><div class='hotkeyCapture' onclick='hotkeyCapture(5)'>f10</div>
+                    <button id="toggleCookies" onclick='toggleCookies()'>Use Cookies</button>
+                    <button id="settingsAccept" onclick='displaySettings(false)'>Accept</button>
+                </div>
             </div>
         </div>
         <header>
