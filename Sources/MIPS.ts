@@ -10,6 +10,7 @@ class MIPSCore implements Core
     defaultEcallRegArg: number;
     aceStyle: string;
     defaultCode: string;
+    defaultMachineCode: string;
 
     memcpy(address: number, bytes: number): number[] {
         return null

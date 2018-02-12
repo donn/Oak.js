@@ -1,6 +1,18 @@
 body {
     margin: 0;
+    width: 100%;
+    overflow-x: hidden;
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+.cross {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background-repeat: no-repeat;
+    background-position: center center;
 }
 
 /* Main Container */
@@ -591,22 +603,21 @@ footer span b {
     transform: translateY(-50%);
     left: 50%;
     margin-left: -15em;
-    background: #f9f9f9;
     vertical-align: middle;
     padding-bottom: 1em;
     border-radius: 4px;
     overflow: hidden;
     box-shadow: 0 0 8px rgba(0,0,0,0.7);
+
+    max-height: 80%;
+    overflow-y: auto;
 }
 
-.overlay > div > div {
+.overlay .header {
     padding: 0.8em;
-    background: #526681;
-    color: white;
-    margin-bottom: 1em;
 }
 
-.overlay > div > input, .overlay > div > button, .overlay > div > select {
+.overlay input, .overlay button, .overlay select, .hotkeyCapture {
     display: inline-block;
     box-sizing: border-box;
     width: 46%;
@@ -615,5 +626,34 @@ footer span b {
     padding: 0.5em;
     margin: 1% 2%;
     border-radius: 2px;
-    border: 1px solid #eee;
+}
+
+.overlay .hotkeyCapture {
+    height: 2em;
+}
+
+.overlay h4 {
+    padding: 0;
+    margin: 2%;
+}
+
+#settingsOverlay select {
+    height: 2.5em;
+    padding: 0.2em;
+}
+
+#settingsOverlay span {
+    display: inline-block;
+    box-sizing: border-box;
+    width: 46%;
+    height: 2.5em;
+    padding: 0.6em 0.2em;
+    vertical-align: middle;
+    margin: 1% 2%;
+    text-align: right;
+}
+
+#toggleCookies, #settingsAccept {
+    width: 96%;
+    margin: 1% 2%;
 }

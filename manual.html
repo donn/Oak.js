@@ -13,11 +13,6 @@
     <body>
         <header>
             <a href="index.html"><img src='Images/iconShadow.png' /></a><a class='noFloat' href="https://github.com/Skyus/Oak.js">Source</a>
-            <select id='themes'>
-                <option value='0'>Light Theme</option>
-                <option value='1'>Dark Theme</option>
-                <option value='2'>DOS</option>
-            </select>
         </header>
         <main class='helpMain'>
             <h2>Oak.js Manual</h2>
@@ -66,7 +61,7 @@
             </p>
             <h3>Usage</h3>
             <p>
-                Input text into the main editor field. Assemble using the <img src="Images/assembleHelp.png" style="height: 16pt; vertical-align:middle;" /> button. Then you can press <img src="Images/playHelp.png" style="height: 16pt; vertical-align:middle;" /> start simulation.
+                Input text into the main editor field. Assemble using the <img src="Images/assembleHelp.png" style="height: 16pt; vertical-align:middle;" /> button. You can press <img src="Images/assemblePlayHelp.png" style="height: 16pt; vertical-align:middle;" /> to assemble, and then start the simulation. Alternatively, when you have a blank codebase but you have machine code, if you press <img src="Images/playHelp.png" style="height: 16pt; vertical-align:middle;" /> you can simply directly simulate the machine code.
             </p>
             <p>
                 You can create new tabs to manage multiple files as well, and the tabs do not share any memory or registers so you can keep different things running, no problem. You can add a new tab by going to file and pressing add tab.
@@ -88,17 +83,41 @@
             <p>
                 Downloading is similar. Simply open the file menu, and press "Download RAM", "Download Binary", or "Download Assembly". The first two must be opened in a hex editor or other program capable of opening binaries. Assembly files can be loaded in any text editor.
             </p>
+            <h4>Keyboard Shortcuts</h4>
+            <p>
+                <b>F8</b>: Assemble.<br />
+                <b>F9</b>: Assemble if there's assembly code, and simulate.<br />
+                <b>F10</b>: Step by Step (requires assembly first).
+            </p>
         </main>
         <script type="text/javascript" charset="utf-8" src="Scripts/jquery.js"></script>
         <script type="text/javascript" charset="utf-8">
-            for (var i = 1; i < 3; i++)
-                $("#theme"+i).prop('disabled', true);
+            function getCookie(cname) {
+                var name = cname + "=";
+                var decodedCookie = decodeURIComponent(document.cookie);
+                var ca = decodedCookie.split(';');
+                for(var i = 0; i <ca.length; i++) {
+                    var c = ca[i];
+                    while (c.charAt(0) == ' ') {
+                        c = c.substring(1);
+                    }
+                    if (c.indexOf(name) == 0) {
+                        return c.substring(name.length, c.length);
+                    }
+                }
+                return "";
+            }
 
-            $("#themes").change(function() {
-                var themeID = $(this).val();
-                for (var i = 0; i < 3; i++)
-                    $("#theme"+i).prop('disabled', i!=themeID);
-            });
+            var theme = getCookie("theme");
+            var themeID = 0;
+            if (theme == "")
+                themeID = 0;
+            else
+                themeID = parseInt(theme);
+                
+            for (var i = 0; i < 3; i++) {
+                $("#theme"+i).prop('disabled', themeID != i);
+            }
         </script>
     </body>
 </html>

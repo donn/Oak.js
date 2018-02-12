@@ -14,11 +14,36 @@
     <body class='noTab'>
         <div class='overlay' id="overlay">
             <div>
-                <div>New Tab</div>
+                <div class='header'>New Tab</div>
                 <input placeholder="File Name.s" /><select>
                     <option value=0>RISC-V</option>
                     <option value=1>MIPS</option>
                 </select><button id="overlayAccept">Accept</button><button id="overlayCancel">Cancel</button>
+            </div>
+        </div><div class='overlay' id="settingsOverlay">
+            <div>
+                <div class='header'>Settings</div>
+                <div class='overlaybody'>
+                    <span>Default Instruction Set</span><select id='defaultISA'>
+                        <option value=0>RISC-V</option>
+                        <option value=1>MIPS</option>
+                    </select>
+                    <span>Theme</span><select id='themes'>
+                        <option value='0'>Light Theme</option>
+                        <option value='1'>Dark Theme</option>
+                        <option value='2'>DOS</option>
+                    </select>
+                    <h4>Hotkeys (Only alt-based combinations)</h4>
+                    <hr />
+                    <span>New Tab</span><div class='hotkeyCapture' onclick='hotkeyCapture(0)'>Alt + n</div>
+                    <span>Load Assembly</span><div class='hotkeyCapture' onclick='hotkeyCapture(1)'>Alt + o</div>
+                    <span>Save Assembly</span><div class='hotkeyCapture' onclick='hotkeyCapture(2)'>Alt + s</div>
+                    <span>Assemble</span><div class='hotkeyCapture' onclick='hotkeyCapture(3)'>f8</div>
+                    <span>Simulate</span><div class='hotkeyCapture' onclick='hotkeyCapture(4)'>f9</div>
+                    <span>Step-by-Step</span><div class='hotkeyCapture' onclick='hotkeyCapture(5)'>f10</div>
+                    <button id="toggleCookies" onclick='toggleCookies()'>Use Cookies</button>
+                    <button id="settingsAccept" onclick='displaySettings(false)'>Accept</button>
+                </div>
             </div>
         </div>
         <header>
@@ -41,20 +66,17 @@
                     <a href='javascript:void(0)' onclick='downloadRam()'>Download RAM</a>
                 </div>
             </div><div>
+                <span href='javascript:void(0)' onclick='displaySettings(true)'>Settings</span>
+            </div><div>
                 <span>Help</span>
                 <div>
                     <a href='manual.html'>Manual</a>
                     <a href='https://github.com/Skyus/Oak.js'>Source</a>
                 </div>
             </div>
-            <select id='themes'>
-                <option value='0'>Light Theme</option>
-                <option value='1'>Dark Theme</option>
-                <option value='2'>DOS</option>
-            </select>
-            <a href='javascript:void(0)' onclick='uiAssemble()'><img src='Images/assemble.png' /><span class='tooltip'>Assemble</span></a>
             <a href='javascript:void(0)' onclick='uiStepbystep()'><img src='Images/stepByStep.png' /><span class='tooltip'>Step By Step</span></a>
-            <a href='javascript:void(0)' onclick='uiSimulate()'><img src='Images/play.png' /><span class='tooltip'>Play</span></a>
+            <a href='javascript:void(0)' onclick='uiSimulate()'  id='playbutton'><img src='Images/play.png' /><span class='tooltip'>Play</span></a>
+            <a href='javascript:void(0)' onclick='uiAssemble()'><img src='Images/assemble.png' /><span class='tooltip'>Assemble</span></a>
         </header>
         <main>
             <div id='noTab'>
