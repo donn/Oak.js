@@ -6,7 +6,8 @@ enum Parameter
     register = 1,
     condition = 2,
     offset = 3,
-    special = 4
+    special = 4,
+    fpImmediate = 5
 };
 
 class BitRange
@@ -14,76 +15,44 @@ class BitRange
     field: string;
     start: number;
     bits: number;
-    limitlessBits: number;
-    constant: number;
-    parameter: number;
     
-    constructor(field: string, start: number, bits: number, parameter: number = null, constant: number = null, limitlessBits: number = null)
-    {
+    totalBits: number;
+    limitStart: number;
+    limitEnd: number;
+    
+    constant: number;
+    
+    parameter: number;
+    parameterDefaultValue: number;
+    parameterType: Parameter;
+
+    constructor(field: string, start: number, bits: number, constant: number = null) {
         this.field = field;
         this.start = start;
         this.bits = bits;
-        this.parameter = parameter;
         this.constant = constant;
-        this.limitlessBits = limitlessBits;
+    }
+
+    public limited(totalBits: number, limitStart: number = null, limitEnd: number = null): BitRange {
+        this.totalBits = totalBits;
+        this.limitStart = limitStart;
+        this.limitEnd = limitEnd;
+        return this;
+    }
+
+    public parameterized(parameter: number, parameterType: Parameter, parameterDefaultValue: number = null): BitRange {
+        this.parameter = parameter;
+        this.parameterDefaultValue = parameterDefaultValue;
+        this.parameterType = parameterType;
+        return this;
     }
 };
 
 class Format
 {   
     ranges: BitRange[];
-    parameters: string[];
-    parameterTypes: Parameter[];
     regex: RegExp;
     disassembly: string; 
-
-    disassemble(mnemonic: string, args: number[], abiNames: string[]): string
-    {
-        var output = this.disassembly;
-        output = output.replace("@mnem", mnemonic);
-        for (var i = 0; i < this.parameters.length; i++)
-        {
-            if ((args[i] == null) || (output.search("@arg") === -1))
-            {
-                console.log("Disassembler note: Argument mismatch.");
-                break;
-            }
-            output = output.replace("@arg", (this.parameterTypes[i] === Parameter.register)? abiNames[args[i]] : args[i].toString());            
-        }
-        return output;
-    }
-
-    parameterBitRangeIndex(parameter: string): number
-    {
-        for (var i = 0; i < this.ranges.length; i++)
-        {
-            if (this.ranges[i].field === parameter)
-            {
-                return i;
-            }
-            var limits = /([A-za-z]+)\s*\[\s*(\d+)\s*:\s*(\d+)\s*\]/.exec(this.ranges[i].field);
-            if (limits !== null)
-            {
-                if (limits[1] === parameter)
-                {
-                    return i;
-                }
-            }
-        }
-        return null;
-    }
-
-    fieldParameterIndex(range: string): number
-    {
-        for (var i = 0; i < this.parameters.length; i++)
-        {
-            if (this.parameters[i] == range)
-            {
-                return i;
-            }
-        }
-        return null;
-    }
 
     processSpecialParameter: (address: number, text: string, bits: number, labels: string[], addresses: number[]) => ({errorMessage: string, value: number});
     decodeSpecialParameter: (value: number, address: number) => number;
@@ -91,17 +60,13 @@ class Format
     constructor
     (
         ranges: BitRange[],
-        parameters: string[],
-        parameterTypes: Parameter[],
         regex: RegExp,
         disassembly: string,
         processSpecialParameter: (address: number, text: string, bits: number, labels: string[], addresses: number[]) => ({errorMessage: string, value: number}) = null,
         decodeSpecialParameter: (value: number, address: number) => number = null
     )
     {
-        this.parameters = parameters;
         this.ranges = ranges;
-        this.parameterTypes = parameterTypes;
         this.regex = regex;
         this.disassembly = disassembly;
         this.processSpecialParameter = processSpecialParameter;
@@ -243,7 +208,7 @@ class InstructionSet
     dataDirectiveSizes: number[];            
 
     //Return Mnemonic Index (pseudo)
-    private pseudoMnemonicSearch(mnemonic: string): number
+    public pseudoMnemonicSearch(mnemonic: string): number
     {
         for (var i = 0; i < this. pseudoInstructions.length; i++)
         {
@@ -256,7 +221,7 @@ class InstructionSet
     } //Worst case = instructions.length
     
     //Return Mnemonic Index (True)
-    private mnemonicSearch(mnemonic: string): number
+    public mnemonicSearch(mnemonic: string): number
     {
         for (var i = 0; i < this.instructions.length; i++)
         {
@@ -267,6 +232,21 @@ class InstructionSet
         }
         return -1;
     } //Worst case = instructions.length
+
+    public disassemble(instruction: Instruction, args: number[]): string
+    {
+        var output = instruction.format.disassembly;
+        output = output.replace("@mnem", instruction.mnemonic);
+        for (var i = 0; i < instruction.format.ranges.length; i++)
+        {
+            let range = instruction.format.ranges[i];
+            if (range.parameter != null)
+            {
+                output = output.replace("@arg" + range.parameter, (range.parameterType === Parameter.register)? this.abiNames[args[i]] : args[i].toString());
+            }            
+        }
+        return output;
+    }
 
     //Validates Parameter, returns value in binary
     processParameter: (address: number, text: string, type: Parameter, bits: number, labels: string[], addresses: number[]) => ({errorMessage: string, value: number});

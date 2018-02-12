@@ -1,6 +1,0 @@
-{
-    "compilerOptions": {
-      "rootDir": "./Sources",
-      "outDir": "./Build"
-    }
-  }
