@@ -1331,7 +1331,7 @@ function Oak_gen_MIPS(): InstructionSet
             lines[i] = lines[i].split("' '").join("32");
             
             //These are fine for most purposes, but string directives MUST NOT USE THE ARRAY DIRECTIVES BY ANY MEANS.
-            let directives = lines[i].split(" ").filter(function(value: string){ return value.length > 0 });
+            let directives = lines[i].split(/\s+/).filter(function(value: string){ return value.length > 0 });
             
             //Check if whitespace
             if (directives.length === 0)
@@ -1463,7 +1463,7 @@ function Oak_gen_MIPS(): InstructionSet
             {
                 continue;
             }      
-            let directives = lines[i].split(" ").filter(function(value: string){ return value.length > 0 });
+            let directives = lines[i].split(/\s+/).filter(function(value: string){ return value.length > 0 });
             
             //Check if whitespace
             if (directives.length === 0)
