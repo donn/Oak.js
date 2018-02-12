@@ -6,9 +6,12 @@ var ISA_MIPS = 1;
 var settings = {
     theme:      0,
     defaultISA: ISA_RISCV,
-    hotkeyAssemble: 119,
-    hotkeySimulate: 120,
-    hotkeyStepbystep: 121
+    hotkeyNewTab: "a_78",
+    hotkeySave: "a_83",
+    hotkeyOpen: "a_79",
+    hotkeyAssemble: "_119",
+    hotkeySimulate: "_120",
+    hotkeyStepbystep: "_121"
 };
 
 function Tab(_name, _content, _machinecode) {
@@ -52,6 +55,183 @@ function resizeRAM() {
 function resize() {
     resizeMC();
     resizeRAM();
+}
+
+// Thank you to https://github.com/wesbos/keycodes
+var keyCodeNames = {
+    0 : "That key has no keycode",
+    3 : "break",
+    8 : "backspace / delete",
+    9 : "tab",
+    12 : 'clear',
+    13 : "enter",
+    16 : "shift",
+    17 : "ctrl",
+    18 : "alt",
+    19 : "pause/break",
+    20 : "caps lock",
+    21 : "hangul",
+    25 : "hanja",
+    27 : "escape",
+    28 : "conversion",
+    29 : "non-conversion",
+    32 : "spacebar",
+    33 : "page up",
+    34 : "page down",
+    35 : "end",
+    36 : "home",
+    37 : "left arrow",
+    38 : "up arrow",
+    39 : "right arrow",
+    40 : "down arrow",
+    41 : "select",
+    42 : "print",
+    43 : "execute",
+    44 : "Print Screen",
+    45 : "insert",
+    46 : "delete",
+    47 : "help",
+    48 : "0",
+    49 : "1",
+    50 : "2",
+    51 : "3",
+    52 : "4",
+    53 : "5",
+    54 : "6",
+    55 : "7",
+    56 : "8",
+    57 : "9",
+    58 : ":",
+    59 : "semicolon (firefox), equals",
+    60 : "<",
+    61 : "equals (firefox)",
+    63 : "ß",
+    64 : "@ (firefox)",
+    65 : "a",
+    66 : "b",
+    67 : "c",
+    68 : "d",
+    69 : "e",
+    70 : "f",
+    71 : "g",
+    72 : "h",
+    73 : "i",
+    74 : "j",
+    75 : "k",
+    76 : "l",
+    77 : "m",
+    78 : "n",
+    79 : "o",
+    80 : "p",
+    81 : "q",
+    82 : "r",
+    83 : "s",
+    84 : "t",
+    85 : "u",
+    86 : "v",
+    87 : "w",
+    88 : "x",
+    89 : "y",
+    90 : "z",
+    91 : "Windows Key / Left ⌘ / Chromebook Search key",
+    92 : "right window key",
+    93 : "Windows Menu / Right ⌘",
+    95: "sleep",
+    96 : "numpad 0",
+    97 : "numpad 1",
+    98 : "numpad 2",
+    99 : "numpad 3",
+    100 : "numpad 4",
+    101 : "numpad 5",
+    102 : "numpad 6",
+    103 : "numpad 7",
+    104 : "numpad 8",
+    105 : "numpad 9",
+    106 : "multiply",
+    107 : "add",
+    108 : "numpad period (firefox)",
+    109 : "subtract",
+    110 : "decimal point",
+    111 : "divide",
+    112 : "f1",
+    113 : "f2",
+    114 : "f3",
+    115 : "f4",
+    116 : "f5",
+    117 : "f6",
+    118 : "f7",
+    119 : "f8",
+    120 : "f9",
+    121 : "f10",
+    122 : "f11",
+    123 : "f12",
+    124 : "f13",
+    125 : "f14",
+    126 : "f15",
+    127 : "f16",
+    128 : "f17",
+    129 : "f18",
+    130 : "f19",
+    131 : "f20",
+    132 : "f21",
+    133 : "f22",
+    134 : "f23",
+    135 : "f24",
+    144 : "num lock",
+    145 : "scroll lock",
+    160 : "^",
+    161 : '!',
+    163 : "#",
+    164 : '$',
+    165 : 'ù',
+    166 : "page backward",
+    167 : "page forward",
+    168 : "refresh",
+    169 : "closing paren (AZERTY)",
+    170 : '*',
+    171 : "~ + * key",
+    172 : "home key",
+    173 : "minus (firefox), mute/unmute",
+    174 : "decrease volume level",
+    175 : "increase volume level",
+    176 : "next",
+    177 : "previous",
+    178 : "stop",
+    179 : "play/pause",
+    180 : "e-mail",
+    181 : "mute/unmute (firefox)",
+    182 : "decrease volume level (firefox)",
+    183 : "increase volume level (firefox)",
+    186 : "semi-colon / ñ",
+    187 : "equal sign",
+    188 : "comma",
+    189 : "dash",
+    190 : "period",
+    191 : "forward slash / ç",
+    192 : "grave accent / ñ / æ / ö",
+    193 : "?, / or °",
+    194 : "numpad period (chrome)",
+    219 : "open bracket",
+    220 : "back slash",
+    221 : "close bracket / å",
+    222 : "single quote / ø / ä",
+    223 : "`",
+    224 : "left or right ⌘ key (firefox)",
+    225 : "altgr",
+    226 : "< /git >, left back slash",
+    230 : "GNOME Compose Key",
+    231 : "ç",
+    233 : "XF86Forward",
+    234 : "XF86Back",
+    240 : "alphanumeric",
+    242 : "hiragana/katakana",
+    243 : "half-width/full-width",
+    244 : "kanji",
+    255 : "toggle touchpad"
+};
+
+function getKeyNameFromStr(k) {
+    return keyCodeNames[k];
 }
 
 function setMachineCodeState(state) {
@@ -116,12 +296,12 @@ function setSettingsCookie() {
 function getCookies() {
     useCookies = false;
     for (var key in settings) {
-        settings[key] = getCookie(key);
-        if (settings[key] != "") {
+        var c = getCookie(key);
+        if (c != "") {
+            settings[key] = c;
             useCookies = true;
         }
     }
-    console.log(settings);
 }
 
 function enableCookies() {
@@ -134,6 +314,10 @@ function enableCookies() {
 function disableCookies() {
     $("#toggleCookies").html("Use Cookies");
     $(".cookie").fadeOut(200);
+}
+
+function sanitizeHTML(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 }
 
 /* Calls */
@@ -154,7 +338,7 @@ function uiAssemble() {
         addConsoleMsg("<b>Assembly Succeeded!</b", CONSOLE_SUCCESS);
     }
     else {
-        addConsoleMsg("<b>Assembler Error: </b>" + output.errorMessage, CONSOLE_ERROR);
+        addConsoleMsg("<b>Assembler Error: </b>" + sanitizeHTML(output.errorMessage), CONSOLE_ERROR);
     }
 
     tabs[currentTab].inSimulation = false;
@@ -808,8 +992,8 @@ function converter() {
     $("#outputVal").val(output);
 }
     
-(function() {
-    "use strict";
+//(function() {
+//    "use strict";
 
     function contextMenuListener(el) {
         el.addEventListener( "contextmenu", function(e) {
@@ -1081,6 +1265,25 @@ function converter() {
         return cookieEnabled;
     }
 
+    function getCombinationNameFromStr(str) {
+        var keycode = str.substr(str.indexOf("_") + 1);;
+        var out = getKeyNameFromStr(parseInt(keycode));
+
+        /*if (str.indexOf("c") != -1) {
+            out = "Ctrl + " + out;
+        }*/
+
+        if (str.indexOf("a") != -1) {
+            out = "Alt + " + out;
+        }
+
+        if (str.indexOf("m") != -1) {
+            out = "Mod + " + out;
+        }
+
+        return out;
+    }
+
     $(document).ready(function() {
         if (are_cookies_enabled()) {
             getCookies();
@@ -1089,12 +1292,6 @@ function converter() {
                 $('#themes').val(0);
                 for (var i = 1; i < 3; i++)
                     $("#theme"+i).prop('disabled', true);
-                    
-                settings.theme = 0;
-                settings.defaultISA = 0;
-                settings.hotkeyAssemble = 119;
-                settings.hotkeySimulate = 120;
-                settings.hotkeyStepbystep = 121;
             }
             else {
                 var themeID = parseInt(settings.theme);
@@ -1104,8 +1301,15 @@ function converter() {
                 }
 
                 $("#toggleCookies").html("Remove Cookies");
+                $(".hotkeyCapture:eq(0)").html(getCombinationNameFromStr(settings.hotkeyNewTab));
+                $(".hotkeyCapture:eq(1)").html(getCombinationNameFromStr(settings.hotkeyOpen));
+                $(".hotkeyCapture:eq(2)").html(getCombinationNameFromStr(settings.hotkeySave));
+                $(".hotkeyCapture:eq(3)").html(getCombinationNameFromStr(settings.hotkeyAssemble));
+                $(".hotkeyCapture:eq(4)").html(getCombinationNameFromStr(settings.hotkeySimulate));
+                $(".hotkeyCapture:eq(5)").html(getCombinationNameFromStr(settings.hotkeyStepbystep));
             }
         }
+        console.log(settings);
 
         $("#defaultISA").val(parseInt(settings.defaultISA));
 
@@ -1253,7 +1457,7 @@ function converter() {
             setMachineCodeState(false);
         }
     });
-})();
+//})();
 
 function displaySettings(state) {
     if (state) {
@@ -1282,19 +1486,138 @@ function toggleCookies() {
     }       
 }
 
-$(document).keydown(function(event){
-    switch(event.which) {
-        case parseInt(settings.hotkeyAssemble):
-            event.preventDefault();
-            uiAssemble();
-            break;
-        case parseInt(settings.hotkeySimulate):
-            event.preventDefault();
-            uiSimulate();
-            break;
-        case parseInt(settings.hotkeyStepbystep):
-            event.preventDefault();
-            uiStepbystep();
-            break;
+var capturing = -1;
+
+function checkCode(e, str) {
+    var meta = (str.indexOf("m")!=-1);
+    var alt = (str.indexOf("a")!=-1);
+    // var ctrl = (str.indexOf("c")!=-1);
+
+    // e.ctrlKey == ctrl && 
+    return (e.metaKey == meta && e.altKey == alt);
+}
+
+$(document).keydown(function(e) {
+    var evtobj=window.event? event : e;
+    var keystr = evtobj.which;
+    if (keystr == 17 || keystr == 18 || keystr == 16)
+        return;
+
+    if (capturing != -1) {
+            
+        var writtenkey = getKeyNameFromStr(parseInt(keystr));
+        
+        keystr = "_"+keystr;
+
+        /*if (evtobj.ctrlKey) {
+            keystr = "c" + keystr;
+            writtenkey = "Ctrl + " + writtenkey;
+        }*/
+        if (evtobj.altKey) {
+            keystr = "a" + keystr;
+            writtenkey = "Alt + " + writtenkey;
+        }
+        if (evtobj.metaKey) {
+            keystr = "m" + keystr;
+            writtenkey = "Mod + " + writtenkey;
+        }
+
+        switch(capturing) {
+            case 0:
+                settings.hotkeyNewTab = keystr;
+                break;
+            case 1:
+                settings.hotkeyOpen = keystr;
+                break;
+            case 2:
+                settings.hotkeySave = keystr;
+                break;
+            case 3:
+                settings.hotkeyAssemble = keystr;
+                break;
+            case 4:
+                settings.hotkeySimulate = keystr;
+                break;
+            case 5:
+                settings.hotkeyStepbystep = keystr;
+                break;
+        }
+
+        setSettingsCookie();
+
+        $(".hotkeyCapture:eq("+capturing+")").html(writtenkey);
+
+        capturing = -1;
+        evtobj.preventDefault();
+        evtobj.stopPropagation();
+    }
+    else {
+        var found = false;
+
+        var newKey = settings.hotkeyNewTab;
+        var newKeycode = parseInt(newKey.substr(newKey.indexOf("_") + 1));
+        
+        var openKey = settings.hotkeyOpen;
+        var openKeyCode = parseInt(openKey.substr(openKey.indexOf("_") + 1));
+        
+        var saveKey = settings.hotkeySave;
+        var saveKeyCode = parseInt(saveKey.substr(saveKey.indexOf("_") + 1));
+        
+        var assembleKey = settings.hotkeyAssemble;
+        var assembleKeycode = parseInt(assembleKey.substr(assembleKey.indexOf("_") + 1));
+        
+        var simulateKey = settings.hotkeySimulate;
+        var simulateKeyCode = parseInt(simulateKey.substr(simulateKey.indexOf("_") + 1));
+        
+        var stepKey = settings.hotkeyStepbystep;
+        var stepKeyCode = parseInt(stepKey.substr(stepKey.indexOf("_") + 1));
+        
+        switch (e.which) {
+            case newKeycode:
+                if (checkCode(e, newKey)) {
+                    addTabWindow();
+                    found = true;
+                }
+                break;
+            case openKeyCode:
+                if (checkCode(e, openKey)) {
+                    $("#asmInputElement").click();
+                    found = true;
+                }
+                break;
+            case saveKeyCode:
+                if (checkCode(e, saveKey)) {
+                    downloadAsm();
+                    found = true;
+                }
+                break;
+            case assembleKeycode:
+                if (checkCode(e, assembleKey)) {
+                    uiAssemble();
+                    found = true;
+                }
+                break;
+            case simulateKeyCode:
+                if (checkCode(e, simulateKey)) {
+                    uiSimulate();
+                    found = true;
+                }
+                break;
+            case stepKeyCode:
+                if (checkCode(e, stepKey)) {
+                    uiStepbystep();
+                    found = true;
+                }
+                break;
+        }
+
+        if (found) {
+            e.preventDefault();
+        }
     }
 });
+
+function hotkeyCapture(id) {
+    $(".hotkeyCapture:eq("+id+")").html("Detecting Hotkey...");
+    capturing = id;
+}
