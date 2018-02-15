@@ -260,6 +260,17 @@ class InstructionSet
 
     //Register abiNames
     abiNames: string[];
+
+    //Endianness
+    endianness: Endianness;
+
+    //Syntax
+    keywordRegexes: Map<Keyword, string>;
+    keywords: Map<Keyword, string[]>;
+    directives: Map<string, Directive>;
+
+    //Assembly Conventions
+    incrementOnFetch: boolean;
     
     /*
         InstructionSet initializer

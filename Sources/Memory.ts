@@ -6,9 +6,11 @@ interface RegisterFile
 
     getRegisterCount():number;
 
-    getModifiedRegisters():boolean[];
+    getModifiedRegisters(): boolean[];
 
-    print()
+    print();
+    
+    reset();
 
     abiNames: string[];
 }

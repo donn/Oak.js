@@ -36,7 +36,7 @@ function Oak_gen_RISCV(): InstructionSet
         [0b0110011, 0b000, 0b0000000],
         function(core)
         {
-            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) + core.registerFile.read(core.arguments[2]));
+            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) + core.registerFile.read(core.arguments[2]));core.pc += 4;
             return null;
         }
     ));
@@ -48,7 +48,7 @@ function Oak_gen_RISCV(): InstructionSet
         [0b0110011, 0b000, 0b0100000],
         function(core)
         {
-            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) - core.registerFile.read(core.arguments[2]));
+            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) - core.registerFile.read(core.arguments[2]));core.pc += 4;
             return null;
         }
     ));
@@ -60,7 +60,7 @@ function Oak_gen_RISCV(): InstructionSet
         [0b0110011, 0b001, 0b0000000],
         function(core)
         {
-            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) << core.registerFile.read(core.arguments[2]));
+            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) << core.registerFile.read(core.arguments[2]));core.pc += 4;
             return null;
         }
     ));
@@ -72,7 +72,7 @@ function Oak_gen_RISCV(): InstructionSet
         [0b0110011, 0b010, 0b0000000],
         function(core)
         {
-            core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) < core.registerFile.read(core.arguments[2]))? 1: 0);
+            core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) < core.registerFile.read(core.arguments[2]))? 1: 0);core.pc += 4;
             return null;
         }
     ));
@@ -84,7 +84,7 @@ function Oak_gen_RISCV(): InstructionSet
         [0b0110011, 0b011, 0b0000000],
         function(core)
         {
-            core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) < core.registerFile.read(core.arguments[2]))? 1: 0);
+            core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) < core.registerFile.read(core.arguments[2]))? 1: 0);core.pc += 4;
             return null;
         },
         false
@@ -98,7 +98,7 @@ function Oak_gen_RISCV(): InstructionSet
         function(core)
         {
             //
-            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) ^ core.registerFile.read(core.arguments[2]));
+            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) ^ core.registerFile.read(core.arguments[2]));core.pc += 4;
             return null;
         }
     ));
@@ -110,7 +110,7 @@ function Oak_gen_RISCV(): InstructionSet
         [0b0110011, 0b101, 0b0000000],
         function(core)
         {
-            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >>> core.registerFile.read(core.arguments[2]));
+            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >>> core.registerFile.read(core.arguments[2]));core.pc += 4;
             return null;
         }
     ));
@@ -122,7 +122,7 @@ function Oak_gen_RISCV(): InstructionSet
         [0b0110011, 0b101, 0b0100000],
         function(core)
         {
-            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >> core.registerFile.read(core.arguments[2]));
+            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >> core.registerFile.read(core.arguments[2]));core.pc += 4;
             return null;
         }
     ));
@@ -134,7 +134,7 @@ function Oak_gen_RISCV(): InstructionSet
         [0b0110011, 0b110, 0b0000000],
         function(core)
         {
-            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) | core.registerFile.read(core.arguments[2]));
+            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) | core.registerFile.read(core.arguments[2]));core.pc += 4;
             return null;
         }
     ));
@@ -146,7 +146,7 @@ function Oak_gen_RISCV(): InstructionSet
         [0b0110011, 0b111, 0b0000000],
         function(core)
         {
-            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) & core.registerFile.read(core.arguments[2]));
+            core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) & core.registerFile.read(core.arguments[2]));core.pc += 4;
             return null;
         }
     ));
@@ -191,6 +191,7 @@ function Oak_gen_RISCV(): InstructionSet
         function(core)
         {
             core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) + core.arguments[2]);
+            core.pc += 4;
             return null;
         }
     ));
@@ -203,6 +204,7 @@ function Oak_gen_RISCV(): InstructionSet
         function(core)
         {
             core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) < core.arguments[2])? 1 : 0);
+            core.pc += 4;
             return null;
         }
     ));
@@ -215,6 +217,7 @@ function Oak_gen_RISCV(): InstructionSet
         function(core)
         {
             core.registerFile.write(core.arguments[0], ((core.registerFile.read(core.arguments[1]) >>> 0) < (core.arguments[2] >>> 0)? 1 : 0));
+            core.pc += 4;
             return null;
         },
         false
@@ -228,6 +231,7 @@ function Oak_gen_RISCV(): InstructionSet
         function(core)
         {
             core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) >>> 0) ^ core.arguments[2]);
+            core.pc += 4;
             return null;
         }
     ));
@@ -240,6 +244,7 @@ function Oak_gen_RISCV(): InstructionSet
         function(core)
         {
             core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) >>> 0) | core.arguments[2]);
+            core.pc += 4;
             return null;
         }
     ));
@@ -252,6 +257,7 @@ function Oak_gen_RISCV(): InstructionSet
         function(core)
         {
             core.registerFile.write(core.arguments[0], ((core.registerFile.read(core.arguments[1]) >>> 0) & core.arguments[2]));
+            core.pc += 4;
             return null;
         }
     ));
@@ -288,6 +294,7 @@ function Oak_gen_RISCV(): InstructionSet
                 return "Illegal memory access.";
             }
             core.registerFile.write(core.arguments[0], signExt(bytes[0], 8));
+            core.pc += 4;
             return null;
         }
     ));
@@ -305,6 +312,7 @@ function Oak_gen_RISCV(): InstructionSet
                 return "Illegal memory access.";
             }
             core.registerFile.write(core.arguments[0], signExt(catBytes(bytes), 16));
+            core.pc += 4;
             return null;
         }
     ));
@@ -322,6 +330,7 @@ function Oak_gen_RISCV(): InstructionSet
                 return "Illegal memory access.";
             }
             core.registerFile.write(core.arguments[0], catBytes(bytes));
+            core.pc += 4;
             return null;
         }
     ));
@@ -339,6 +348,7 @@ function Oak_gen_RISCV(): InstructionSet
                 return "Illegal memory access.";
             }
             core.registerFile.write(core.arguments[0], bytes[0]);
+            core.pc += 4;
             return null;
         }
     ));
@@ -356,6 +366,7 @@ function Oak_gen_RISCV(): InstructionSet
                 return "Illegal memory access.";
             }
             core.registerFile.write(core.arguments[0], catBytes(bytes));
+            core.pc += 4;
             return null;
         }
     ));
@@ -388,6 +399,7 @@ function Oak_gen_RISCV(): InstructionSet
         function(core)
         {
             core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) << core.arguments[2]);
+            core.pc += 4;
             return null;
         },
         false
@@ -401,6 +413,7 @@ function Oak_gen_RISCV(): InstructionSet
         function(core)
         {
             core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >>> core.arguments[2]);
+            core.pc += 4;
             return null;
         },
         false
@@ -414,6 +427,7 @@ function Oak_gen_RISCV(): InstructionSet
         function(core)
         {
             core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >> core.arguments[2]);
+            core.pc += 4;
             return null;
         },
         false
@@ -451,6 +465,7 @@ function Oak_gen_RISCV(): InstructionSet
             bytes.push(core.registerFile.read(core.arguments[0]) & 255);
             if(core.memset(core.registerFile.read(core.arguments[2]) + core.arguments[1], bytes))
             {
+                core.pc += 4;
                 return null;
             }
             return "Illegal memory access.";
@@ -471,6 +486,7 @@ function Oak_gen_RISCV(): InstructionSet
             bytes.push(value & 255);
             if(core.memset(core.registerFile.read(core.arguments[2]) + core.arguments[1], bytes))
             {
+                core.pc += 4;
                 return null;
             }
             return "Illegal memory access.";
@@ -495,6 +511,7 @@ function Oak_gen_RISCV(): InstructionSet
             bytes.push(value & 255);
             if(core.memset(core.registerFile.read(core.arguments[2]) + core.arguments[1], bytes))
             {
+                core.pc += 4;
                 return null;
             }
             return "Illegal memory access.";
@@ -528,6 +545,7 @@ function Oak_gen_RISCV(): InstructionSet
         function(core)
         {
             core.registerFile.write(core.arguments[0], (core.arguments[1] << 12));
+            core.pc += 4;
             return null;
         }
     ));
@@ -539,7 +557,8 @@ function Oak_gen_RISCV(): InstructionSet
         [0b0010111],
         function(core)
         {
-            core.registerFile.write(core.arguments[0], (core.arguments[1] << 12) + core.pc - 4);
+            core.registerFile.write(core.arguments[0], (core.arguments[1] << 12) + core.pc);
+            core.pc += 4;
             return null;
         }
     ));
@@ -659,7 +678,6 @@ function Oak_gen_RISCV(): InstructionSet
             if (core.registerFile.read(core.arguments[0]) === core.registerFile.read(core.arguments[1]))
             {
                 core.pc += core.arguments[2];
-                core.pc -= 4;
             }
             return null;
         }
@@ -675,7 +693,6 @@ function Oak_gen_RISCV(): InstructionSet
             if (core.registerFile.read(core.arguments[0]) !== core.registerFile.read(core.arguments[1]))
             {
                 core.pc += core.arguments[2];
-                core.pc -= 4;
             }
             return null;
         }
@@ -691,7 +708,6 @@ function Oak_gen_RISCV(): InstructionSet
             if (core.registerFile.read(core.arguments[0]) < core.registerFile.read(core.arguments[1]))
             {
                 core.pc += core.arguments[2];
-                core.pc -= 4;
             }
             return null;
         }
@@ -707,7 +723,6 @@ function Oak_gen_RISCV(): InstructionSet
             if (core.registerFile.read(core.arguments[0]) >= core.registerFile.read(core.arguments[1]))
             {
                 core.pc += core.arguments[2];
-                core.pc -= 4;
             }
             return null;
         }
@@ -723,7 +738,6 @@ function Oak_gen_RISCV(): InstructionSet
             if ((core.registerFile.read(core.arguments[0]) >>> 0) < (core.registerFile.read(core.arguments[1]) >>> 0))
             {
                 core.pc += core.arguments[2];
-                core.pc -= 4;
             }
             return null;
         }
@@ -739,7 +753,6 @@ function Oak_gen_RISCV(): InstructionSet
             if ((core.registerFile.read(core.arguments[0]) >>> 0) >= (core.registerFile.read(core.arguments[1]) >>> 0))
             {
                 core.pc += core.arguments[2];
-                core.pc -= 4;
             }
             return null;
         }
@@ -857,7 +870,6 @@ function Oak_gen_RISCV(): InstructionSet
             core.registerFile.write(core.arguments[0], core.pc);
             //console.log(core.pc);
             core.pc += core.arguments[1];
-            core.pc -= 4;
             //console.log(core.arguments[1]);
             return null;
         }
@@ -890,6 +902,7 @@ function Oak_gen_RISCV(): InstructionSet
             function(core)
             {
                 core.ecall();
+                core.pc += 4;
                 return null;
             }
             
@@ -1651,7 +1664,7 @@ function Oak_gen_RISCV(): InstructionSet
 }
 let RISCV = Oak_gen_RISCV();
 
-class RISCVRegisterFile
+class RISCVRegisterFile implements RegisterFile
 {
     private memorySize: number;
     physicalFile: number[];
@@ -1727,32 +1740,8 @@ class RISCVRegisterFile
     }
 };
 
-class RISCVCore implements Core
+class RISCVCore extends Core
 {
-    //Permanent
-    instructionSet: InstructionSet;
-    registerFile: RISCVRegisterFile;
-    memorySize: number;
-
-    // Default Environment Call Regs
-    defaultEcallRegType: number;
-    defaultEcallRegArg: number;
-
-    // Editor Info
-    aceStyle: string;
-    defaultCode: string;
-    defaultMachineCode: string;
-
-    //Transient
-    pc: number;
-    memory: number[];
-
-    //Environment Call Lambda
-    ecall: () => void;
-
-    //Instruction Callback
-    instructionCallback: (data: string) => void;
-
     reset()
     {
         this.pc = 0;
@@ -1763,45 +1752,6 @@ class RISCVCore implements Core
         }
         this.registerFile.reset();
     }
-
-    //Returns bytes on success, null on failure
-    memcpy(address: number, bytes: number): number[]
-    {
-        if (address + bytes > this.memorySize)
-        {
-            return null;
-        }
-        
-        var result: number[] = [];
-        for (var i = 0; i < bytes; i++)
-        {
-            result.push(this.memory[address + i]);
-        }
-        return result;
-    }
-
-    //Returns boolean indicating success
-    //Use to store machine code in memory so it can be executed.
-    memset(address: number, bytes: number[]): boolean
-    {
-        if (address < 0)
-        {
-            return false;
-        }
-
-        if (address + bytes.length > this.memorySize)
-        {
-            return false;
-        }
-
-        for (var i = 0; i < bytes.length; i++)
-        {
-            this.memory[address + i] = bytes[i];
-        }
-        return true;
-    }
-    
-    fetched: number;
 
     fetch(): string
     {
@@ -1814,81 +1764,14 @@ class RISCVCore implements Core
         {
             return "Fetch Error: Illegal memory access.";
         }
-        this.pc += 4;
 
         this.fetched = catBytes(arr);
         return null;
     }
 
-    decoded: Instruction;
-    arguments: number[];
-
-    //Returns the disassembly. If the decoding fails, null.
-    decode(): string
-    {
-        let insts = this.instructionSet.instructions;
-        this.decoded = null;
-        this.arguments = [];
-        for (var i = 0; i < insts.length; i++)
-        {
-            if (insts[i].match(this.fetched))
-            {
-                this.decoded = insts[i];
-                break;
-            }
-        }
-        if (this.decoded == null)
-        {
-            return null;
-        }
-
-        let format = this.decoded.format;
-        let bitRanges = format.ranges;
-
-        for (var i = 0; i < bitRanges.length; i++)
-        {
-            if (bitRanges[i].parameter != null)
-            {
-                var limit = 0;
-                var field = bitRanges[i].field;
-
-                var limits = /([A-za-z]+)\s*\[\s*(\d+)\s*:\s*(\d+)\s*\]/.exec(bitRanges[i].field);
-
-                if (limits != null)
-                {
-                    field = limits[1];
-                    limit = parseInt(limits[3]) >>> 0;
-                }
-                var bits = bitRanges[i].bits;
-
-                var value = ((this.fetched >>> bitRanges[i].start) & ((1 << bitRanges[i].bits) - 1)) << limit;
-                
-                if (bitRanges[i].parameterType === Parameter.special)
-                {
-                    value = this.decoded.format.decodeSpecialParameter(value, this.pc); //Unmangle...
-                }
-
-                this.arguments[bitRanges[i].parameter] = this.arguments[bitRanges[i].parameter] | value;
-
-                if (this.decoded.signed && bitRanges[i].parameterType !== Parameter.register) {
-                    this.arguments[bitRanges[i].parameter] = signExt(this.arguments[i], bitRanges[i].totalBits? bitRanges[i].totalBits: bitRanges[i].bits);
-                }
-            }
-        }
-
-        return this.instructionSet.disassemble(this.decoded, this.arguments);
-
-    }
-
-    //Returns null on success, error message on error.
-    execute(): string
-    {
-        return this.decoded.executor(this)
-    }
-
-
     constructor(memorySize: number, ecall: () => void, instructionCallback: (data: string) => void)
     {
+        super();
         this.defaultEcallRegType     = 17;
         this.defaultEcallRegArg      = 10;
         this.aceStyle = "ace/mode/riscv";
