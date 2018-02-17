@@ -1,4 +1,5 @@
 /// <reference path="Core.ts"/>
+/// <reference path="Assembler.ts"/>
 
 enum Parameter
 {
@@ -26,11 +27,14 @@ class BitRange
     parameterDefaultValue: number;
     parameterType: Parameter;
 
-    constructor(field: string, start: number, bits: number, constant: number = null) {
+    signed: boolean;
+
+    constructor(field: string, start: number, bits: number, constant: number = null, signed: boolean = false) {
         this.field = field;
         this.start = start;
         this.bits = bits;
         this.constant = constant;
+        this.signed = signed;
     }
 
     public limited(totalBits: number, limitStart: number = null, limitEnd: number = null): BitRange {
@@ -81,7 +85,7 @@ class Instruction
     constants: string[];
     constValues: number[];
     available: boolean;
-    signed: boolean;
+    signatoryOverride: boolean; //Optional, if true/false overrides default signing behavior for bitranges
 
     executor: (core: Core) => string;
 
@@ -159,15 +163,14 @@ class Instruction
     };
 
 
-    constructor(mnemonic: string, format: Format, constants: string[], constValues: number[], executor: (core: Core) => string, signed: boolean = true, available: boolean = true)
+    constructor(mnemonic: string, format: Format, constants: string[], constValues: number[], executor: (core: Core) => string, signatoryOverride: boolean = null)
     {
         this.mnemonic = mnemonic;
         this.format = format;
         this.constants = constants;
         this.constValues = constValues;
-        this.available = available;
-        this.signed = signed;
         this.executor = executor;        
+        this.signatoryOverride = signatoryOverride;
     }
 };
 

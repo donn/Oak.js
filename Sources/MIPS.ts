@@ -336,7 +336,7 @@ function Oak_gen_MIPS(): InstructionSet
                 new BitRange("opcode", 26, 6),
                 new BitRange("rs", 21, 5).parameterized(1, Parameter.register),
                 new BitRange("rt", 16, 5).parameterized(0, Parameter.register),
-                new BitRange("imm", 0, 16).parameterized(2, Parameter.immediate)
+                new BitRange("imm", 0, 16, null, true).parameterized(2, Parameter.immediate)
             ],
             /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/,
             "@mnem @arg0, @arg1, @arg2"
@@ -408,7 +408,7 @@ function Oak_gen_MIPS(): InstructionSet
             [0x0B],
             function(core)
             {
-                core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) < core.arguments[2])? 1 : 0);
+                core.registerFile.write(core.arguments[0], ((core.registerFile.read(core.arguments[1]) >>> 0) < (core.arguments[2] >>> 0)? 1 : 0));
                 return null;
             }
         )
@@ -477,7 +477,7 @@ function Oak_gen_MIPS(): InstructionSet
                 new BitRange("opcode", 26, 6),
                 new BitRange("rs", 21, 5).parameterized(0, Parameter.register),
                 new BitRange("rt", 16, 5).parameterized(1, Parameter.register),
-                new BitRange("imm", 0, 16).parameterized(2, Parameter.immediate)
+                new BitRange("imm", 0, 16, null, true).parameterized(2, Parameter.immediate)
             ],
             /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/,
             "@mnem @arg0, @arg1, @arg2",
@@ -614,7 +614,7 @@ function Oak_gen_MIPS(): InstructionSet
                 new BitRange("opcode", 26, 6),
                 new BitRange("rs", 21, 5, 0),
                 new BitRange("rt", 16, 5).parameterized(0, Parameter.register),
-                new BitRange("imm", 0, 16).parameterized(1, Parameter.register)
+                new BitRange("imm", 0, 16, null, true).parameterized(1, Parameter.register)
             ],
             /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/,
             "@mnem @arg0, @arg1"
@@ -649,7 +649,7 @@ function Oak_gen_MIPS(): InstructionSet
                 new BitRange("opcode", 26, 6),
                 new BitRange("rs", 21, 5).parameterized(2, Parameter.register),
                 new BitRange("rt", 16, 5).parameterized(0, Parameter.register),
-                new BitRange("imm", 0, 16).parameterized(1, Parameter.immediate)
+                new BitRange("imm", 0, 16, null, true).parameterized(1, Parameter.immediate)
             ],
             /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(-?0?[boxd]?[0-9A-F]+)\(\s*(\$[A-Za-z0-9]+)\s*\)/,
             "@mnem @arg0, @arg1(@arg2)"
@@ -1000,7 +1000,7 @@ function Oak_gen_MIPS(): InstructionSet
                 new BitRange("opcode", 26, 6),
                 new BitRange("rs", 21, 5, 0),
                 new BitRange("rt", 16, 5).parameterized(0, Parameter.register),
-                new BitRange("imm", 0, 16).parameterized(1, Parameter.immediate)
+                new BitRange("imm", 0, 16, null, true).parameterized(1, Parameter.immediate)
             ],
             /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/,
             "@mnem @arg0, @arg1"

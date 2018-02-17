@@ -84,10 +84,9 @@ function Oak_gen_RISCV(): InstructionSet
         [0b0110011, 0b011, 0b0000000],
         function(core)
         {
-            core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) < core.registerFile.read(core.arguments[2]))? 1: 0);core.pc += 4;
+            core.registerFile.write(core.arguments[0], ((core.registerFile.read(core.arguments[1]) >>> 0) < (core.registerFile.read(core.arguments[2]) >>> 0))? 1: 0);core.pc += 4;
             return null;
-        },
-        false
+        }
     ));
 
     instructions.push(new Instruction(
@@ -157,7 +156,7 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm", 20, 12).parameterized(2, Parameter.immediate),
+                new BitRange("imm", 20, 12, null, true).parameterized(2, Parameter.immediate),
                 new BitRange("rs1", 15, 5).parameterized(1, Parameter.register),
                 new BitRange("funct3", 12, 3),
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.register),
@@ -268,7 +267,7 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm", 20, 12).parameterized(1, Parameter.immediate),
+                new BitRange("imm", 20, 12, null, true).parameterized(1, Parameter.immediate),
                 new BitRange("rs1", 15, 5).parameterized(2, Parameter.register),
                 new BitRange("funct3", 12, 3),
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.register),
@@ -401,8 +400,7 @@ function Oak_gen_RISCV(): InstructionSet
             core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) << core.arguments[2]);
             core.pc += 4;
             return null;
-        },
-        false
+        }
     ));
 
     instructions.push(new Instruction(
@@ -415,8 +413,7 @@ function Oak_gen_RISCV(): InstructionSet
             core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >>> core.arguments[2]);
             core.pc += 4;
             return null;
-        },
-        false
+        }
     ));
 
     instructions.push(new Instruction(
@@ -429,8 +426,7 @@ function Oak_gen_RISCV(): InstructionSet
             core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >> core.arguments[2]);
             core.pc += 4;
             return null;
-        },
-        false
+        }
     ));
 
 
@@ -440,11 +436,11 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm", 25, 7).parameterized(1, Parameter.immediate).limited(12, 5, 11),
+                new BitRange("imm", 25, 7, null, true).parameterized(1, Parameter.immediate).limited(12, 5, 11),
                 new BitRange("rs2", 20, 5).parameterized(0, Parameter.register),
                 new BitRange("rs1", 15, 5).parameterized(2, Parameter.register),
                 new BitRange("funct3", 12, 3),
-                new BitRange("imm", 7, 5).parameterized(1, Parameter.immediate).limited(12, 0, 4),
+                new BitRange("imm", 7, 5, null, true).parameterized(1, Parameter.immediate).limited(12, 0, 4),
                 new BitRange("opcode", 0, 7)
             ],
             /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*(-?0?[boxd]?[0-9A-F]+)\(\s*([A-Za-z0-9]+)\s*\)/,
@@ -526,7 +522,7 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm", 12, 20).parameterized(1, Parameter.register),
+                new BitRange("imm", 12, 20, null, true).parameterized(1, Parameter.immediate),
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.offset),
                 new BitRange("opcode", 0, 7)
             ],
@@ -569,11 +565,11 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm", 25, 7).parameterized(2, Parameter.special).limited(13, 5, 11),
+                new BitRange("imm", 25, 7, null, true).parameterized(2, Parameter.special).limited(13, 5, 11),
                 new BitRange("rs2", 20, 5).parameterized(1, Parameter.register),
                 new BitRange("rs1", 15, 5).parameterized(0, Parameter.register),
                 new BitRange("funct3", 12, 3),
-                new BitRange("imm", 25, 7).parameterized(2, Parameter.special).limited(13, 0, 4),
+                new BitRange("imm", 7, 5, null, true).parameterized(2, Parameter.special).limited(13, 0, 4),
                 new BitRange("opcode", 0, 7)
             ],
             /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)/,
@@ -764,7 +760,7 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm", 12, 20).parameterized(1, Parameter.special).limited(21),
+                new BitRange("imm", 12, 20, null, true).parameterized(1, Parameter.special).limited(21),
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.register),
                 new BitRange("opcode", 0, 7)
             ],
@@ -948,7 +944,7 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm", 20, 12).parameterized(1, Parameter.register),
+                new BitRange("imm", 20, 12, null, true).parameterized(1, Parameter.register),
                 new BitRange("rs1", 15, 5),
                 new BitRange("funct3", 12, 3),
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.register),
@@ -989,7 +985,7 @@ function Oak_gen_RISCV(): InstructionSet
         new Format
         (
             [
-                new BitRange("imm", 20, 12),
+                new BitRange("imm", 20, 12, null, true),
                 new BitRange("rs1", 15, 5).parameterized(0, Parameter.register),
                 new BitRange("funct3", 12, 3),
                 new BitRange("rd", 7, 5),
