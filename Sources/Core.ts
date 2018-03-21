@@ -1,15 +1,7 @@
 /// <reference path="InstructionSet.ts"/>
 /// <reference path="Memory.ts"/>
 
-enum Endianness
-{
-    little = 0,
-    big,
-    bi
-}
-
-abstract class Core
-{
+abstract class Core {
     //Permanent
     instructionSet: InstructionSet;
     registerFile: RegisterFile;
@@ -46,8 +38,7 @@ abstract class Core
 
     //Returns boolean indicating success
     //Use to store machine code in memory so it can be executed.
-    memset(address: number, bytes: number[]): boolean
-    {
+    memset(address: number, bytes: number[]): boolean {
         if (address < 0)
         {
             return false;
@@ -110,7 +101,7 @@ abstract class Core
 
                 this.arguments[bitRanges[i].parameter] = this.arguments[bitRanges[i].parameter] | value;
 
-                if (this.decoded.signed && bitRanges[i].parameterType !== Parameter.register) {
+                if (this.decoded.format.ranges[i].signed && bitRanges[i].parameterType !== Parameter.register) {
                     this.arguments[bitRanges[i].parameter] = signExt(this.arguments[i], bitRanges[i].totalBits? bitRanges[i].totalBits: bitRanges[i].bits);
                 }
             }
@@ -120,8 +111,7 @@ abstract class Core
     }
 
     //Returns null on success, error message on error.
-    execute(): string
-    {
+    execute(): string {
         return this.decoded.executor(this)
     }
 

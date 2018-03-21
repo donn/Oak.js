@@ -1,8 +1,7 @@
 /// <reference path="Core.ts"/>
 /// <reference path="Assembler.ts"/>
 
-enum Parameter
-{
+enum Parameter {
     immediate = 0,
     register = 1,
     condition = 2,
@@ -11,8 +10,13 @@ enum Parameter
     fpImmediate = 5
 };
 
-class BitRange
-{
+enum Endianness {
+    little = 0,
+    big,
+    bi
+}
+
+class BitRange {
     field: string;
     start: number;
     bits: number;
@@ -52,8 +56,7 @@ class BitRange
     }
 };
 
-class Format
-{   
+class Format {   
     ranges: BitRange[];
     regex: RegExp;
     disassembly: string; 
@@ -78,8 +81,7 @@ class Format
     }        
 };
 
-class Instruction
-{
+class Instruction {
     mnemonic: string;
     format: Format;
     constants: string[];
@@ -89,8 +91,7 @@ class Instruction
 
     executor: (core: Core) => string;
 
-    private pad(str: string, length: number): string
-    {
+    private pad(str: string, length: number): string {
         var padded = str;
         for (var i = 0; i < length - str.length; i++)
         {
@@ -99,8 +100,7 @@ class Instruction
         return padded;
     }
 
-    mask(): string
-    {
+    mask(): string {
         var str = "";
         for (var i = 0; i < this.format.ranges.length; i++)
         {
@@ -113,8 +113,7 @@ class Instruction
             {
                 str += this.pad(this.format.ranges[i].constant.toString(2), this.format.ranges[i].bits);
             }
-            else
-            {
+            else {
                 for (var j = 0; j < this.format.ranges[i].bits; j++)
                 {
                     str += "X";
@@ -125,8 +124,7 @@ class Instruction
         return str;
     };
 
-    match(machineCode: number): boolean
-    {
+    match(machineCode: number): boolean {
         var machineCodeMutable = machineCode >>> 0;
         let maskBits = this.mask().split("");
         for (var i = 31; i >= 0; i--)
@@ -146,8 +144,7 @@ class Instruction
         return true;
     }
 
-    template(): number
-    {
+    template(): number {
         var temp = 0 >>> 0;
 
         for (var i = 0; i < this.format.ranges.length; i++)
@@ -201,8 +198,7 @@ class PseudoInstruction //We don't have to use this here but I should probably b
 
 };
 
-class InstructionSet
-{
+class InstructionSet {
     name: string;
     formats: Format[];   
     instructions: Instruction[];
@@ -211,8 +207,7 @@ class InstructionSet
     dataDirectiveSizes: number[];            
 
     //Return Mnemonic Index (pseudo)
-    public pseudoMnemonicSearch(mnemonic: string): number
-    {
+    public pseudoMnemonicSearch(mnemonic: string): number {
         for (var i = 0; i < this. pseudoInstructions.length; i++)
         {
             if (this. pseudoInstructions[i].mnemonic == mnemonic)
@@ -224,8 +219,7 @@ class InstructionSet
     } //Worst case = instructions.length
     
     //Return Mnemonic Index (True)
-    public mnemonicSearch(mnemonic: string): number
-    {
+    public mnemonicSearch(mnemonic: string): number {
         for (var i = 0; i < this.instructions.length; i++)
         {
             if (this.instructions[i].mnemonic == mnemonic)
@@ -236,8 +230,7 @@ class InstructionSet
         return -1;
     } //Worst case = instructions.length
 
-    public disassemble(instruction: Instruction, args: number[]): string
-    {
+    public disassemble(instruction: Instruction, args: number[]): string {
         var output = instruction.format.disassembly;
         output = output.replace("@mnem", instruction.mnemonic);
         for (var i = 0; i < instruction.format.ranges.length; i++)
@@ -268,9 +261,9 @@ class InstructionSet
     endianness: Endianness;
 
     //Syntax
-    keywordRegexes: Map<Keyword, string>;
-    keywords: Map<Keyword, string[]>;
-    directives: Map<string, Directive>;
+    keywordRegexes: string[]; //Map<Keyword, string>;
+    keywords: string[][]; //Map<Keyword, string[]>;
+    directives: Directive[]; //Map<string, Directive>;
 
     //Assembly Conventions
     incrementOnFetch: boolean;
