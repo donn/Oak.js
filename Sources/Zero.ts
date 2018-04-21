@@ -239,3 +239,14 @@ if (consoleTests)
     console.log(ecalloutput);
     ecalloutput = "";
 }
+
+function CreateRISCVCore(memorySize: number, ecall: () => void, instructionCallback: (data: string) => void) {
+    return new RISCVCore(memorySize, ecall, instructionCallback);
+}
+
+function CreateMIPSCore(memorySize: number, ecall: () => void, instructionCallback: (data: string) => void) {
+    return new MIPSCore(memorySize, ecall, instructionCallback);
+}
+
+RegisterISA("RISC-V", CreateRISCVCore);
+RegisterISA("MIPS", CreateMIPSCore);
