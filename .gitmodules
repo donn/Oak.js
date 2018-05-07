@@ -1,0 +1,6 @@
+[submodule "Libraries/grapheme-splitter"]
+	path = Libraries/grapheme-splitter
+	url = https://github.com/orling/grapheme-splitter
+[submodule "Libraries/text-encoding-shim"]
+	path = Libraries/text-encoding-shim
+	url = https://gitlab.com/PseudoPsycho/text-encoding-shim

@@ -1,3 +1,6 @@
+declare function TextEncoder(): void; //Ignore this error, TypeScript can't decide if it's ES6
+declare function GraphemeSplitter(): void;
+
 function rangeCheck(value: number, bits: number): boolean {
     if (bits == 32) {
         return true; //No other option.
@@ -13,6 +16,16 @@ function rangeCheck(value: number, bits: number): boolean {
         return true;
     }
     return false;
+}
+
+function bytes(text: string): number[] {
+    var encoder = new TextEncoder();
+    return [].slice.call(encoder.encode(text));
+}
+
+function graphemes(text: string): string[] {
+    var splitter = new GraphemeSplitter();
+    return splitter.splitGraphemes(text);
 }
 
 /*
