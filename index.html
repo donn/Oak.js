@@ -1,5 +1,5 @@
 <!doctype HTML>
-<html>
+<html lang="en">
     <head>
         <title>Oak.js</title>
         <link rel="stylesheet" type="text/css" href="Styles/style.css"></link>
@@ -10,6 +10,29 @@
         <link rel="icon" type="image/png" sizes="16x16" href="Images/favicon.ico">
 
         <meta charset="utf-8"/>
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <meta name="description" content="Oak.js is a web-based IDE, assembler, disassembler, and simulator for RISC-V and MIPS.">
+        <meta name="keywords" content="iss, assembly, tool, online, ide, simulator, assembler, riscv, risc-v, mips">
+        <link rel="canonical" href="https://donn.github.io/Oak.js" />
+        
+        <meta property="og:title" content="Oak.js" />
+        <meta property="og:site_name" content="Oak.js">
+        <meta property="og:image" content="https://donn.github.io/Oak.js/Images/preview.png" />
+        <meta property="og:description" content="Oak.js is a web-based IDE, assembler, disassembler, and simulator for RISC-V and MIPS." />
+        <meta property="og:url" content="https://donn.github.io/Oak.js" />
+        <meta property="og:type" content="website" />
+
+        <meta itemprop="name" content="Oak.js">
+        <meta itemprop="description" content="Oak.js is a web-based IDE, assembler, disassembler, and simulator for RISC-V and MIPS.">
+        <meta itemprop="image" content="https://donn.github.io/Oak.js/Images/preview.png">
+
+        <meta name="twitter:card" content="summary">
+        <meta name="twitter:url" content="https://donn.github.io/Oak.js">
+        <meta name="twitter:title" content="Oak.js">
+        <meta name="twitter:description" content="Oak.js is a web-based IDE, assembler, disassembler, and simulator for RISC-V and MIPS.">
+        <meta name="twitter:image" content="https://donn.github.io/Oak.js/Images/preview.png">
     </head>
     <body class='noTab'>
         <div class='overlay' id="overlay">
@@ -43,7 +66,7 @@
             </div>
         </div>
         <header>
-            <a href=''><img src='Images/iconShadow.png' /></a><div>
+            <a href=''><img src='Images/iconShadow.png' alt='Oak.js Logo' /></a><div>
                 <span>File</span>
                 <div>
                     <a href="javascript:void(0)" class="addTab">New Tab</a>
@@ -68,15 +91,16 @@
                     <a href='https://github.com/donn/Oak.js'>Source</a>
                 </div>
             </div>
-            <a href='javascript:void(0)' onclick='uiStepbystep()'><img src='Images/stepByStep.png' /><span class='tooltip'>Step By Step</span></a>
-            <a href='javascript:void(0)' onclick='uiSimulate()'  id='playbutton'><img src='Images/play.png' /><span class='tooltip'>Play</span></a>
-            <a href='javascript:void(0)' onclick='uiAssemble()'><img src='Images/assemble.png' /><span class='tooltip'>Assemble</span></a>
+            <a href='javascript:void(0)' onclick='uiStepbystep()'><img src='Images/stepByStep.png' alt='Simulate Step-by-step' /><span class='tooltip'>Step By Step</span></a>
+            <a href='javascript:void(0)' onclick='uiSimulate()'  id='playbutton'><img src='Images/play.png' alt='Simulate' /><span class='tooltip'>Play</span></a>
+            <a href='javascript:void(0)' onclick='uiAssemble()'><img src='Images/assemble.png' alt='Assemble' /><span class='tooltip'>Assemble</span></a>
         </header>
         <main>
             <div id='noTab'>
                 <div>
-                    <h2>Welcome to Oak.js!</h2>
-                    <p>Oak.js is a simulator and assembler for RISC-V, and MIPS.</p>
+                    <h1>Welcome to Oak.js!</h1>
+                    <p>Oak.js is an online javascript IDE, Assembler, Disassembler, and Simulator for assembly languages such as RISC-V and MIPS.</p>
+                    <p>Please note that Oak.js requires Javascript. It is entirely developed to use the front-end, and so is light and easily portable.</p>
                     <button class='addTab'>Add Tab</button><button class='loadAsm'>Load Assembly</button><button class='loadBin'>Load Binary</button>
                 </div>
             </div>
