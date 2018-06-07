@@ -80,9 +80,8 @@ abstract class Core {
         {
             return null;
         }
-
-        let format = this.decoded.format;
-        let bitRanges = format.ranges;
+        
+        let bitRanges = this.decoded.format.ranges;
 
         for (var i = 0; i < bitRanges.length; i++)
         {

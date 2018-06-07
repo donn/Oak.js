@@ -57,7 +57,7 @@ function resize() {
     resizeRAM();
 }
 
-// Thank you to https://github.com/wesbos/keycodes
+// Credit: https://github.com/wesbos/keycodes
 var keyCodeNames = {
     0 : "That key has no keycode",
     3 : "break",
@@ -133,7 +133,7 @@ var keyCodeNames = {
     88 : "x",
     89 : "y",
     90 : "z",
-    91 : "Windows Key / Left ⌘ / Chromebook Search key",
+    91 : "Win Key / Left ⌘ / Chromebook Search key",
     92 : "right window key",
     93 : "Windows Menu / Right ⌘",
     95: "sleep",
@@ -334,7 +334,7 @@ function uiAssemble() {
 
     $("#console").html("");
     if (output.errorMessage==null) {
-        $("#machineCode").val(output.machineCode.Oak_hex());
+        $("#machineCode").val(output.machineCode.hexed());
         addConsoleMsg("<b>Assembly Succeeded!</b", CONSOLE_SUCCESS);
     }
     else {

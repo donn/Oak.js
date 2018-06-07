@@ -1,5 +1,6 @@
 /// <reference path="InstructionSet.ts"/>
 /// <reference path="Utils.ts" />
+/// <reference path="Assembler.ts" />
 //The RISC-V Instruction Set Architecture, Version 2.1
 
 function Oak_gen_RISCV(): InstructionSet {
@@ -1435,7 +1436,23 @@ function Oak_gen_RISCV(): InstructionSet {
 
     let abiNames = ['zero', 'ra', 'sp', 'gp', 'tp', 't0', 't1', 't2', 's0', 's1', 'a0', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10', 's11', 't3', 't4', 't5', 't6'];
 
-    return new InstructionSet("rv32i", 32, formats, instructions, pseudoInstructions, [".word", ".half", ".byte", ".string"], [4, 2, 1, 0], abiNames, process, tokenize, assemble);
+    var keywords: string[][] = [];
+        keywords[Keyword.directive] = ["\\."];
+        keywords[Keyword.comment] = ["#"];
+        keywords[Keyword.label] = ["\\:"];
+        keywords[Keyword.stringMarker] = ["\\\""];
+        keywords[Keyword.charMarker] = ["\\\'"];
+        keywords[Keyword.register] = ["x"];
+
+    var directives: Directive[] = [];
+        directives["text"] = Directive.text;
+        directives["data"] = Directive.data;
+        directives["string"] = Directive.cString;
+        directives["byte"] = Directive._8bit;
+        directives["half"] = Directive._16bit;
+        directives["word"] = Directive._32bit;
+
+    return new InstructionSet("rv32i", 32, formats, instructions, pseudoInstructions, [".word", ".half", ".byte", ".string"], [4, 2, 1, 0], abiNames, process, tokenize, assemble, keywords, directives);
 }
 let RISCV = Oak_gen_RISCV();
 

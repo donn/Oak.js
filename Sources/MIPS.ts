@@ -1378,11 +1378,27 @@ function Oak_gen_MIPS(): InstructionSet {
         result.size = address;
         return result;
     };
+    
+    var keywords: string[][] = [];
+        keywords[Keyword.directive] = ["\\."];
+        keywords[Keyword.comment] = ["#"];
+        keywords[Keyword.label] = ["\\:"];
+        keywords[Keyword.stringMarker] = ["\\\""];
+        keywords[Keyword.charMarker] = ["\\\'"];
+        keywords[Keyword.register] = ["x"];
+
+    var directives: Directive[] = [];
+        directives["text"] = Directive.text;
+        directives["data"] = Directive.data;
+        directives["asciiz"] = Directive.cString;
+        directives["byte"] = Directive._8bit;
+        directives["half"] = Directive._16bit;
+        directives["word"] = Directive._32bit;
 
 
     let abiNames = ["$zero", "$at", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$k0", "$k1", "$gp", "$sp", "$fp", "$ra"];
 
-    return new InstructionSet("mips", 32, formats, instructions, pseudoInstructions, [".word", ".half", ".byte", ".asciiz"], [4, 2, 1, 0], abiNames, process, tokenize, assemble);
+    return new InstructionSet("mips", 32, formats, instructions, pseudoInstructions, [".word", ".half", ".byte", ".asciiz"], [4, 2, 1, 0], abiNames, process, tokenize, assemble, keywords, directives);
 }
 let MIPS = Oak_gen_MIPS();
 

@@ -1,5 +1,4 @@
 /// <reference path="Core.ts"/>
-/// <reference path="Assembler.ts"/>
 
 enum Parameter {
     immediate = 0,
@@ -14,7 +13,43 @@ enum Endianness {
     little = 0,
     big,
     bi
-}
+};
+
+enum Keyword {
+    directive = 0,
+    comment,
+    label,
+    stringMarker,
+    charMarker,
+    register,
+    blockCommentBegin,
+    blockCommentEnd,
+
+    //Only send as keywordRegexes,
+    string,
+    char,
+    numeric
+};
+
+enum Directive {
+    text = 0,
+    data,
+    string,
+    cString, //Null terminated
+
+    //Ints and chars,
+    _8bit,
+    _16bit,
+    _32bit,
+    _64bit,
+
+    //Fixed point decimals,
+    fixedPoint,
+    floatingPoint,
+
+    //Custom,
+    custom
+};
 
 class BitRange {
     field: string;
@@ -84,8 +119,7 @@ class Format {
 class Instruction {
     mnemonic: string;
     format: Format;
-    constants: string[];
-    constValues: number[];
+    constants: number[];
     available: boolean;
     signatoryOverride: boolean; //Optional, if true/false overrides default signing behavior for bitranges
 
@@ -104,10 +138,10 @@ class Instruction {
         var str = "";
         for (var i = 0; i < this.format.ranges.length; i++)
         {
-            let index = this.constants.indexOf(this.format.ranges[i].field);
-            if (index !== -1)
+            let constant = this.constants[this.format.ranges[i].field];
+            if (constant !== undefined)
             {
-                str += this.pad(this.constValues[index].toString(2), this.format.ranges[i].bits);
+                str += this.pad(constant.toString(2), this.format.ranges[i].bits);
             }
             else if (this.format.ranges[i].constant != null)
             {
@@ -140,61 +174,35 @@ class Instruction {
             }
             machineCodeMutable = machineCodeMutable >>> 1;
         }
-        //console.log("Match Log: Matched 0b" + (machineCode >>> 0).toString(2) + " with " + this.mnemonic + ".");
+        
         return true;
     }
 
     template(): number {
         var temp = 0 >>> 0;
 
-        for (var i = 0; i < this.format.ranges.length; i++)
-        {
-            let index = this.constants.indexOf(this.format.ranges[i].field);
-            if (index !== -1)
-            {
-                
+        for (var i = 0; i < this.format.ranges.length; i++) {
+            let constant = this.constants[this.format.ranges[i].field];
+            if (constant !== undefined) {
+                temp |= (constant << this.format.ranges[i].start)
             }
         }
 
-        return parseInt(this.mask().split("X").join("0"), 2);
+        return temp
     };
 
 
-    constructor(mnemonic: string, format: Format, constants: string[], constValues: number[], executor: (core: Core) => string, signatoryOverride: boolean = null)
-    {
+    constructor(mnemonic: string, format: Format, constants: string[], constValues: number[], executor: (core: Core) => string, signatoryOverride: boolean = null) {
         this.mnemonic = mnemonic;
         this.format = format;
-        this.constants = constants;
-        this.constValues = constValues;
+        this.constants = [];
+        for (var constant in constants) { this.constants[constants[constant]] = constValues[constant]; }
         this.executor = executor;        
         this.signatoryOverride = signatoryOverride;
     }
 };
 
-class PseudoInstruction //We don't have to use this here but I should probably backport it to Swift.
-{    
-    mnemonic: string;
-    parameters: string[];
-    expansion: string[];
-
-    /*
-    Example:
-    mnemonic: li
-    parameters: ['__oakasm__rd', '__oakasm__imm']        
-    expansion: ['add __oakasm__rd, __oakasm__rd, __oakasm__imm']
-    */
-
-    expand(line: String)
-    {
-        return null; 
-    }
-
-    constructor(mnemonic: string, parameters: string[], expansion: string[])
-    {
-        this.mnemonic = mnemonic;
-        this.parameters = parameters;
-        this.expansion = expansion;
-    }
+class PseudoInstruction { //Note: Redo
 
 };
 
@@ -208,13 +216,6 @@ class InstructionSet {
 
     //Return Mnemonic Index (pseudo)
     public pseudoMnemonicSearch(mnemonic: string): number {
-        for (var i = 0; i < this. pseudoInstructions.length; i++)
-        {
-            if (this. pseudoInstructions[i].mnemonic == mnemonic)
-            {
-                return i;
-            }
-        }
         return -1;
     } //Worst case = instructions.length
     
@@ -282,9 +283,10 @@ class InstructionSet {
         abiNames: string[],
         process: (address: number, text: string, type: Parameter, bits: number, labels: string[], addresses: number[]) => ({errorMessage: string, value: number}),
         tokenize: (file: string) => ({errorMessage: string, labels: string[], addresses: number[], lines: string[], pc: number[]}),
-        assemble: (nester: number, address: number, lines: string[], labels: string[], addresses: number[]) => ({errorMessage: string, machineCode: number[], size: number})
-    )
-    {
+        assemble: (nester: number, address: number, lines: string[], labels: string[], addresses: number[]) => ({errorMessage: string, machineCode: number[], size: number}),
+        keywords: string[][],
+        directives: Directive[]
+    ) {
         this.name = name
         this.bits = bits       
         this.formats = formats
@@ -293,9 +295,7 @@ class InstructionSet {
         this.dataDirectives = dataDirectives
         this.dataDirectiveSizes = dataDirectiveSizes
         this.abiNames = abiNames
-
-        this.processParameter = process       
-        this.tokenize = tokenize
-        this.assemble = assemble
+        this.keywords = keywords
+        this.directives = directives
     }
 };

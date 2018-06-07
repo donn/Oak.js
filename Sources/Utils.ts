@@ -1,6 +1,3 @@
-declare function TextEncoder(): void; //Ignore this error, TypeScript can't decide if it's ES6
-declare function GraphemeSplitter(): void;
-
 function rangeCheck(value: number, bits: number): boolean {
     if (bits == 32) {
         return true; //No other option.
@@ -16,16 +13,6 @@ function rangeCheck(value: number, bits: number): boolean {
         return true;
     }
     return false;
-}
-
-function bytes(text: string): number[] {
-    var encoder = new TextEncoder();
-    return [].slice.call(encoder.encode(text));
-}
-
-function graphemes(text: string): string[] {
-    var splitter = new GraphemeSplitter();
-    return splitter.splitGraphemes(text);
 }
 
 /*
@@ -59,3 +46,35 @@ function catBytes(bytes: number[]): number {
     }
     return storage;
 }
+
+interface String {
+    interpretedBytes(): number[];
+}
+
+String.prototype.interpretedBytes = function () {
+    var hexes = this.split(' '); // Remove spaces, then seperate characters
+	var bytes = [];
+	for (var i=0; i < hexes.length; i++) {
+		let value = parseInt(hexes[i], 16);
+		if (!isNaN(value)) {
+			bytes.push(value);
+		}
+	}
+	return bytes;
+}
+
+interface Array<T> {
+    hexed(): string;
+}
+
+Array.prototype.hexed = function () {
+    var hexadecimal = "";
+    for (var i = 0; i < this.length; i++) {
+        var hexRepresentation = this[i].toString(16).toUpperCase();
+        if (hexRepresentation.length === 1) {
+            hexRepresentation = "0" + hexRepresentation;
+        }
+        hexadecimal += hexRepresentation + " ";
+    }
+    return hexadecimal;
+};
