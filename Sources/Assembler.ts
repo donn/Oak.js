@@ -7,6 +7,7 @@ class Assembler {
     directives: Directive[]; //Map<string, Directive>;
     endianness: Endianness;
     incrementOnFetch: boolean;
+    memoryMap: number[];
 
     static radixes = {
         'b': 2,
@@ -121,10 +122,12 @@ class Assembler {
 
         return options + ")";
     }
+    
 
-    constructor(instructionSet: InstructionSet, endianness: Endianness) {
+    constructor(instructionSet: InstructionSet, endianness: Endianness, memoryMap: number[] = null) {
         this.incrementOnFetch = instructionSet.incrementOnFetch;
         this.keywordRegexes = [];
+        this.memoryMap = memoryMap;
 
         if (instructionSet.keywordRegexes) {
             this.keywordRegexes = instructionSet.keywordRegexes;
@@ -177,18 +180,6 @@ class Assembler {
                     this.keywordRegexes[Keyword.char] = options + "((?:.)|(\\\\[\\\\" + Assembler.escapedCharacterList + escapable + "]))" + options;
                 }
 
-            }
-
-            if (words[Keyword.blockCommentBegin]) {
-                let options0 = Assembler.options(words[Keyword.blockCommentBegin]) 
-                if (options0) {
-                    if (words[Keyword.blockCommentEnd]) {
-                        let options1 = Assembler.options(words[Keyword.blockCommentEnd]);
-                        if (options1) {
-                            console.log("Oak Warning: Oak does not support block comments just yet, so please do not use them in your code.");
-                        }
-                    }
-                }
             }
         }
         else {

@@ -22,8 +22,6 @@ enum Keyword {
     stringMarker,
     charMarker,
     register,
-    blockCommentBegin,
-    blockCommentEnd,
 
     //Only send as keywordRegexes,
     string,
@@ -230,6 +228,20 @@ class InstructionSet {
         }
         return -1;
     } //Worst case = instructions.length
+
+    public instructionPrefixing(line: string): Instruction {
+        for (var i in this.instructions) {
+            var instruction = this.instructions[i];
+            if (line.toUpperCase().hasPrefix(instruction.mnemonic)) {
+                var captures = instruction.format.regex.exec(line);
+                if (captures && captures[1].toUpperCase() == instruction.mnemonic) {
+                    return instruction
+                }
+            }
+        }
+
+        return null;
+    }
 
     public disassemble(instruction: Instruction, args: number[]): string {
         var output = instruction.format.disassembly;

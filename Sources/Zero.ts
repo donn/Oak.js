@@ -1,3 +1,4 @@
+/// <reference path="Core.ts"/>
 /// <reference path="RISCV.ts"/>
 /// <reference path="MIPS.ts"/>
 // The Zero Interface
@@ -169,7 +170,7 @@ if (typeof process === 'object' && process + '' === '[object process]') { //Is N
     console.log("If you did not, a verbatim copy should be available at https://www.mozilla.org/en-US/MPL/2.0/.")
     var fs = require('fs');
     var asm = new Assembler(RISCV, Endianness.big);
-    console.log(asm.process("0b01101010", 0, 1, Parameter.immediate, 8, []));
+    console.log(asm.process("fuck", 0, 1, Parameter.immediate, 8, {"fuck": 420} as any));
     process.exit(0);
 
 } else {

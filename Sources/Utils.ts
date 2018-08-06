@@ -67,7 +67,7 @@ interface Array<T> {
     hexed(): string;
 }
 
-Array.prototype.hexed = function () {
+Array.prototype.hexed = function() {
     var hexadecimal = "";
     for (var i = 0; i < this.length; i++) {
         var hexRepresentation = this[i].toString(16).toUpperCase();
@@ -77,4 +77,21 @@ Array.prototype.hexed = function () {
         hexadecimal += hexRepresentation + " ";
     }
     return hexadecimal;
+};
+
+function unwrap(optional: any, unwrapBehavior: (unwrapped: any) => any): boolean {
+    if (optional !== null && optional !== undefined) {
+        unwrapBehavior(optional);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+interface String {
+    hasPrefix(search: string) : boolean;
+}
+
+String.prototype.hasPrefix = function(needle) {
+    return this.substr(0, needle.length) === needle;
 };
