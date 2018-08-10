@@ -1,0 +1,331 @@
+assemble(lines: string[], labels: number[], pass: number): any {
+        var errorMessages = []
+        var machineCode = []
+        var processedLines = []
+        
+        let commonAddress = 0
+
+        let text = true
+        let skipLine = false
+
+        for (let i in lines) {
+            var line = lines[i];
+
+            skipLine = false;
+            var words = line.split(/s+/);
+
+            var directiveString = null
+            var directiveData = null
+
+            if (this.keywordRegexes[Keyword.directive] != null) {
+                let captures = RegExp(this.keywordRegexes[Keyword.directive]).exec(line);
+                if (captures != null)
+                    directiveString = captures[1]
+                    directiveData = captures[2]
+                }
+            }
+            
+            //Calculate lengths
+            if (text) {
+                if (this.directives[directiveString] != null) {
+                    let directive = this.directives[directiveString]
+                    switch (directive) {
+                        case Directive.data:
+                            text = false
+                            if (words.length > 1) {
+                                let message = "Assembler Error: Line " + i + ": This directive does not take any parameters."
+                                errorMessages.push(message)
+                                continue
+                            }
+                        case Directive.text:
+                            if (words.length > 1) {
+                                let message = "Assembler Error: Line " + i + ": This directive does not take any parameters."
+                                errorMessages.push(message)
+                                continue
+                            }
+                        default:
+                            //TODO - Allow user-defined directives
+                            let message = "Assembler Error: Line " + i + ": This directive is unsupported in the text section."
+                            errorMessages.push(message)
+                            continue
+                    }
+                } else {
+                    let instruction = this.instructionSet.instructionPrefixing(line);
+                    if (instruction != null) {
+                        let message = "Assembler Error: Line " + i + ": Instruction " + words[0] + " not found."
+                        errorMessages.push(message)
+                        continue
+                    }
+
+                    if (this.incrementOnFetch) {
+                        commonAddress += instruction.bytes
+                    }
+                    
+                    let format = instruction.format
+                    let bitRanges = format.ranges
+                    var regex = format.regex
+                    let code = instruction.template
+                    
+                    let captures = regex.exec(line)
+                    if (captures == null) {
+                        let message = "Assembler Error: Line " + i + ": Argument format for " + words[0] + " violated."
+                        errorMessages.push(message)
+                    }
+
+                    captures.shift()
+                    captures.shift()
+                    
+                    for (let j in bitRanges) {
+                        var range = bitRanges[j];
+                        if (range.parameter != null) {
+                            let parameter = range.parameter;
+                            let bits = range.bits;
+                            let field = range.field;
+
+                            if (range.totalBits != null) {
+                                bits = range.totalBits
+                            }                
+                            
+                            let register = 0 >>> 0
+
+                            if (range.parameterType == Parameter.special) {
+                                let specialProcess = instruction.format.processSpecialParameter[field]
+                                if (specialProcess == null) {
+                                    let message = "Instruction Set Error: Line " + i + ": Special parameter '" + field + "' missing parameter processor."
+                                    errorMessages = [message]
+                                    return {
+                                        errorMessages: errorMessages
+                                    }
+                                }
+                                let processed = specialProcess(captures[parameter], commonAddress, bits, labels)
+                                let error = processed.errorMessage
+                                if (error != null) {
+                                    let message = "Assembler Error: Line " + i + ": " + error + ""
+                                    errorMessages.push(message)
+                                    skipLine = true
+                                    continue
+                                }
+                                register = processed.value
+                            }
+                            else {
+                                let type = range.parameterType
+                                if (type == null) {
+                                    let message = "Instruction Set Error: Line " + i + ": Parameter '" + field + "' missing parameter type.";
+                                    errorMessages = [message];
+                                    return {
+                                        errorMessages: errorMessages
+                                    };
+                                }
+                                let processed = this.process(captures[parameter], commonAddress, instruction.bytes, type, bits, labels);
+                                let error = processed.errorMessage;
+                                if (error != null) {
+                                    let message = "Assembler Error: Line " + i + ": " + error + "";
+                                    errorMessages.push(message);
+                                    skipLine = true;
+                                    continue;
+                                }
+                                register = processed.value
+                            }
+
+                            let limited = range.totalBits;
+                            let startBit = range.limitStart;
+                            let endBit = range.limitEnd;
+                            if (limited != null && startBit != null && endBit != null) {
+                                register = register >>> startBit;
+                                register = register & ((1 << (endBit - startBit + 1)) - 1);
+                            }
+                            
+                            code |= register << range.start;
+                            
+                        }
+                    }
+
+                    if (skipLine) {
+                        continue
+                    }
+
+                    var bytes = [];
+
+                    for (let i = 0; i < instruction.bytes; i += 1) {
+                        bytes.push(code & 255);
+                        code = code >>> 8;
+                    }
+                    
+                    if (this.endianness == Endianness.big) {
+                        bytes.reverse();
+                    }
+
+                    machineCode = machineCode.concat(bytes);
+                
+                    if (!this.incrementOnFetch) {
+                        commonAddress += instruction.bytes
+                    }
+                }
+            }
+            else {
+                if (this.directives[directiveString] != null) {
+                    let directive = this.directives[directiveString];
+                    let regex: string = null
+                    let captures: string[] = null
+                    switch (directive) {
+                        case Directive.data:
+                            if (words.length > 1) {
+                                let message = "Assembler Error: Line " + i + ": This directive does not take any parameters."
+                                errorMessages.push(message)
+                                continue
+                            }
+                        case Directive.text:
+                            text = true
+                            if (words.length > 1) {
+                                let message = "Assembler Error: Line " + i + ": This directive does not take any parameters."
+                                errorMessages.push(message)
+                                continue
+                            }
+                        case Directive.cString:                            
+                            commonAddress += 1
+                        case Directive.string:
+                            regex = this.keywordRegexes[Keyword.string];
+                            captures = RegExp(regex).exec(directiveData);
+                            if (captures == null) {
+                                let message = "Assembler Error: Line " + i + ": Malformed string."
+                                errorMessages.push(message)
+                                continue
+                            }
+                            let result = null;
+                            let characterRegex = RegExp("(?:\\\\[" +  Assembler.escapedCharacterList + "])|(?:.)", "g");
+                            let count = 0;
+                            while( (result = characterRegex.exec(captures[1])) ) {
+                                count += 1;
+                                if (result[0].length == 2) {
+                                    machineCode.push(Assembler.escapedCharacters[result[0][1]]);
+                                } else {
+                                    machineCode.push(result[0].charCodeAt(0))
+                                }
+                            }
+                            let j = 0
+                            commonAddress += count;
+                            if (directive === Directive.cString) {
+                                machineCode.push(0);
+                            }
+                            break;
+                        //Ints and chars
+                        //To-do: make this more optimized because this is mostly identical code
+                        case Directive._8bit:
+                            guard var regex = keywordRegexes[.data], var matches = Regex(regex)!.matches(in: directiveData!)
+                            else {
+                                let message = "Assembler Error: Line " + i + ": No values found."
+                                errorMessages.push(message)
+                                continue
+                            }
+                            for (j, match) in matches.enumerated() {
+                                let processed = process(match, address: address, type: .immediate, bits: 8, labels: labels)
+                                if let error = processed.errorMessage {
+                                    let message = "Assembler Error: Line " + i + ": Value " + j + ": " + error + "."
+                                    errorMessages.push(message)
+                                    continue
+                                }
+                                machineCode.push(UInt8(processed.value))
+                            }
+                            address += UInt(matches.count)
+                        case Directive._16bit:
+                            guard var regex = keywordRegexes[.data], var matches = Regex(regex)!.matches(in: directiveData!)
+                            else {
+                                let message = "Assembler Error: Line " + i + ": No values found."
+                                errorMessages.push(message)
+                                continue
+                            }
+                            for (j, match) in matches.enumerated() {
+                                let processed = process(match, address: address, type: .immediate, bits: 16, labels: labels)
+                                if let error = processed.errorMessage {
+                                    let message = "Assembler Error: Line " + i + ": Value " + j + ": " + error + "."
+                                    errorMessages.push(message)
+                                    continue
+                                }
+                                machineCode.push(UInt8(processed.value & 255))
+                                machineCode.push(UInt8((processed.value >> 8) & 255))
+                            }
+                            address += UInt(matches.count << 1)
+                        case Directive._32bit:
+                            guard var regex = keywordRegexes[.data], var matches = Regex(regex)!.matches(in: directiveData!)
+                            else {
+                                let message = "Assembler Error: Line " + i + ": No 32-bit values found."
+                                errorMessages.push(message)
+                                continue
+                            }
+                            for (j, match) in matches.enumerated() {
+                                let processed = process(match, address: address, type: .immediate, bits: 32, labels: labels)
+                                if let error = processed.errorMessage {
+                                    let message = "Assembler Error: Line " + i + ": Value " + j + ": " + error + "."
+                                    errorMessages.push(message)
+                                    continue
+                                }
+                                machineCode.push(UInt8(processed.value & 255))
+                                machineCode.push(UInt8((processed.value >> 8) & 255))
+                                machineCode.push(UInt8((processed.value >> 16) & 255))
+                                machineCode.push(UInt8((processed.value >> 24) & 255))
+                            }
+                            address += UInt(matches.count << 2)
+                        case Directive._64bit:
+                            guard var regex = keywordRegexes[.data], var matches = Regex(regex)!.matches(in: directiveData!)
+                            else {
+                                let message = "Assembler Error: Line " + i + ": No values found."
+                                errorMessages.push(message)
+                                continue
+                            }
+                            for (j, match) in matches.enumerated() {
+                                let processed = process(match, address: address, type: .immediate, bits: 64, labels: labels)
+                                if let error = processed.errorMessage {
+                                    let message = "Assembler Error: Line " + i + ": Value " + j + ": " + error + "."
+                                    errorMessages.push(message)
+                                    continue
+                                }
+                                machineCode.push(UInt8(processed.value & 255))
+                                machineCode.push(UInt8((processed.value >> 8) & 255))
+                                machineCode.push(UInt8((processed.value >> 16) & 255))
+                                machineCode.push(UInt8((processed.value >> 24) & 255))
+                                machineCode.push(UInt8((processed.value >> 32) & 255))
+                                machineCode.push(UInt8((processed.value >> 40) & 255))
+                                machineCode.push(UInt8((processed.value >> 48) & 255))
+                                machineCode.push(UInt8((processed.value >> 56) & 255))
+                            }
+                            address +=  UInt(matches.count << 3)
+                        //Fixed point decimals
+                        case Directive.fixedPoint:
+                            let message = "Oak Error: Line " + i + ": Fixed point decimals not yet supported."
+                            errorMessages = [message]
+                            return (errorMessages, machineCode)
+                        case Directive.floatingPoint:
+                            guard var matches = Regex("[-+]?[0-9]*\\.?[0-9]+")!.matches(in: directiveData!)
+                            else {
+                                let message = "Assembler Error: Line " + i + ": No floating point values found."
+                                errorMessages.push(message)
+                                continue
+                            }
+                            guard let width = instructionSet.floatingPointLengths[str]
+                            else {
+                                let message = "Instruction Set Error: Line " + i + ": Floating point directive " + str + " has a missing octet length.\nConsider submitting a bug report."
+                                errorMessages = [message]
+                                return (errorMessages, machineCode)
+                            }
+                            for (j, match) in matches.enumerated() {
+                                let message = "Oak Error: Line " + i + ": Floating point decimal support is unfinished."
+                                errorMessages = [message]
+                                return (errorMessages, machineCode)
+                            }
+                            address +=  UInt(matches.count * width)
+                        default:
+                            //TODO - Allow user-defined directives
+                            let message = "Assembler Error: Line " + i + ": This directive is unsupported in the data section."
+                            errorMessages.push(message)
+                            continue
+                    }
+                }
+                else {
+                    let message = "Assembler Error: Line " + i + ": Only directives are accepted in the data section."
+                    errorMessages.push(message)
+                    continue
+                }
+            }
+        }   
+        return (errorMessages, machineCode)
+    }

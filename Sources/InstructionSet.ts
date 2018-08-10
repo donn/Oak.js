@@ -53,6 +53,10 @@ class BitRange {
     field: string;
     start: number;
     bits: number;
+
+    get end(): number {
+        return this.start + this.bits - 1
+    }
     
     totalBits: number;
     limitStart: number;
@@ -94,18 +98,16 @@ class Format {
     regex: RegExp;
     disassembly: string; 
 
-    processSpecialParameter: (address: number, text: string, bits: number, labels: string[], addresses: number[]) => ({errorMessage: string, value: number});
+    processSpecialParameter: (text: string, bits: number, Line: Line[]) => any;
     decodeSpecialParameter: (value: number, address: number) => number;
 
-    constructor
-    (
+    constructor (
         ranges: BitRange[],
         regex: RegExp,
         disassembly: string,
-        processSpecialParameter: (address: number, text: string, bits: number, labels: string[], addresses: number[]) => ({errorMessage: string, value: number}) = null,
+        processSpecialParameter: (text: string, bits: number, lines: Line[]) => any = null,
         decodeSpecialParameter: (value: number, address: number) => number = null
-    )
-    {
+    ) {
         this.ranges = ranges;
         this.regex = regex;
         this.disassembly = disassembly;
@@ -124,42 +126,70 @@ class Instruction {
     executor: (core: Core) => string;
 
     private pad(str: string, length: number): string {
-        var padded = str;
-        for (var i = 0; i < length - str.length; i++)
+        let padded = str;
+        for (let i = 0; i < length - str.length; i++)
         {
             padded = "0" + padded;
         }
         return padded;
     }
 
-    mask(): string {
-        var str = "";
-        for (var i = 0; i < this.format.ranges.length; i++)
-        {
-            let constant = this.constants[this.format.ranges[i].field];
-            if (constant !== undefined)
-            {
-                str += this.pad(constant.toString(2), this.format.ranges[i].bits);
-            }
-            else if (this.format.ranges[i].constant != null)
-            {
-                str += this.pad(this.format.ranges[i].constant.toString(2), this.format.ranges[i].bits);
-            }
-            else {
-                for (var j = 0; j < this.format.ranges[i].bits; j++)
-                {
-                    str += "X";
-                }
-            }
+    computedBits: number = null
+    get bits(): number {
+        if (this.computedBits != null) {
+            return this.computedBits
         }
 
-        return str;
+        let count = 0
+        for (let i in this.format.ranges) {   
+            count += this.format.ranges[i].bits
+        }
+
+        this.computedBits = count
+        return this.computedBits
+    }
+
+    get bytes(): number {
+        return Math.ceil(this.bits / 8)
+    }
+
+    /*
+     Mask
+     
+     It's basically the bits of each format, but with Xs replacing parts that aren't constant in every instruction.
+     For example, if an 8-bit ISA defines 5 bits for the register and 3 bits for the opcode, and the opcode for ADD is 101 then the ADD instruction's mask is XXXXX101.
+    */
+    computedMask: string = null
+    get mask(): string {
+        if (this.computedMask !== null) {
+            return this.computedMask;
+        }
+
+            var string = '';
+            for (let i = 0; i < this.bits; i += 1) {
+                string += 'X';
+            }
+
+            for (let i in this.format.ranges) {
+                let range = this.format.ranges[i];
+                let constant = this.constants[range.field];
+                if (constant == null) {
+                    constant = range.constant;
+                }
+                if (constant != null) {
+                    let start = this.bits - range.end - 1;
+                    let end = this.bits - range.start - 1;
+                    string = string.substr(0, start) + Utils.pad(constant, range.bits, 2) + string.substr(end, 0);
+                }
+            }
+            this.computedMask = string
+            return this.computedMask;
     };
 
     match(machineCode: number): boolean {
-        var machineCodeMutable = machineCode >>> 0;
-        let maskBits = this.mask().split("");
-        for (var i = 31; i >= 0; i--)
+        let machineCodeMutable = machineCode >>> 0;
+        let maskBits = this.mask.split("");
+        for (let i = 31; i >= 0; i--)
         {
             if (maskBits[i] === "X")
             {
@@ -176,25 +206,93 @@ class Instruction {
         return true;
     }
 
-    template(): number {
-        var temp = 0 >>> 0;
+    computedTemplate: number = null;
+    get template(): number {
+        if (this.computedTemplate != null) {
+            return 0;
+        }
+        let temp = 0 >>> 0;
 
-        for (var i = 0; i < this.format.ranges.length; i++) {
-            let constant = this.constants[this.format.ranges[i].field];
-            if (constant !== undefined) {
-                temp |= (constant << this.format.ranges[i].start)
+        for (let i in this.format.ranges) {
+            let range = this.format.ranges[i];
+            let constant = this.constants[range.field];
+            if (constant == null) {
+                constant = range.constant;
+            }
+            if (constant != null) {
+                temp |= (constant << range.start)
             }
         }
 
         return temp
     };
 
+    assemble(
+        line: Line,
+        lines: Line[],
+        process: (text: string, instructionLength: number, type: Parameter, bits: number, lines: Line[])=> any
+    ): any {
+        var result = {
+            machineCode: this.template,
+            errorMessage: null,
+            context: null
+        };
+
+        let match = this.format.regex.exec(line.processed);
+        let args = match.slice(1, match.length);
+
+        for (let i in this.format.ranges) {
+            let range = this.format.ranges[i];
+
+            if (range.parameter == null) {
+                continue;
+            }
+
+            let startBit = (range.limitStart == null) ? 0 : range.limitStart
+            let endBit = range.limitEnd
+            let bits = (range.totalBits == null) ? range.bits : range.totalBits
+            
+            let store = 0;
+            
+            if (range.parameterType !== Parameter.special) {
+                let processed = process(args[range.parameter], this.bytes, range.parameterType, bits, lines);
+                if (processed.contextSensitive !== null) {
+                    result.context = processed.context;
+                    return result;
+                }
+                if (processed.errorMessage !== null) {
+                    result.errorMessage = processed.errorMessage;
+                    return result;                            
+                }
+                store = processed.value;
+            } else {
+                let processed = this.format.processSpecialParameter(args[range.parameter], bits, lines);
+                if (processed.contextSensitive !== null) {
+                    result.context = processed.context;
+                    return result;
+                }
+                if (processed.errorMessage !== null) {
+                    result.errorMessage = processed.errorMessage;
+                    return result;                            
+                }
+                store = processed.value;
+            }
+
+            if (endBit != null) {
+                store >>>= startBit;
+                store &= ((1 << (endBit - startBit + 1)) - 1);
+            }
+
+            result.machineCode |= store << range.start;
+        }
+    }
+
 
     constructor(mnemonic: string, format: Format, constants: string[], constValues: number[], executor: (core: Core) => string, signatoryOverride: boolean = null) {
         this.mnemonic = mnemonic;
         this.format = format;
         this.constants = [];
-        for (var constant in constants) { this.constants[constants[constant]] = constValues[constant]; }
+        for (let i in constants) { this.constants[constants[i]] = constValues[i]; }
         this.executor = executor;        
         this.signatoryOverride = signatoryOverride;
     }
@@ -219,7 +317,7 @@ class InstructionSet {
     
     //Return Mnemonic Index (True)
     public mnemonicSearch(mnemonic: string): number {
-        for (var i = 0; i < this.instructions.length; i++)
+        for (let i = 0; i < this.instructions.length; i++)
         {
             if (this.instructions[i].mnemonic == mnemonic)
             {
@@ -229,24 +327,25 @@ class InstructionSet {
         return -1;
     } //Worst case = instructions.length
 
-    public instructionPrefixing(line: string): Instruction {
-        for (var i in this.instructions) {
-            var instruction = this.instructions[i];
+    public instructionsPrefixing(line: string): Instruction[] {
+        var result = [];
+        for (let i in this.instructions) {
+            let instruction = this.instructions[i];
             if (line.toUpperCase().hasPrefix(instruction.mnemonic)) {
-                var captures = instruction.format.regex.exec(line);
+                let captures = instruction.format.regex.exec(line);
                 if (captures && captures[1].toUpperCase() == instruction.mnemonic) {
-                    return instruction
+                    result.push(instruction);
                 }
             }
         }
 
-        return null;
+        return result;
     }
 
     public disassemble(instruction: Instruction, args: number[]): string {
-        var output = instruction.format.disassembly;
+        let output = instruction.format.disassembly;
         output = output.replace("@mnem", instruction.mnemonic);
-        for (var i = 0; i < instruction.format.ranges.length; i++)
+        for (let i = 0; i < instruction.format.ranges.length; i++)
         {
             let range = instruction.format.ranges[i];
             if (range.parameter != null)
@@ -274,7 +373,7 @@ class InstructionSet {
     endianness: Endianness;
 
     //Syntax
-    keywordRegexes: string[]; //Map<Keyword, string>;
+    keywordRegexes: RegExp[]; //Map<Keyword, string>;
     keywords: string[][]; //Map<Keyword, string[]>;
     directives: Directive[]; //Map<string, Directive>;
 

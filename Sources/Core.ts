@@ -21,16 +21,13 @@ abstract class Core {
     memory: number[];
 
     //Returns bytes on success, null on failure
-    memcpy(address: number, bytes: number): number[]
-    {
-        if (address + bytes > this.memorySize)
-        {
+    memcpy(address: number, bytes: number): number[] {
+        if (((address + bytes) >>> 0) > this.memorySize) {
             return null;
         }
         
-        var result: number[] = [];
-        for (var i = 0; i < bytes; i++)
-        {
+        let result: number[] = [];
+        for (let i = 0; i < bytes; i++) {
             result.push(this.memory[address + i]);
         }
         return result;
@@ -39,18 +36,15 @@ abstract class Core {
     //Returns boolean indicating success
     //Use to store machine code in memory so it can be executed.
     memset(address: number, bytes: number[]): boolean {
-        if (address < 0)
-        {
+        if (address < 0) {
             return false;
         }
 
-        if (address + bytes.length > this.memorySize)
-        {
+        if (address + bytes.length > this.memorySize) {
             return false;
         }
 
-        for (var i = 0; i < bytes.length; i++)
-        {
+        for (let i = 0; i < bytes.length; i++) {
             this.memory[address + i] = bytes[i];
         }
         return true;
@@ -68,40 +62,34 @@ abstract class Core {
         let insts = this.instructionSet.instructions;
         this.decoded = null;
         this.arguments = [];
-        for (var i = 0; i < insts.length; i++)
-        {
-            if (insts[i].match(this.fetched))
-            {
+        for (let i = 0; i < insts.length; i++) {
+            if (insts[i].match(this.fetched)) {
                 this.decoded = insts[i];
                 break;
             }
         }
-        if (this.decoded == null)
-        {
+        if (this.decoded == null) {
             return null;
         }
         
         let bitRanges = this.decoded.format.ranges;
 
-        for (var i = 0; i < bitRanges.length; i++)
-        {
-            if (bitRanges[i].parameter != null)
-            {
-                var limit = bitRanges[i].limitStart;
-                var field = bitRanges[i].field;
-                var bits = bitRanges[i].bits;
+        for (let i = 0; i < bitRanges.length; i++) {
+            if (bitRanges[i].parameter != null) {
+                let limit = bitRanges[i].limitStart;
+                let field = bitRanges[i].field;
+                let bits = bitRanges[i].bits;
 
-                var value = ((this.fetched >>> bitRanges[i].start) & ((1 << bitRanges[i].bits) - 1)) << limit;
+                let value = ((this.fetched >>> bitRanges[i].start) & ((1 << bitRanges[i].bits) - 1)) << limit;
                 
-                if (bitRanges[i].parameterType === Parameter.special)
-                {
+                if (bitRanges[i].parameterType === Parameter.special) {
                     value = this.decoded.format.decodeSpecialParameter(value, this.pc); //Unmangle...
                 }
 
                 this.arguments[bitRanges[i].parameter] = this.arguments[bitRanges[i].parameter] | value;
 
                 if (this.decoded.format.ranges[i].signed && bitRanges[i].parameterType !== Parameter.register) {
-                    this.arguments[bitRanges[i].parameter] = signExt(this.arguments[i], bitRanges[i].totalBits? bitRanges[i].totalBits: bitRanges[i].bits);
+                    this.arguments[bitRanges[i].parameter] = Utils.signExt(this.arguments[i], bitRanges[i].totalBits? bitRanges[i].totalBits: bitRanges[i].bits);
                 }
             }
         }

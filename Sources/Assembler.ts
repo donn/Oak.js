@@ -1,9 +1,38 @@
 /// <reference path="InstructionSet.ts"/>
 /// <reference path="Utils.ts" />
 
+class Line {
+    finalAddress: number;
+    label: string;
+    raw: string;
+    processed: string;
+    possibleInstructions: Instruction[];
+    machineCode: number[];
+    sensitivityList: Line[];
+
+    constructor(raw: string) {
+        this.raw = raw;
+    }
+
+    static arrayFromFile(file: string): Line[] {
+        return file.split('\n').map(line=> new Line(line));
+    }
+
+    initialProcess(assembler: Assembler, text: boolean = true) {
+        var comment = assembler.keywordRegexes[Keyword.comment];
+        var tmp = comment.exec(this.raw)[1];
+
+        var label = assembler.keywordRegexes[Keyword.label];
+        var pieces = label.exec(tmp);
+
+        this.label = pieces[2];
+        this.processed = pieces[3];
+    }
+}
+
 class Assembler {
     instructionSet: InstructionSet;
-    keywordRegexes: string[]; //Map<Keyword, string>;
+    keywordRegexes: RegExp[]; //Map<Keyword, RegExp>;
     directives: Directive[]; //Map<string, Directive>;
     endianness: Endianness;
     incrementOnFetch: boolean;
@@ -21,16 +50,18 @@ class Assembler {
         '0': 0,
         't': 9,
         'n': 10,
-        'r': 13
+        'r': 13,
+        '\'': 47,
+        '\"': 42
     }
     static escapedCharacterList = Object.keys(Assembler.escapedCharacters).join("")
 
     //Returns number on success, string on failure
-    process(text: string, address: number, instructionLength: number, type: Parameter, bits: number, labels: number[]): any  {
-        let array = text.split(""); //Character View
-        var result = {
+    process(text: string, instructionLength: number, type: Parameter, bits: number, lines: Line[]): any {
+        let result = {
             errorMessage: null,
-            value: null
+            value: null,
+            context: null
         };
         switch(type) {
         case Parameter.register:                
@@ -40,7 +71,7 @@ class Assembler {
                 return result; 
             }
             
-            var registerNo = null;
+            let registerNo = null;
             if (this.keywordRegexes[Keyword.register]) {
                 registerNo = new RegExp(this.keywordRegexes[Parameter.register]).exec(text)[1];
             } else {
@@ -58,7 +89,12 @@ class Assembler {
         case Parameter.offset:
         case Parameter.immediate:
             //Label
-            var value: number = labels[text];
+            let reference = lines.filter(line=> line.label == text)[0];
+            if (reference !== undefined) {
+                result.context = reference;
+                return result;
+            }
+            let value = 0;
             if (value === undefined && this.keywordRegexes[Keyword.char]) {
                 let extraction = RegExp(this.keywordRegexes[Keyword.char]).exec(text);
                 if (extraction !== null && extraction[1] !== undefined) {
@@ -78,13 +114,14 @@ class Assembler {
             }
 
             if (type == Parameter.offset) {
-                value = value - (address + (this.incrementOnFetch? instructionLength: 0));
+                result.context = self;
+                return result;
             }
 
             if (isNaN(value)) {     
                 result.errorMessage = "Immediate '" + text + "' is not a recognized label, literal or character.";
                 return result;
-            } else if (!rangeCheck(value, bits)) {
+            } else if (!Utils.rangeCheck(value, bits)) {
                 result.errorMessage = "The value of '" + value + "' is out of range.";
                 return result;
             }
@@ -103,10 +140,10 @@ class Assembler {
             return null
         }
 
-        var options = ""
+        let options = ""
 
-        for (var i = 0; i < list.length; i++) {
-            var keyword = list[i];
+        for (let i = 0; i < list.length; i++) {
+            let keyword = list[i];
 
             if (keyword == "\\") {
                 console.log("Instruction Set Error: Escape character \\ cannot be used as a keyword.")
@@ -122,7 +159,16 @@ class Assembler {
 
         return options + ")";
     }
-    
+
+    assemble(lines: Line[]): boolean {
+        var data = [];
+        var text = [];
+
+        
+        return false;
+    }
+
+
 
     constructor(instructionSet: InstructionSet, endianness: Endianness, memoryMap: number[] = null) {
         this.incrementOnFetch = instructionSet.incrementOnFetch;
@@ -134,50 +180,50 @@ class Assembler {
         }
         else if (instructionSet.keywords) {
             let words = instructionSet.keywords;
-            this.keywordRegexes = new Array<string>();
+            this.keywordRegexes = [];
             
             if (words[Keyword.directive]) {
                 let options = Assembler.options(instructionSet.keywords[Keyword.directive]);
                 if (options) {
-                    this.keywordRegexes[Keyword.directive] = options + "([^\\s]+)\\s*(.+)*";
+                    this.keywordRegexes[Keyword.directive] = RegExp(options + "([^\\s]+)\\s*(.+)*");
                 }
             }
                     
             if (words[Keyword.stringMarker]) {
                 let options = Assembler.options(words[Keyword.stringMarker]);
                 if (options) {
-                    this.keywordRegexes[Keyword.string] = options + "(.*?)" + options;
+                    this.keywordRegexes[Keyword.string] = RegExp(options + "(.*?)" + options);
                 }
             }
 
             if (words[Keyword.comment]) {
                 let options = Assembler.options(words[Keyword.comment]);
                 if (options) {
-                    this.keywordRegexes[Keyword.comment] = "(.*?)(" + options + ".*)";
+                    this.keywordRegexes[Keyword.comment] = RegExp("(.*?)(" + options + ".*)");
                 }
             }
 
             if (words[Keyword.label]) {
                 let options = Assembler.options(words[Keyword.label]);
                 if (options) {
-                    this.keywordRegexes[Keyword.label] = "(([A-Za-z_][A-Za-z0-9_]*)" + options + ")?\\s*(.*)?";
+                    this.keywordRegexes[Keyword.label] = RegExp("(([A-Za-z_][A-Za-z0-9_]*)" + options + ")?\\s*(.*)?");
                 }
             }
             
             if (words[Keyword.register]) {
                 let options = Assembler.options(words[Keyword.register]);
                 if (options) {
-                    this.keywordRegexes[Keyword.register] = options + "([0-9]+)";
+                    this.keywordRegexes[Keyword.register] = RegExp(options + "([0-9]+)");
                 }
             }
 
-            this.keywordRegexes[Keyword.numeric] = "(?:0([" + Assembler.radixList + "]))?([A-F0-9]+)";
+            this.keywordRegexes[Keyword.numeric] = RegExp("(?:0([" + Assembler.radixList + "]))?([A-F0-9]+)");
 
             if (words[Keyword.charMarker]) {
                 let options = Assembler.options(words[Keyword.charMarker]);
                 if (options) {
-                    var escapable = options.length > 1 ? "": "\\" + options
-                    this.keywordRegexes[Keyword.char] = options + "((?:.)|(\\\\[\\\\" + Assembler.escapedCharacterList + escapable + "]))" + options;
+                    let escapable = options.length > 1 ? "": "\\" + options
+                    this.keywordRegexes[Keyword.char] = RegExp(options + "((?:.)|(\\\\[\\\\" + Assembler.escapedCharacterList + escapable + "]))" + options);
                 }
 
             }
