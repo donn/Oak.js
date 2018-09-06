@@ -20,7 +20,7 @@ function Oak_gen_RISCV(): InstructionSet {
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.register),
                 new BitRange("opcode", 0, 7)
             ],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)/,
+            /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)/,
             "@mnem @arg0, @arg1, @arg2"
         )
     );
@@ -148,7 +148,7 @@ function Oak_gen_RISCV(): InstructionSet {
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.register),
                 new BitRange("opcode", 0, 7)
             ],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+),\s*(-?[a-zA-Z0-9_]+)/,
+            /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+),\s*(-?[a-zA-Z0-9_]+)/,
             "@mnem @arg0, @arg1, @arg2"
         )
     );
@@ -250,7 +250,7 @@ function Oak_gen_RISCV(): InstructionSet {
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.register),
                 new BitRange("opcode", 0, 7)
             ],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*(-?0?[boxd]?[0-9A-F]+)\s*\(\s*([A-Za-z0-9]+)\s*\)/,
+            /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*(-?0?[boxd]?[0-9A-F]+)\s*\(\s*([A-Za-z0-9]+)\s*\)/,
             "@mnem @arg0, @arg2(@arg1)"
         )
     );
@@ -348,7 +348,7 @@ function Oak_gen_RISCV(): InstructionSet {
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.register),
                 new BitRange("opcode", 0, 7)
             ],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+),\s*(-?0?[boxd]?[0-9A-F]+)/,
+            /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+),\s*(-?0?[boxd]?[0-9A-F]+)/,
             "@mnem @arg0, @arg1, @arg2"
         )
     );
@@ -403,7 +403,7 @@ function Oak_gen_RISCV(): InstructionSet {
                 new BitRange("imm", 7, 5, null, true).parameterized(1, Parameter.immediate).limited(12, 0, 4),
                 new BitRange("opcode", 0, 7)
             ],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*(-?0?[boxd]?[0-9A-F]+)\(\s*([A-Za-z0-9]+)\s*\)/,
+            /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*(-?0?[boxd]?[0-9A-F]+)\(\s*([A-Za-z0-9]+)\s*\)/,
             "@mnem @arg0, @arg2(@arg1)"
         )
     );
@@ -478,7 +478,7 @@ function Oak_gen_RISCV(): InstructionSet {
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.offset),
                 new BitRange("opcode", 0, 7)
             ],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)/,
+            /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)/,
             "@mnem @arg0, @arg1"
         )
     );
@@ -520,71 +520,72 @@ function Oak_gen_RISCV(): InstructionSet {
                 new BitRange("imm", 7, 5, null, true).parameterized(2, Parameter.special).limited(13, 0, 4),
                 new BitRange("opcode", 0, 7)
             ],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)/,
-            "@mnem @arg0, @arg1, @arg2",
-            function(address: number, text: string, bits: number, labels: string[], addresses: number[]) {
-                let array = text.split(""); //Character View
-                let result = {
-                    errorMessage: null,
-                    value: null
-                };
+            /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)/,
+            "@mnem @arg0, @arg1, @arg2"
+            ,
+            // function(address: number, text: string, bits: number, labels: string[], addresses: number[]) {
+            //     let array = text.split(""); //Character View
+            //     let result = {
+            //         errorMessage: null,
+            //         value: null
+            //     };
 
-                let int = NaN;
-                let labelLocation = labels.indexOf(text);
-                if (labelLocation !== -1) {
-                    int = addresses[labelLocation] - address + 4;
-                }
-                else {
-                    let radix = 10 >>> 0;
-                    let splice = false;
+            //     let int = NaN;
+            //     let labelLocation = labels.indexOf(text);
+            //     if (labelLocation !== -1) {
+            //         int = addresses[labelLocation] - address + 4;
+            //     }
+            //     else {
+            //         let radix = 10 >>> 0;
+            //         let splice = false;
                     
-                    if (array[0] === "0") {
-                        if (array[1] == "b") {
-                            radix = 2;
-                            splice = true;
-                        }
-                        if (array[1] == "o") {
-                            radix = 8;
-                            splice = true;
-                        }
-                        if (array[1] == "d") {
-                            radix = 10;
-                            splice = true;
-                        }
-                        if (array[1] == "x") {
-                            radix = 16;
-                            splice = true;
-                        }
-                    }
+            //         if (array[0] === "0") {
+            //             if (array[1] == "b") {
+            //                 radix = 2;
+            //                 splice = true;
+            //             }
+            //             if (array[1] == "o") {
+            //                 radix = 8;
+            //                 splice = true;
+            //             }
+            //             if (array[1] == "d") {
+            //                 radix = 10;
+            //                 splice = true;
+            //             }
+            //             if (array[1] == "x") {
+            //                 radix = 16;
+            //                 splice = true;
+            //             }
+            //         }
 
-                    let interpretable = text;
-                    if (splice) {
-                        interpretable = array.splice(2, array.length - 2).join("");
-                    }
-                    int = parseInt(interpretable, radix);
-                }
+            //         let interpretable = text;
+            //         if (splice) {
+            //             interpretable = array.splice(2, array.length - 2).join("");
+            //         }
+            //         int = parseInt(interpretable, radix);
+            //     }
                     
-                if (isNaN(int)) {     
-                    result.errorMessage = "Offset '" + text + "' is not a recognized label or literal.";
-                    return result;
-                }
+            //     if (isNaN(int)) {     
+            //         result.errorMessage = "Offset '" + text + "' is not a recognized label or literal.";
+            //         return result;
+            //     }
 
-                if (Utils.rangeCheck(int, 13)) {
-                    let mangle = int & 2046; //mangle[10:1] = int[10:1];
-                    mangle = mangle | ((int >>> 11) & 1); //mangle[0] = int[11]
-                    mangle = mangle | ((int >>> 12) & 1) << 11; //mangle[11] = int[12];
-                    result.value = mangle;
-                    return result;
-                }
-                result.errorMessage = "The value of '" + text + "' is out of range.";
-                return result;
-            },
-            function(value: number) {
-                let unmangle = (value & 1) << 11; //unmangle[11]; = value[0];
-                unmangle = unmangle | ((value >>> 11) << 12); //unmangle[12] = value[12];
-                unmangle = unmangle | (value & 2046); //unmangle[10:1] = value[10:1];
-                return unmangle;
-            }
+            //     if (Utils.rangeCheck(int, 13)) {
+            //         let mangle = int & 2046; //mangle[10:1] = int[10:1];
+            //         mangle = mangle | ((int >>> 11) & 1); //mangle[0] = int[11]
+            //         mangle = mangle | ((int >>> 12) & 1) << 11; //mangle[11] = int[12];
+            //         result.value = mangle;
+            //         return result;
+            //     }
+            //     result.errorMessage = "The value of '" + text + "' is out of range.";
+            //     return result;
+            // },
+            // function(value: number) {
+            //     let unmangle = (value & 1) << 11; //unmangle[11]; = value[0];
+            //     unmangle = unmangle | ((value >>> 11) << 12); //unmangle[12] = value[12];
+            //     unmangle = unmangle | (value & 2046); //unmangle[10:1] = value[10:1];
+            //     return unmangle;
+            // }
         )
     );
 
@@ -677,74 +678,74 @@ function Oak_gen_RISCV(): InstructionSet {
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.register),
                 new BitRange("opcode", 0, 7)
             ],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)/,
+            /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)/,
             "@mnem @arg0, @arg1",
-            function(address: number, text: string, bits: number, labels: string[], addresses: number[]) {
-                let array = text.split(""); //Character View
-                let result = {
-                    errorMessage: null,
-                    value: null
-                };
+            // function(address: number, text: string, bits: number, labels: string[], addresses: number[]) {
+            //     let array = text.split(""); //Character View
+            //     let result = {
+            //         errorMessage: null,
+            //         value: null
+            //     };
 
-                let int = NaN;
-                let labelLocation = labels.indexOf(text);
-                if (labelLocation !== -1) {
-                    int = addresses[labelLocation] - address + 4;
-                }
-                else {
-                    let radix = 10 >>> 0;
-                    let splice = false;
+            //     let int = NaN;
+            //     let labelLocation = labels.indexOf(text);
+            //     if (labelLocation !== -1) {
+            //         int = addresses[labelLocation] - address + 4;
+            //     }
+            //     else {
+            //         let radix = 10 >>> 0;
+            //         let splice = false;
                     
-                    if (array[0] === "0") {
-                        if (array[1] == "b") {
-                            radix = 2;
-                            splice = true;
-                        }
-                        if (array[1] == "o") {
-                            radix = 8;
-                            splice = true;
-                        }
-                        if (array[1] == "d") {
-                            radix = 10;
-                            splice = true;
-                        }
-                        if (array[1] == "x") {
-                            radix = 16;
-                            splice = true;
-                        }
-                    }
+            //         if (array[0] === "0") {
+            //             if (array[1] == "b") {
+            //                 radix = 2;
+            //                 splice = true;
+            //             }
+            //             if (array[1] == "o") {
+            //                 radix = 8;
+            //                 splice = true;
+            //             }
+            //             if (array[1] == "d") {
+            //                 radix = 10;
+            //                 splice = true;
+            //             }
+            //             if (array[1] == "x") {
+            //                 radix = 16;
+            //                 splice = true;
+            //             }
+            //         }
 
-                    let interpretable = text;
-                    if (splice) {
-                        interpretable = array.splice(2, array.length - 2).join("");
-                    }
-                    int = parseInt(interpretable, radix);
-                }
+            //         let interpretable = text;
+            //         if (splice) {
+            //             interpretable = array.splice(2, array.length - 2).join("");
+            //         }
+            //         int = parseInt(interpretable, radix);
+            //     }
                     
-                if (isNaN(int)) {     
-                    result.errorMessage = "Offset '" + text + "' is not a recognized label or literal.";
-                    return result;
-                }
+            //     if (isNaN(int)) {     
+            //         result.errorMessage = "Offset '" + text + "' is not a recognized label or literal.";
+            //         return result;
+            //     }
 
-                if (Utils.rangeCheck(int, 21)) {
-                    let mangle = ((int >> 12) & 255); //mangle[7:0] = int[19:12] 
-                    mangle = mangle | (((int >> 11) & 1) << 8); //mangle[8] = int[11];
-                    mangle = mangle | (((int >> 1) & 1023) << 9); //mangle[18:9] = int[10:1];
-                    mangle = mangle | (((int >> 20) & 1) << 19 ); //mangle[19] = int[20];
-                    result.value = mangle;
-                    return result;
-                }
-                result.errorMessage = "The value of '" + text + "' (" + int.toString() + ")is out of range.";
-                return result;
-            },
-            function(value: number) {
-                let unmangle = ((value >> 8) & 1) << 11; //unmangle[11]; = value[8];
-                unmangle = unmangle | (((value >>> 19) & 1) << 20); //unmangle[20] = value[19];
-                unmangle = unmangle | (((value >>> 0) & 255) << 12); //unmangle[19:12] = value[7:0];
-                unmangle = unmangle | (((value >>> 9) & 1023) << 1); //unmangle[10:1] = value[18:9];
-                return unmangle;
+            //     if (Utils.rangeCheck(int, 21)) {
+            //         let mangle = ((int >> 12) & 255); //mangle[7:0] = int[19:12] 
+            //         mangle = mangle | (((int >> 11) & 1) << 8); //mangle[8] = int[11];
+            //         mangle = mangle | (((int >> 1) & 1023) << 9); //mangle[18:9] = int[10:1];
+            //         mangle = mangle | (((int >> 20) & 1) << 19 ); //mangle[19] = int[20];
+            //         result.value = mangle;
+            //         return result;
+            //     }
+            //     result.errorMessage = "The value of '" + text + "' (" + int.toString() + ")is out of range.";
+            //     return result;
+            // },
+            // function(value: number) {
+            //     let unmangle = ((value >> 8) & 1) << 11; //unmangle[11]; = value[8];
+            //     unmangle = unmangle | (((value >>> 19) & 1) << 20); //unmangle[20] = value[19];
+            //     unmangle = unmangle | (((value >>> 0) & 255) << 12); //unmangle[19:12] = value[7:0];
+            //     unmangle = unmangle | (((value >>> 9) & 1023) << 1); //unmangle[10:1] = value[18:9];
+            //     return unmangle;
 
-            }
+            // }
         )
     );
 
@@ -771,7 +772,7 @@ function Oak_gen_RISCV(): InstructionSet {
             [
                 new BitRange("const", 0, 32)
             ],
-            /[a-zA-Z]+/,
+            /([a-zA-Z]+)/,
             "@mnem"
         )
     );
@@ -806,7 +807,7 @@ function Oak_gen_RISCV(): InstructionSet {
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.register),
                 new BitRange("opcode", 0, 7)
             ],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)/,
+            /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)/,
             "@mnem @arg0, @arg1"
         )
     );
@@ -833,7 +834,7 @@ function Oak_gen_RISCV(): InstructionSet {
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.register),
                 new BitRange("opcode", 0, 7)
             ],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/,
+            /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/,
             "@mnem @arg0, @arg1"
         )
     );
@@ -870,7 +871,7 @@ function Oak_gen_RISCV(): InstructionSet {
                 new BitRange("rd", 7, 5),
                 new BitRange("opcode", 0, 7)
             ],
-            /[a-zA-Z]+\s*([A-Za-z0-9]+)/,
+            /([a-zA-Z]+)\s*([A-Za-z0-9]+)/,
             "@mnem @arg0"
         )
     );

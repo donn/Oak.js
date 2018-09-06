@@ -1,6 +1,6 @@
 SOURCES = $(wildcard Sources/*.ts)
-FLAGS = --pretty
-UGLIFYFLAGS = --verbose
+FLAGS = --pretty --target ES2016
+BABELFLAGS = --minified --no-comments
 
 all: ui
 terminal: Scripts/oak.min.js
@@ -8,12 +8,13 @@ ui: Scripts/ui.min.js Scripts/oak.min.js
 
 Scripts/oak.min.js: $(SOURCES)
 	mkdir -p Build/
-	tsc $(FLAGS) Sources/Zero.ts --outFile Build/Oak.js
-	uglifyjs $(UGLIFYFLAGS) Build/Oak.js > Scripts/oak.min.js
+	./node_modules/typescript/bin/tsc $(FLAGS) Sources/Zero.ts --outFile Build/Oak.js
+
+	./node_modules/babel-cli/bin/babel.js $(BABELFLAGS) Build/Oak.js > Scripts/oak.min.js
 	chmod +x Scripts/oak.min.js
 
 Scripts/ui.min.js: UI/Oak.js 
-	uglifyjs $(UGLIFYFLAGS) UI/Oak.js > Scripts/ui.min.js
+	./node_modules/babel-cli/bin/babel.js $(BABELFLAGS) UI/Oak.js > Scripts/ui.min.js
 
 clean:
 	@rm -rf Build/

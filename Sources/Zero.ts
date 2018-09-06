@@ -164,33 +164,26 @@ function Oak_terminal_eCall() {
 	}
 }
 if (typeof process === 'object' && process + '' === '[object process]') { //Is Node.js
+    let args = process.argv.slice(2);
+
     console.log("Oak.js · 2.0-dev")
     console.log("All rights reserved.")
     console.log("You should have obtained a copy of the Mozilla Public License with your app.")
     console.log("If you did not, a verbatim copy should be available at https://www.mozilla.org/en-US/MPL/2.0/.")
-    let fs = require('fs');
-    let asm = new Assembler(RISCV, Endianness.big);
-    console.log(asm.process("fuck", 0, 1, Parameter.immediate, 8, {"fuck": 420} as any));
+
+    //Requires
+    let { performance } = require('perf_hooks');
+    let Filesystem = require('fs');
+    
+    let file = Filesystem.readFileSync(args[0]).toString();
+    let assembler = new Assembler(RISCV, Endianness.little);
+    let lines = Line.arrayFromFile(file);
+
+    assembler.assemble(lines, 0);
+    lines.map(line=> console.log(line.invalidReason, line.kind, line.machineCode));
+
     process.exit(0);
 
 } else {
     console.log("Running from browser, suppressing terminal interface...")
-}
-
-if (tests) {
-    //CLI Test Area
-    console.log("Oak.js Console Tests");
-    let testCore = new RISCVCore(2048, Oak_terminal_eCall, function(data){});
-    let oakHex = assemble(testCore, "main:\naddi a0, zero, 8\naddi a1, zero, 2\njal ra, mydiv\n\nli a7, 10  # calls exit command (code 10)\nSCALL # end of program\n\n## Divides two numbers, storing integer result on t0 and rest on t1\n# a0 Number we will divide\n# a1 Number we will divide for\nmydiv:\nadd t1, zero, zero # i = 0\n\nmydiv_test:\nslt t0, a0, a1 # if ( a < b )\nbne t0, zero, mydiv_end # then get out of here\nsub a0, a0, a1 # else, a = a - b\naddi t1, t1, 1 # and i = i + 1\njal x0, mydiv_test # let's test again\n\nmydiv_end:\nadd a1, zero, a0 # rest = a\nadd a0, zero, t1 # result = i\njalr x0, ra, 0").machineCode;
-    let gnuHex = "13 05 80 00 93 05 20 00 EF 00 C0 00 93 08 A0 00 73 00 00 00 33 03 00 00 B3 22 B5 00 63 98 02 00 33 05 B5 40 13 03 13 00 6F F0 1F FF B3 05 A0 00 33 05 60 00 67 80 00 00".interpretedBytes;
-    for (let i = 0; i < oakHex.length; i++) {
-        if (oakHex[i] !== gnuHex[i]) {
-            console.log("Binaries do not match.")
-            break;
-        }
-    }
-    let sim = simulate(testCore, oakHex);
-    ecalloutput = "";
-    console.log(ecalloutput);
-    ecalloutput = "";
 }

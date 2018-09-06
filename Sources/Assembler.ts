@@ -1,32 +1,121 @@
 /// <reference path="InstructionSet.ts"/>
 /// <reference path="Utils.ts" />
 
+enum Kind {
+    instruction = 0,
+    data,
+    directive,
+    noise
+};
+
 class Line {
     finalAddress: number;
-    label: string;
-    raw: string;
-    processed: string;
-    possibleInstructions: Instruction[];
     machineCode: number[];
+    kind: Kind;
+
+    invalidReason: string;
+
     sensitivityList: Line[];
+
+    raw: string;
+    label: string;
+    processed: string;
+
+    possibleInstructions: Instruction[];
+    directive: Directive;
+    directiveData: string;
 
     constructor(raw: string) {
         this.raw = raw;
+        this.kind = Kind.noise;
     }
 
     static arrayFromFile(file: string): Line[] {
         return file.split('\n').map(line=> new Line(line));
     }
 
-    initialProcess(assembler: Assembler, text: boolean = true) {
-        var comment = assembler.keywordRegexes[Keyword.comment];
-        var tmp = comment.exec(this.raw)[1];
+    initialProcess(assembler: Assembler, text: boolean = true): boolean {
+        let comment = assembler.keywordRegexes[Keyword.comment];
+        let tmp = comment.exec(this.raw)[1];
+        let label = assembler.keywordRegexes[Keyword.label];
+        let pieces = label.exec(tmp);
 
-        var label = assembler.keywordRegexes[Keyword.label];
-        var pieces = label.exec(tmp);
+        this.label = pieces[1];
+        this.processed = pieces[2] || '';
 
-        this.label = pieces[2];
-        this.processed = pieces[3];
+        if (/^s*$/.exec(this.processed) !== null) {
+            return text;
+        }
+
+        if (assembler.keywordRegexes[Keyword.directive] != null) {
+            let captures = RegExp(assembler.keywordRegexes[Keyword.directive]).exec(this.processed);
+            if (captures !== null) {
+                this.directive = assembler.directives[captures[1]];
+                this.directiveData = captures[2]
+            }
+        }
+
+        if (text) {
+            if (this.directive !== undefined) {
+                switch(this.directive) {
+                case Directive.data:
+                    this.machineCode = [];
+                    this.kind = Kind.directive;
+                    return false;
+                case Directive.text:
+                    this.machineCode = [];
+                    this.kind = Kind.directive;
+                    break;
+                default:
+                    this.invalidReason = "text.unsupportedDirective";
+                }
+                return true;
+            }
+            this.kind = Kind.instruction;
+            this.possibleInstructions = assembler.instructionSet.instructions.filter(instruction=> {
+                let match = instruction.format.regex.exec(this.processed);
+                return match !== null && match[1].toUpperCase() === instruction.mnemonic;
+            });
+            if (this.possibleInstructions.length === 0) {
+                this.invalidReason = "text.noMatchingInstructions";
+                return true;
+            }
+            let byteCounts = this.possibleInstructions.map(instruction=> instruction.bytes);
+            let minimum = Math.min(...byteCounts);
+            (this.machineCode = []).length = minimum;
+            this.machineCode.fill(0);
+            return true;
+        } else {
+            let count = null; // byte count
+            if (this.directive !== undefined) {
+                this.kind = Kind.data;
+                switch(this.directive) {
+                case Directive.data:
+                    this.machineCode = [];
+                    this.kind = Kind.directive;
+                    break;
+                case Directive.text:
+                    this.machineCode = [];
+                    this.kind = Kind.directive;
+                    return true;
+                    break;
+                case Directive._32bit:
+                    count = count || 4;
+                case Directive._16bit:
+                    count = count || 2;
+                case Directive._8bit:
+                    count = count || 1;
+                    let elements = this.directiveData.split(/\s*,\s*/);
+                    (this.machineCode = []).length = (elements.length * count);
+                    this.machineCode.fill(0);
+                    this.kind = Kind.data;
+                    break;
+                default:
+                    this.invalidReason = "data.unrecognizedDirective";
+                }
+            }
+            return false;
+        }
     }
 }
 
@@ -160,15 +249,26 @@ class Assembler {
         return options + ")";
     }
 
-    assemble(lines: Line[]): boolean {
-        var data = [];
-        var text = [];
-
+    assemble(lines: Line[], pass: number): boolean {
+        let errors = false;
         
-        return false;
+        let assemblerModeText = true;
+        for (var i in lines) {
+            let line = lines[i];
+            switch (pass) {
+            case 0:
+                assemblerModeText = line.initialProcess(this, assemblerModeText);
+                if (line.invalidReason !== undefined) {
+                    errors = true;
+                }
+                break;
+            case 1:
+                let dafinal = 0;
+            }
+        }
+
+        return errors;
     }
-
-
 
     constructor(instructionSet: InstructionSet, endianness: Endianness, memoryMap: number[] = null) {
         this.incrementOnFetch = instructionSet.incrementOnFetch;
@@ -199,14 +299,14 @@ class Assembler {
             if (words[Keyword.comment]) {
                 let options = Assembler.options(words[Keyword.comment]);
                 if (options) {
-                    this.keywordRegexes[Keyword.comment] = RegExp("(.*?)(" + options + ".*)");
+                    this.keywordRegexes[Keyword.comment] = RegExp("^(.*?)(" + options + ".*)?$");
                 }
             }
 
             if (words[Keyword.label]) {
                 let options = Assembler.options(words[Keyword.label]);
                 if (options) {
-                    this.keywordRegexes[Keyword.label] = RegExp("(([A-Za-z_][A-Za-z0-9_]*)" + options + ")?\\s*(.*)?");
+                    this.keywordRegexes[Keyword.label] = RegExp("^(?:([A-Za-z_][A-Za-z0-9_]*)" + options + ")?\\s*(.*)?$");
                 }
             }
             

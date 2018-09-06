@@ -134,19 +134,17 @@ class Instruction {
         return padded;
     }
 
-    computedBits: number = null
+    computedBits: number = null;
     get bits(): number {
-        if (this.computedBits != null) {
-            return this.computedBits
+        if (this.computedBits !== null) {
+            return this.computedBits;
         }
-
-        let count = 0
-        for (let i in this.format.ranges) {   
-            count += this.format.ranges[i].bits
+        let count = 0;
+        for (var i in this.format.ranges) {
+            count += this.format.ranges[i].bits;
         }
-
-        this.computedBits = count
-        return this.computedBits
+        this.computedBits = count;
+        return this.computedBits;
     }
 
     get bytes(): number {
