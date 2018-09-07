@@ -821,7 +821,9 @@ function Oak_gen_RISCV(): InstructionSet {
         [0b0110011, 0b000, parseInt("00000"), 0b0000000],
         function(core) {
             return null; //Captured by and
-        }
+        },
+        false,
+        ["ADD"]
     ));
 
     //LI
@@ -848,7 +850,9 @@ function Oak_gen_RISCV(): InstructionSet {
         [0b0010011, 0b000, 0b00000],
         function(core) {
             return null; //Captured by andi
-        }
+        },
+        false,
+        ["ADDI"]
     ));
 
     instructions.push(new Instruction(
@@ -858,7 +862,9 @@ function Oak_gen_RISCV(): InstructionSet {
         [0b0010011, 0b000, 0b00000],
         function(core) {
             return null; //Captured by andi
-        }
+        },
+        false,
+        ["ADDI"]
     ));
 
     //JR pseudo
@@ -885,7 +891,9 @@ function Oak_gen_RISCV(): InstructionSet {
         [0b1100111, 0b00000, 0b000, 0b000000000000],
         function(core) {
             return null; //captured by jalr
-        }
+        },
+        false,
+        ["ADDI"]
     ));
     
     //Scall, Syscall both as PseudoInstructions
@@ -898,8 +906,9 @@ function Oak_gen_RISCV(): InstructionSet {
             [0b00000000000000000000000001110011],
             function(core) {
                 return null; //captured by ecall
-            }
-            
+            },
+            false,
+            ["ECALL"]
         )
     )
 
@@ -911,8 +920,9 @@ function Oak_gen_RISCV(): InstructionSet {
             [0b00000000000000000000000001110011],
             function(core) {
                 return null; //captured by ecall
-            }
-            
+            },
+            false,
+            ["ECALL"]
         )
     )
 
@@ -934,7 +944,7 @@ function Oak_gen_RISCV(): InstructionSet {
         directives["half"] = Directive._16bit;
         directives["word"] = Directive._32bit;
 
-    return new InstructionSet("rv32i", 32, formats, instructions, pseudoInstructions, [".word", ".half", ".byte", ".string"], [4, 2, 1, 0], abiNames, process, null, null, keywords, directives);
+    return new InstructionSet("rv32i", 32, formats, instructions, pseudoInstructions, abiNames, keywords, directives);
 }
 let RISCV = Oak_gen_RISCV();
 

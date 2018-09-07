@@ -21,7 +21,8 @@ class Line {
     label: string;
     processed: string;
 
-    possibleInstructions: Instruction[];
+    chosenInstruction: Instruction[];
+    possibleInstructions: [Instruction, string[]][];
     directive: Directive;
     directiveData: string;
 
@@ -72,16 +73,18 @@ class Line {
                 return true;
             }
             this.kind = Kind.instruction;
-            this.possibleInstructions = assembler.instructionSet.instructions.filter(instruction=> {
+            assembler.instructionSet.instructions.forEach(instruction=> {
                 let match = instruction.format.regex.exec(this.processed);
-                return match !== null && match[1].toUpperCase() === instruction.mnemonic;
+                if (match !== null && match[1].toUpperCase() === instruction.mnemonic) {
+                    this.possibleInstructions.push([instruction, match.slice(2)]);
+                }
+                return match !== null ;
             });
             if (this.possibleInstructions.length === 0) {
                 this.invalidReason = "text.noMatchingInstructions";
                 return true;
             }
-            let byteCounts = this.possibleInstructions.map(instruction=> instruction.bytes);
-            let minimum = Math.min(...byteCounts);
+            let minimum = this.possibleInstructions[0][0].bytes;
             (this.machineCode = []).length = minimum;
             this.machineCode.fill(0);
             return true;
@@ -115,6 +118,25 @@ class Line {
                 }
             }
             return false;
+        }
+    }
+
+    assemble(assembler: Assembler, lines: Line[]) {
+        for (let i in this.possibleInstructions) {
+            let instruction = this.possibleInstructions[i][0];
+            let args = this.possibleInstructions[i][1];
+
+            let machineCode = instruction.template;
+            
+            for (var j in instruction.format.ranges) {
+                let range = instruction.format.ranges[j];
+                if (!range.parameter) {
+                    continue;
+                }
+                let store = assembler.process(args[range.parameter], instruction.bytes, range.parameterType, range.bits, lines);
+
+
+            }
         }
     }
 }
@@ -251,19 +273,22 @@ class Assembler {
 
     assemble(lines: Line[], pass: number): boolean {
         let errors = false;
-        
+        let wipAddress = false;
         let assemblerModeText = true;
         for (var i in lines) {
             let line = lines[i];
+
             switch (pass) {
-            case 0:
+            case 0: // Zero Pass - Minimum Possible Size
                 assemblerModeText = line.initialProcess(this, assemblerModeText);
                 if (line.invalidReason !== undefined) {
                     errors = true;
                 }
                 break;
+
             case 1:
-                let dafinal = 0;
+                let wipAddress = 0;
+                line.assemble(this, lines);
             }
         }
 

@@ -118,6 +118,8 @@ class Format {
 
 class Instruction {
     mnemonic: string;
+    pseudoInstructionFor: string[];
+
     format: Format;
     constants: number[];
     available: boolean;
@@ -225,74 +227,14 @@ class Instruction {
         return temp
     };
 
-    assemble(
-        line: Line,
-        lines: Line[],
-        process: (text: string, instructionLength: number, type: Parameter, bits: number, lines: Line[])=> any
-    ): any {
-        var result = {
-            machineCode: this.template,
-            errorMessage: null,
-            context: null
-        };
-
-        let match = this.format.regex.exec(line.processed);
-        let args = match.slice(1, match.length);
-
-        for (let i in this.format.ranges) {
-            let range = this.format.ranges[i];
-
-            if (range.parameter == null) {
-                continue;
-            }
-
-            let startBit = (range.limitStart == null) ? 0 : range.limitStart
-            let endBit = range.limitEnd
-            let bits = (range.totalBits == null) ? range.bits : range.totalBits
-            
-            let store = 0;
-            
-            if (range.parameterType !== Parameter.special) {
-                let processed = process(args[range.parameter], this.bytes, range.parameterType, bits, lines);
-                if (processed.contextSensitive !== null) {
-                    result.context = processed.context;
-                    return result;
-                }
-                if (processed.errorMessage !== null) {
-                    result.errorMessage = processed.errorMessage;
-                    return result;                            
-                }
-                store = processed.value;
-            } else {
-                let processed = this.format.processSpecialParameter(args[range.parameter], bits, lines);
-                if (processed.contextSensitive !== null) {
-                    result.context = processed.context;
-                    return result;
-                }
-                if (processed.errorMessage !== null) {
-                    result.errorMessage = processed.errorMessage;
-                    return result;                            
-                }
-                store = processed.value;
-            }
-
-            if (endBit != null) {
-                store >>>= startBit;
-                store &= ((1 << (endBit - startBit + 1)) - 1);
-            }
-
-            result.machineCode |= store << range.start;
-        }
-    }
-
-
-    constructor(mnemonic: string, format: Format, constants: string[], constValues: number[], executor: (core: Core) => string, signatoryOverride: boolean = null) {
+    constructor(mnemonic: string, format: Format, constants: string[], constValues: number[], executor: (core: Core) => string, signatoryOverride: boolean = null, pseudoInstructionFor: string[] = []) {
         this.mnemonic = mnemonic;
         this.format = format;
         this.constants = [];
         for (let i in constants) { this.constants[constants[i]] = constValues[i]; }
         this.executor = executor;        
         this.signatoryOverride = signatoryOverride;
+        this.pseudoInstructionFor = pseudoInstructionFor;
     }
 };
 
@@ -354,9 +296,6 @@ class InstructionSet {
         return output;
     }
 
-    //Validates Parameter, returns value in binary
-    processParameter: (address: number, text: string, type: Parameter, bits: number, labels: string[], addresses: number[]) => ({errorMessage: string, value: number});
-
     //Number of bits.
     bits: number;
 
@@ -387,12 +326,7 @@ class InstructionSet {
         formats: Format[],
         instructions: Instruction[],
         pseudoInstructions: PseudoInstruction[],
-        dataDirectives: string[],
-        dataDirectiveSizes: number[],
         abiNames: string[],
-        process: (address: number, text: string, type: Parameter, bits: number, labels: string[], addresses: number[]) => ({errorMessage: string, value: number}),
-        tokenize: (file: string) => ({errorMessage: string, labels: string[], addresses: number[], lines: string[], pc: number[]}),
-        assemble: (nester: number, address: number, lines: string[], labels: string[], addresses: number[]) => ({errorMessage: string, machineCode: number[], size: number}),
         keywords: string[][],
         directives: Directive[]
     ) {
@@ -400,9 +334,8 @@ class InstructionSet {
         this.bits = bits       
         this.formats = formats
         this.instructions = instructions
+        instructions.sort((a, b)=> a.bytes-b.bytes);
         this.pseudoInstructions = pseudoInstructions
-        this.dataDirectives = dataDirectives
-        this.dataDirectiveSizes = dataDirectiveSizes
         this.abiNames = abiNames
         this.keywords = keywords
         this.directives = directives
