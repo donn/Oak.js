@@ -39,6 +39,8 @@
             <div>
                 <div class='header'>New Tab</div>
                 <input placeholder="File Name.s" /><select>
+                    <option value=0>RISC-V</option>
+                    <option value=1>MIPS</option>
                 </select><button id="overlayAccept">Accept</button><button id="overlayCancel">Cancel</button>
             </div>
         </div><div class='overlay' id="settingsOverlay">
@@ -46,6 +48,8 @@
                 <div class='header'>Settings</div>
                 <div class='overlaybody'>
                     <span>Default Instruction Set</span><select id='defaultISA'>
+                        <option value=0>RISC-V</option>
+                        <option value=1>MIPS</option>
                     </select>
                     <span>Theme</span><select id='themes'>
                         <option value='0'>Light Theme</option>
@@ -71,6 +75,8 @@
                 <div>
                     <a href="javascript:void(0)" class="addTab">New Tab</a>
                     <div class='dropdown'>
+                        <a href="javascript:void(0)" class="addTabOfType" data-value="0">New RISC-V Tab</a>
+                        <a href="javascript:void(0)" class="addTabOfType menuSection" data-value="1">New MIPS Tab</a>
                     </div>
                     <a href="javascript:void(0)" class="removeTab menuSection">Close Tab</a>
                     
@@ -117,6 +123,8 @@
                         </div><div>
                             <span>Instruction Set</span>
                             <select id='isa'>
+                                <option value='0'>RISC-V</option>
+                                <option selected="selected" value='1'>MIPS</option>
                             </select>
                         </div><div>
                             <span>Memory Size (Bytes)</span>
@@ -231,11 +239,11 @@
             </ul>
         </nav>
         <script type="text/javascript" charset="utf-8" src="Scripts/jquery.js"></script>
+        <script type="text/javascript" charset="utf-8" src="Scripts/oak.min.js"></script>
         <script type="text/javascript" charset="utf-8" src="Scripts/ace.min.js"></script>
         <script type="text/javascript" charset="utf-8" src="Scripts/Ace/mode-mips.js"></script>
         <script type="text/javascript" charset="utf-8" src="Scripts/Ace/mode-riscv.js"></script>
         <script type="text/javascript" charset="utf-8" src="Scripts/Ace/theme-oak.js"></script>
         <script type="text/javascript" charset="utf-8" src="Scripts/oakui.min.js"></script>
-        <script type="text/javascript" charset="utf-8" src="Scripts/oak.min.js"></script>
     </body>
 </html>

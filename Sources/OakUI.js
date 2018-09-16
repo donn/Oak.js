@@ -1,32 +1,11 @@
 var useCookies = false;
 
-var DEFAULT_ISA = 0;
-
-var isa_list = [];
-
-function RegisterISA(name_, callback_) {
-    console.log("Loading Oak.js Plugin: " + name_);
-    isa_list.push({
-        name: name_,
-        create_callback: callback_
-    });
-
-    var c = $("#defaultISA").children('option').length;
-
-    // Selected
-    var selected = (c > 0) ? "" : "selected=selected"; // SELECTED
-    
-    $("#defaultISA").append("<option value="+c+" "+selected+">"+name_+"</option>");
-    $("#overlay select").append("<option value="+c+" "+selected+">"+name_+"</option>");
-    $("#isa").append("<option value='"+c+"' "+selected+">"+name_+"</option>");
-    if (c <= 5) {
-        $(".dropdown").append("<a href='javascript:void(0)' class='addTabOfType' data-value='"+c+"'>New "+name_+" Tab</a>");
-    }
-}
+var ISA_RISCV = 0;
+var ISA_MIPS = 1;
 
 var settings = {
     theme:      0,
-    defaultISA: DEFAULT_ISA,
+    defaultISA: ISA_RISCV,
     hotkeyNewTab: "a_78",
     hotkeySave: "a_83",
     hotkeyOpen: "a_79",
@@ -42,7 +21,7 @@ function Tab(_name, _content, _machinecode) {
         machinecode: _machinecode,
         console: "",
         instructionLog: "",
-        instructionSet: DEFAULT_ISA,
+        instructionSet: ISA_RISCV,
         memorySize: 4096,
         core: null,
         inSimulation: false,
@@ -510,7 +489,13 @@ function createCore(type, size, ecallback, dcallback) {
         size = parseInt(size)
     }
 
-    return isa_list[type].create_callback(size, ecallback, dcallback);
+    switch(type) {
+        case ISA_MIPS:
+            return new MIPSCore(size, ecallback, dcallback);
+        default:
+        case ISA_RISCV:
+            return new RISCVCore(size, ecallback, dcallback);
+    }
 }
 
 function updateMemorySize(newSize) {
@@ -1165,21 +1150,21 @@ function converter() {
 
     function addTabWindow() {
         $("#overlay > div > div").html("New File");
-        $("#overlay input").val("Untitled");
-        $("#overlay select").val(settings.defaultISA);
-        $("#overlay").fadeIn(200);
-        $("#overlayAccept").click(function(e) {
-            var n = $("#overlay input").val();
-            var isa = $("#overlay select").val();
-            addTabDefault(n, isa);
-            $("#overlay").fadeOut(200);
-            $(this).unbind('click');
-        });
+            $("#overlay input").val("Untitled");
+            $("#overlay select").val(settings.defaultISA);
+            $("#overlay").fadeIn(200);
+            $("#overlayAccept").click(function(e) {
+                var n = $("#overlay input").val();
+                var isa = $("#overlay select").val();
+                addTabDefault(n, isa);
+                $("#overlay").fadeOut(200);
+                $(this).unbind('click');
+            });
 
-        $("#overlayCancel").click(function(e) {
-            $("#overlay").fadeOut(200);
-            $(this).unbind('click');
-        });
+            $("#overlayCancel").click(function(e) {
+                $("#overlay").fadeOut(200);
+                $(this).unbind('click');
+            });
     }
 
     function uploadBin(e) {
@@ -1332,6 +1317,7 @@ function converter() {
         editor.getSession().on('change', editorChange);
         editor.setOption("firstLineNumber", 0);
         editor.setTheme("ace/theme/oak");
+        editor.getSession().setMode("ace/mode/riscv");
         editor.getSession().setUseWrapMode(true);
         editor.$blockScrolling = Infinity;
 
