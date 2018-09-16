@@ -1,6 +1,8 @@
 /// <reference path="Core.ts"/>
 /// <reference path="RISCV.ts"/>
 /// <reference path="MIPS.ts"/>
+/// <reference path="Assembler.ts" />
+
 // The Zero Interface
 // Should be mostly pure Javascript, as it is indeed an interface for Javascript.
 // INTERFACE GUIDE: If null, then it looks like it was successful. Else, it is unsuccessful.
@@ -180,7 +182,9 @@ if (typeof process === 'object' && process + '' === '[object process]') { //Is N
     let lines = Line.arrayFromFile(file);
 
     assembler.assemble(lines, 0);
-    lines.map(line=> console.log(line.invalidReason, line.kind, line.machineCode));
+    console.log(assembler.assemble(lines, 1));
+    //lines.map(line=> console.log(line.invalidReason, line.kind, Utils.hex(line.machineCode), line.raw));
+    console.log(lines.reduce((str, line)=> str + Utils.hex(line.machineCode), ''));
 
     process.exit(0);
 

@@ -76,4 +76,4 @@ return:
 jalr x0, ra, 0
 
 .data
-array: .word 9, 5, 17, 6, 8, 2, 4, 39, 18, 3
+array: # .word 9, 5, 17, 6, 8, 2, 4, 39, 18, 3

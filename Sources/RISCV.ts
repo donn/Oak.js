@@ -1,6 +1,7 @@
 /// <reference path="InstructionSet.ts"/>
 /// <reference path="Utils.ts" />
 /// <reference path="Assembler.ts" />
+
 //The RISC-V Instruction Set Architecture, Version 2.1
 
 function Oak_gen_RISCV(): InstructionSet {
@@ -513,79 +514,17 @@ function Oak_gen_RISCV(): InstructionSet {
     formats.push (
         new Format (
             [
-                new BitRange("imm", 25, 7, null, true).parameterized(2, Parameter.special).limited(13, 5, 11),
+                new BitRange("imm", 31, 1, null, true).parameterized(2, Parameter.offset).limited(13, 12, 12),
+                new BitRange("imm", 25, 6, null, true).parameterized(2, Parameter.offset).limited(13, 5, 10),
                 new BitRange("rs2", 20, 5).parameterized(1, Parameter.register),
                 new BitRange("rs1", 15, 5).parameterized(0, Parameter.register),
                 new BitRange("funct3", 12, 3),
-                new BitRange("imm", 7, 5, null, true).parameterized(2, Parameter.special).limited(13, 0, 4),
+                new BitRange("imm", 8, 4, null, true).parameterized(2, Parameter.offset).limited(13, 1, 4),
+                new BitRange("imm", 7, 1, null, true).parameterized(2, Parameter.offset).limited(13, 11, 11),
                 new BitRange("opcode", 0, 7)
             ],
             /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)/,
             "@mnem @arg0, @arg1, @arg2"
-            ,
-            // function(address: number, text: string, bits: number, labels: string[], addresses: number[]) {
-            //     let array = text.split(""); //Character View
-            //     let result = {
-            //         errorMessage: null,
-            //         value: null
-            //     };
-
-            //     let int = NaN;
-            //     let labelLocation = labels.indexOf(text);
-            //     if (labelLocation !== -1) {
-            //         int = addresses[labelLocation] - address + 4;
-            //     }
-            //     else {
-            //         let radix = 10 >>> 0;
-            //         let splice = false;
-                    
-            //         if (array[0] === "0") {
-            //             if (array[1] == "b") {
-            //                 radix = 2;
-            //                 splice = true;
-            //             }
-            //             if (array[1] == "o") {
-            //                 radix = 8;
-            //                 splice = true;
-            //             }
-            //             if (array[1] == "d") {
-            //                 radix = 10;
-            //                 splice = true;
-            //             }
-            //             if (array[1] == "x") {
-            //                 radix = 16;
-            //                 splice = true;
-            //             }
-            //         }
-
-            //         let interpretable = text;
-            //         if (splice) {
-            //             interpretable = array.splice(2, array.length - 2).join("");
-            //         }
-            //         int = parseInt(interpretable, radix);
-            //     }
-                    
-            //     if (isNaN(int)) {     
-            //         result.errorMessage = "Offset '" + text + "' is not a recognized label or literal.";
-            //         return result;
-            //     }
-
-            //     if (Utils.rangeCheck(int, 13)) {
-            //         let mangle = int & 2046; //mangle[10:1] = int[10:1];
-            //         mangle = mangle | ((int >>> 11) & 1); //mangle[0] = int[11]
-            //         mangle = mangle | ((int >>> 12) & 1) << 11; //mangle[11] = int[12];
-            //         result.value = mangle;
-            //         return result;
-            //     }
-            //     result.errorMessage = "The value of '" + text + "' is out of range.";
-            //     return result;
-            // },
-            // function(value: number) {
-            //     let unmangle = (value & 1) << 11; //unmangle[11]; = value[0];
-            //     unmangle = unmangle | ((value >>> 11) << 12); //unmangle[12] = value[12];
-            //     unmangle = unmangle | (value & 2046); //unmangle[10:1] = value[10:1];
-            //     return unmangle;
-            // }
         )
     );
 
@@ -674,78 +613,15 @@ function Oak_gen_RISCV(): InstructionSet {
     formats.push (
         new Format (
             [
-                new BitRange("imm", 12, 20, null, true).parameterized(1, Parameter.special).limited(21),
+                new BitRange("imm", 31, 1, null, true).parameterized(1, Parameter.offset).limited(21, 20, 20),
+                new BitRange("imm", 21, 10, null, true).parameterized(1, Parameter.offset).limited(21, 1, 10),
+                new BitRange("imm", 20, 1, null, true).parameterized(1, Parameter.offset).limited(21, 11, 11),
+                new BitRange("imm", 12, 8, null, true).parameterized(1, Parameter.offset).limited(21, 12, 19),
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.register),
                 new BitRange("opcode", 0, 7)
             ],
             /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)/,
-            "@mnem @arg0, @arg1",
-            // function(address: number, text: string, bits: number, labels: string[], addresses: number[]) {
-            //     let array = text.split(""); //Character View
-            //     let result = {
-            //         errorMessage: null,
-            //         value: null
-            //     };
-
-            //     let int = NaN;
-            //     let labelLocation = labels.indexOf(text);
-            //     if (labelLocation !== -1) {
-            //         int = addresses[labelLocation] - address + 4;
-            //     }
-            //     else {
-            //         let radix = 10 >>> 0;
-            //         let splice = false;
-                    
-            //         if (array[0] === "0") {
-            //             if (array[1] == "b") {
-            //                 radix = 2;
-            //                 splice = true;
-            //             }
-            //             if (array[1] == "o") {
-            //                 radix = 8;
-            //                 splice = true;
-            //             }
-            //             if (array[1] == "d") {
-            //                 radix = 10;
-            //                 splice = true;
-            //             }
-            //             if (array[1] == "x") {
-            //                 radix = 16;
-            //                 splice = true;
-            //             }
-            //         }
-
-            //         let interpretable = text;
-            //         if (splice) {
-            //             interpretable = array.splice(2, array.length - 2).join("");
-            //         }
-            //         int = parseInt(interpretable, radix);
-            //     }
-                    
-            //     if (isNaN(int)) {     
-            //         result.errorMessage = "Offset '" + text + "' is not a recognized label or literal.";
-            //         return result;
-            //     }
-
-            //     if (Utils.rangeCheck(int, 21)) {
-            //         let mangle = ((int >> 12) & 255); //mangle[7:0] = int[19:12] 
-            //         mangle = mangle | (((int >> 11) & 1) << 8); //mangle[8] = int[11];
-            //         mangle = mangle | (((int >> 1) & 1023) << 9); //mangle[18:9] = int[10:1];
-            //         mangle = mangle | (((int >> 20) & 1) << 19 ); //mangle[19] = int[20];
-            //         result.value = mangle;
-            //         return result;
-            //     }
-            //     result.errorMessage = "The value of '" + text + "' (" + int.toString() + ")is out of range.";
-            //     return result;
-            // },
-            // function(value: number) {
-            //     let unmangle = ((value >> 8) & 1) << 11; //unmangle[11]; = value[8];
-            //     unmangle = unmangle | (((value >>> 19) & 1) << 20); //unmangle[20] = value[19];
-            //     unmangle = unmangle | (((value >>> 0) & 255) << 12); //unmangle[19:12] = value[7:0];
-            //     unmangle = unmangle | (((value >>> 9) & 1023) << 1); //unmangle[10:1] = value[18:9];
-            //     return unmangle;
-
-            // }
+            "@mnem @arg0, @arg1"
         )
     );
 
@@ -830,7 +706,7 @@ function Oak_gen_RISCV(): InstructionSet {
     formats.push (
         new Format (
             [
-                new BitRange("imm", 20, 12, null, true).parameterized(1, Parameter.register),
+                new BitRange("imm", 20, 12, null, true).parameterized(1, Parameter.immediate),
                 new BitRange("rs1", 15, 5),
                 new BitRange("funct3", 12, 3),
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.register),
@@ -944,7 +820,7 @@ function Oak_gen_RISCV(): InstructionSet {
         directives["half"] = Directive._16bit;
         directives["word"] = Directive._32bit;
 
-    return new InstructionSet("rv32i", 32, formats, instructions, pseudoInstructions, abiNames, keywords, directives);
+    return new InstructionSet("riscv", 32, formats, instructions, pseudoInstructions, abiNames, keywords, directives);
 }
 let RISCV = Oak_gen_RISCV();
 

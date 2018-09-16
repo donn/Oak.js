@@ -1,25 +1,6 @@
 namespace Utils {
 
     /*
-        rangeCheck
-
-        Checks if a value can fit within a certain number of bits.
-    */
-    export function rangeCheck(value: number, bits: number): boolean {
-        if (bits >= 32) {
-            return null; // No stable way of checking.
-        }
-        
-        let min = (-(1 << bits - 1)) >>> 0;
-        let max = ((1 << bits - 1) - 1) >>> 0;
-        value = signExt(value, bits);
-        if (((value >>> 0) <= max) && ((value >>> 0) >= min)) {
-            return true;
-        }
-        return false;
-    }
-
-    /*
         signExt
 
         Sign extends an n-bit value to fit Javascript limits.
@@ -30,6 +11,25 @@ namespace Utils {
             mutableValue = ((~(0) >>> bits) << bits) | value;
         }
         return mutableValue;
+    }
+
+    /*
+        rangeCheck
+
+        Checks if a value can fit within a certain number of bits.
+    */
+    export function rangeCheck(value: number, bits: number): boolean {
+        if (bits >= 32) {
+            return null; // No stable way of checking.
+        }
+        
+        let min = -(1 << (bits - 1));
+        let max = ((1 << (bits - 1)) - 1);
+        value = signExt(value, bits);
+        if ((min <= value) && (value <= max)) {
+            return true;
+        }
+        return false;
     }
 
     /*
@@ -69,8 +69,8 @@ namespace Utils {
 
     export function hex(array: number[]) {
         let hexadecimal = "";
-        for (let i = 0; i < this.length; i++) {
-            let hexRepresentation = this[i].toString(16).toUpperCase();
+        for (let i = 0; i < array.length; i++) {
+            let hexRepresentation = array[i].toString(16).toUpperCase();
             if (hexRepresentation.length === 1) {
                 hexRepresentation = "0" + hexRepresentation;
             }

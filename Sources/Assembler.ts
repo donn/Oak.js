@@ -16,7 +16,7 @@ class Line {
     sensitive: boolean = false;
     sensitivityList: Line[];
 
-    machineCode: number[];
+    machineCode: number[] = [];
     kind: Kind;
 
     invalidReason: string;
@@ -65,11 +65,9 @@ class Line {
             if (this.directive !== undefined) {
                 switch(this.directive) {
                 case Directive.data:
-                    this.machineCode = [];
                     this.kind = Kind.directive;
                     return false;
                 case Directive.text:
-                    this.machineCode = [];
                     this.kind = Kind.directive;
                     break;
                 default:
@@ -99,11 +97,9 @@ class Line {
                 this.kind = Kind.data;
                 switch(this.directive) {
                 case Directive.data:
-                    this.machineCode = [];
                     this.kind = Kind.directive;
                     break;
                 case Directive.text:
-                    this.machineCode = [];
                     this.kind = Kind.directive;
                     return true;
                     break;
@@ -126,9 +122,8 @@ class Line {
         }
     }
 
-    assemble(assembler: Assembler, lines: Line[], address: number): [string, boolean] { // [errorMessage, repass]
+    private assembleText(assembler: Assembler, lines: Line[], address: number): string { 
         let candidates = false;
-        this.sensitive = false;
 
         testingInstructions: for (let i in this.possibleInstructions) {
             let possibleInstruction = this.possibleInstructions[i];
@@ -136,32 +131,31 @@ class Line {
             let args = possibleInstruction[1];
 
             let machineCode = instruction.template;
-            
             for (var j in instruction.format.ranges) {
                 let range = instruction.format.ranges[j];
-                if (!range.parameter) {
+                if (range.parameter === undefined) {
                     continue;
                 }
-                let store = assembler.process(args[range.parameter], instruction.bytes, range.parameterType, range.bits, lines);
-                if (store.context !== null && store.value === null) {
+                let limited = range.totalBits;
+                let bits = limited || range.bits;
+                let store = assembler.process(args[range.parameter], range.parameterType, bits, address, instruction.bytes);
+                if (store.errorMessage !== null) {
+                    possibleInstruction[3] = store.errorMessage;
+                    continue testingInstructions;
+                } else if (store.context !== null && store.value === null) {
                     store.context.sensitivityList.push(this);
                     this.sensitive = true;
                     break testingInstructions;
-                } else if (store.errorMessage !== null) {
-                    possibleInstruction[3] = store.errorMessage;
-                    continue testingInstructions;
                 } else {
                     let register = store.value;
-
-                    let limited = range.totalBits;
                     let startBit = range.limitStart;
                     let endBit = range.limitEnd;
 
-                    if (limited !== null && startBit !== null && endBit !== null) {
-                        register = register >>> startBit;
-                        register = register & ((1 << (endBit - startBit + 1)) - 1);
+                    if (limited !== undefined && startBit !== undefined && endBit !== undefined) {
+                        register >>= startBit; // discard start bits bits
+                        let bits = (endBit - startBit + 1);
+                        register &= (1 << bits) - 1; // mask end - start + 1 bits
                     }
-
                     machineCode |= register << range.start;
                 }
             }
@@ -173,36 +167,10 @@ class Line {
             candidates = true;
         }
 
-        let lineByLabel = assembler.linesByLabel[this.label];
-        if (lineByLabel !== undefined) {
-            lineByLabel[1] = address;
-        }
-        let repass = false;
-
         if (candidates) {
             // Expand machine code if applicable
             let smallestPossibleInstruction = this.possibleInstructions.filter(pi=> pi[3] === null)[0];
             this.machineCode = smallestPossibleInstruction[2];
-
-            sensitiveList: for (let i in this.sensitivityList) {
-                let sensor = this.sensitivityList[i];
-                if (sensor.addressThisPass !== null) {
-                    let sensorLength = sensor.machineCode.length;
-                    let newAssembly = sensor.assemble(assembler, lines, sensor.addressThisPass);
-                    if (sensor.sensitive) {
-                        // Still sensitive, leave it alone uwu
-                    } else {
-                        if (newAssembly[1]) {
-                            repass = true;
-                            break sensitiveList;
-                        }
-                        if (sensor.machineCode.length !== sensorLength) {
-                            repass = true;
-                            break sensitiveList;
-                        }
-                    }
-                }
-            }
         }
 
         // Handle errors
@@ -212,7 +180,47 @@ class Line {
             errorMessage = this.possibleInstructions[this.possibleInstructions.length - 1][3]; //Typically the most lenient option is last
         }
 
-        return [errorMessage, repass];
+        return errorMessage;
+    }
+
+    assemble(assembler: Assembler, lines: Line[], address: number): [string, boolean] { // [errorMessage, repass]
+        this.sensitive = false;
+        let result: [string, boolean] = [null, false];
+
+        switch(this.kind) {
+        case Kind.instruction:
+            result[0] = this.assembleText(assembler, lines, address);
+            break;
+        }
+
+        let lineByLabel = assembler.linesByLabel[this.label];
+        if (lineByLabel !== undefined) {
+            lineByLabel[1] = address;
+        }
+
+        if (result[0] === null) {
+            sensitiveList: for (let i in this.sensitivityList) {
+                let sensor = this.sensitivityList[i];
+                if (sensor.addressThisPass !== null) {
+                    let sensorLength = sensor.machineCode.length;
+                    let newAssembly = sensor.assemble(assembler, lines, sensor.addressThisPass);
+                    if (sensor.sensitive) {
+                        // Still sensitive, leave it alone uwu
+                    } else {
+                        if (newAssembly[1]) {
+                            result[1] = true;
+                            break sensitiveList;
+                        }
+                        if (sensor.machineCode.length !== sensorLength) {
+                            result[1] = true;
+                            break sensitiveList;
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
     }
 }
 
@@ -243,14 +251,14 @@ class Assembler {
     static escapedCharacterList = Object.keys(Assembler.escapedCharacters).join("")
 
     //Returns number on success, string on failure
-    process(text: string, instructionLength: number, type: Parameter, bits: number, lines: Line[]) {
+    process(text: string, type: Parameter, bits: number, address: number, instructionLength: number) {
         let result = {
             errorMessage: null,
             value: null,
             context: null
         };
         switch(type) {
-        case Parameter.register:                
+        case Parameter.register:  
             let index = this.instructionSet.abiNames.indexOf(text);
             if (index !== -1) {
                 result.value = index;
@@ -261,12 +269,12 @@ class Assembler {
             if (this.keywordRegexes[Keyword.register]) {
                 registerNo = new RegExp(this.keywordRegexes[Parameter.register]).exec(text)[1];
             } else {
-                result.errorMessage = "Register " + text + " does not exist.";
+                result.errorMessage = `args.registerDoesNotExist(${text})`;
                 return result;
             }
             registerNo = parseInt(registerNo);
             if ((registerNo & (~0 << bits)) !== 0) {
-                result.errorMessage = "Register " + text + " does not exist.";
+                result.errorMessage = `args.registerDoesNotExist(${text})`;
                 return result;
             }
             result.value = registerNo;
@@ -275,15 +283,16 @@ class Assembler {
         case Parameter.offset:
         case Parameter.immediate:
             //Label
+            let value = null;
             let reference = this.linesByLabel[text];
             if (reference !== undefined) {
                 result.context = reference[0]
                 if (reference[1] === null) {
                     return result;
                 }
+                value = reference[1];
             }
-            let value = 0;
-            if (value === undefined && this.keywordRegexes[Keyword.char]) {
+            if (value === null && this.keywordRegexes[Keyword.char]) {
                 let extraction = RegExp(this.keywordRegexes[Keyword.char]).exec(text);
                 if (extraction !== null && extraction[1] !== undefined) {
                     value = extraction[1].charCodeAt(0);
@@ -293,19 +302,29 @@ class Assembler {
                     }
                 }
             }
-            if (type != Parameter.offset && value === undefined && this.keywordRegexes[Keyword.numeric] !== undefined) {
+            if (value === null && this.keywordRegexes[Keyword.numeric] !== undefined) {
                 let array = RegExp(this.keywordRegexes[Keyword.numeric]).exec(text);
-                let radix = Assembler.radixes[array[1]];
-                let interpretable = array[2];
-
-                value = parseInt(interpretable, radix);
+                
+                if (array !== null) {
+                    let radix = Assembler.radixes[array[2]] || 10;
+                    let interpretable = array[1];
+    
+                    value = parseInt(interpretable, radix);
+                }
             }
 
-            if (isNaN(value)) {     
-                result.errorMessage = "Immediate '" + text + "' is not a recognized label, literal or character.";
+            if (value !== null && type === Parameter.offset) {
+                value -= address;
+                if (this.incrementOnFetch) {
+                    value += instructionLength;
+                }
+            }
+
+            if (value === null || isNaN(value)) {     
+                result.errorMessage = `args.valueUnrecognized(${text})`;
                 return result;
             } else if (!Utils.rangeCheck(value, bits)) {
-                result.errorMessage = "The value of '" + value + "' is out of range.";
+                result.errorMessage = `args.outOfRange(${text})`;
                 return result;
             }
             
@@ -313,7 +332,7 @@ class Assembler {
             return result;
 
         default:
-            result.errorMessage = "Oak Error: Parameter type unsupported.";
+            result.errorMessage = "oak.paramUnsupported";
             return result;
         }
     }
@@ -329,7 +348,8 @@ class Assembler {
             let keyword = list[i];
 
             if (keyword == "\\") {
-                console.log("Instruction Set Error: Escape character \\ cannot be used as a keyword.")
+                console.log("INSTRUCTION SET WARNING: '\\' used as keyword. This behavior is undefined.")
+                return null;
             }
             if (options == "") {
                 options = "(?:";
@@ -343,15 +363,13 @@ class Assembler {
         return options + ")";
     }
 
-    linesByLabel: [Line[], number];
+    linesByLabel: [Line[], number][] = [];
 
     assemble(lines: Line[], pass: number): [Line, string][] {
-
         lines.map(line=> line.addressThisPass = null);
         let errors = [];
         let assemblerModeText = true;
         let address = 0;
-        let final = true;
 
         for (var i in lines) {
             let line = lines[i];
@@ -372,7 +390,7 @@ class Assembler {
                 if (asm[0] !== null) {
                     errors.push(line, asm[0]);
                 }
-                if (asm[1] !== null) {
+                if (asm[1]) {
                     return null; // Repass
                 }
                 address += line.machineCode.length;
@@ -428,7 +446,7 @@ class Assembler {
                 }
             }
 
-            this.keywordRegexes[Keyword.numeric] = RegExp("(?:0([" + Assembler.radixList + "]))?([A-F0-9]+)");
+            this.keywordRegexes[Keyword.numeric] = RegExp("(-?(?:0([" + Assembler.radixList + "]))?[A-F0-9]+)");
 
             if (words[Keyword.charMarker]) {
                 let options = Assembler.options(words[Keyword.charMarker]);
@@ -440,7 +458,7 @@ class Assembler {
             }
         }
         else {
-            console.log("Instruction Set Warning: This instruction set doesn't define any keywords.\nTo suppress this warning, pass an empty [:] to \"keywords\"");
+            console.log("INSTRUCTION SET WARNING: This instruction set doesn't define any keywords.");
         }
         this.directives = instructionSet.directives;
         this.endianness = (endianness) ? endianness : instructionSet.endianness;

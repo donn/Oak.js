@@ -15,33 +15,29 @@ Make, TypeScript 2 or above, UglifyJS 2 or above, and a compatible version of No
 
 If you just want to use Oak.js, it should work fine on any modern browser, bar modern versions of Internet Explorer.
 
-## Installing Dependencies
-(aka how to use Node.js 101)
-
+## Getting Node
 ### macOS
 It is recommended to use the [Homebrew package manager](https://brew.sh) first. Type in your terminal:
 
     brew install node
-    npm install typescript
-    npm install babel
 
 ### Debian-based OSes (incl. Ubuntu)
 Again, in the terminal:
 
     sudo apt-get install nodejs npm
-    npm install typescript
-    npm install babel   
 
-For other Linux-based OSes, substitute aptitudes's syntax with that of your package manager's.
+For other Linux-based OSes, substitute aptitude's syntax with that of your package manager's.
 If you get errors about node not being found, try running the following: `ln -s /usr/bin/nodejs /usr/bin/node`.
     
 ### Windows
 Please use Bash on Ubuntu on Windows 10 and follow the instructions for Debian-based OSes for a supported and tested workflow. If you do not wish to use the Linux subsystem, try first installing Node.js from [their website](http://nodejs.org/) and then, in PowerShell:
 
-    npm install typescript
-    npm install uglify-js
-
 Like Debian-based OSes, you may need administrative privileges for this.
+
+## Packages
+
+    npm install typescript
+    npm install babel-cli
 
 # Usage
 To use Oak.js, either visit the [GitHub Page](https://skyus.github.io/Oak.js) or download this repository and open index.html using your web browser.
