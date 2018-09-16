@@ -1934,10 +1934,10 @@ class RISCVCore //: Core
 
     constructor(memorySize: number, ecall: () => void, instructionCallback: (data: string) => void)
     {
-        this.defaultEcallRegType     = 17;
-        this.defaultEcallRegArg      = 10;
+        this.defaultEcallRegType     = 10;
+        this.defaultEcallRegArg      = 11;
         this.aceStyle = "ace/mode/riscv";
-        this.defaultCode = "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"";
+        this.defaultCode = "    la a1, str\n    li a0, 4 #4 is the string print service number...\n    ecall\n    li a0, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"";
         this.defaultMachineCode = "13 05 40 01 93 08 40 00 73 00 00 00 93 08 A0 00 73 00 00 00 48 65 6C 6C 6F 2C 20 57 6F 72 6C 64 21 00 ";
         this.instructionSet = RISCV;
         this.pc = 0 >>> 0;
