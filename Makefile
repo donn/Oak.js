@@ -9,7 +9,6 @@ ui: Scripts/ui.min.js Scripts/oak.min.js
 Scripts/oak.min.js: $(SOURCES)
 	mkdir -p Build/
 	./node_modules/typescript/bin/tsc $(FLAGS) Sources/Zero.ts --outFile Build/Oak.js
-
 	./node_modules/babel-cli/bin/babel.js $(BABELFLAGS) Build/Oak.js > Scripts/oak.min.js
 	chmod +x Scripts/oak.min.js
 

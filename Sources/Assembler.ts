@@ -9,26 +9,31 @@ enum Kind {
 };
 
 class Line {
-    finalAddress: number;
+    final: boolean = false;
+
+    addressThisPass: number = null;
+
+    sensitive: boolean = false;
+    sensitivityList: Line[];
+
     machineCode: number[];
     kind: Kind;
 
     invalidReason: string;
 
-    sensitivityList: Line[];
-
     raw: string;
     label: string;
     processed: string;
-
-    chosenInstruction: Instruction[];
-    possibleInstructions: [Instruction, string[]][];
+    
+    possibleInstructions: [Instruction, string[], number[], string][];
     directive: Directive;
     directiveData: string;
 
     constructor(raw: string) {
         this.raw = raw;
         this.kind = Kind.noise;
+        this.sensitivityList = [];
+        this.possibleInstructions = [];
     }
 
     static arrayFromFile(file: string): Line[] {
@@ -76,7 +81,7 @@ class Line {
             assembler.instructionSet.instructions.forEach(instruction=> {
                 let match = instruction.format.regex.exec(this.processed);
                 if (match !== null && match[1].toUpperCase() === instruction.mnemonic) {
-                    this.possibleInstructions.push([instruction, match.slice(2)]);
+                    this.possibleInstructions.push([instruction, match.slice(2), [], null]);
                 }
                 return match !== null ;
             });
@@ -121,10 +126,14 @@ class Line {
         }
     }
 
-    assemble(assembler: Assembler, lines: Line[]) {
-        for (let i in this.possibleInstructions) {
-            let instruction = this.possibleInstructions[i][0];
-            let args = this.possibleInstructions[i][1];
+    assemble(assembler: Assembler, lines: Line[], address: number): [string, boolean] { // [errorMessage, repass]
+        let candidates = false;
+        this.sensitive = false;
+
+        testingInstructions: for (let i in this.possibleInstructions) {
+            let possibleInstruction = this.possibleInstructions[i];
+            let instruction = possibleInstruction[0];
+            let args = possibleInstruction[1];
 
             let machineCode = instruction.template;
             
@@ -134,10 +143,76 @@ class Line {
                     continue;
                 }
                 let store = assembler.process(args[range.parameter], instruction.bytes, range.parameterType, range.bits, lines);
+                if (store.context !== null && store.value === null) {
+                    store.context.sensitivityList.push(this);
+                    this.sensitive = true;
+                    break testingInstructions;
+                } else if (store.errorMessage !== null) {
+                    possibleInstruction[3] = store.errorMessage;
+                    continue testingInstructions;
+                } else {
+                    let register = store.value;
 
+                    let limited = range.totalBits;
+                    let startBit = range.limitStart;
+                    let endBit = range.limitEnd;
 
+                    if (limited !== null && startBit !== null && endBit !== null) {
+                        register = register >>> startBit;
+                        register = register & ((1 << (endBit - startBit + 1)) - 1);
+                    }
+
+                    machineCode |= register << range.start;
+                }
+            }
+
+            for (let i = 0; i < instruction.bytes; i += 1) {
+                possibleInstruction[2].push(machineCode & 0xFF);
+                machineCode >>>= 8;
+            }
+            candidates = true;
+        }
+
+        let lineByLabel = assembler.linesByLabel[this.label];
+        if (lineByLabel !== undefined) {
+            lineByLabel[1] = address;
+        }
+        let repass = false;
+
+        if (candidates) {
+            // Expand machine code if applicable
+            let smallestPossibleInstruction = this.possibleInstructions.filter(pi=> pi[3] === null)[0];
+            this.machineCode = smallestPossibleInstruction[2];
+
+            sensitiveList: for (let i in this.sensitivityList) {
+                let sensor = this.sensitivityList[i];
+                if (sensor.addressThisPass !== null) {
+                    let sensorLength = sensor.machineCode.length;
+                    let newAssembly = sensor.assemble(assembler, lines, sensor.addressThisPass);
+                    if (sensor.sensitive) {
+                        // Still sensitive, leave it alone uwu
+                    } else {
+                        if (newAssembly[1]) {
+                            repass = true;
+                            break sensitiveList;
+                        }
+                        if (sensor.machineCode.length !== sensorLength) {
+                            repass = true;
+                            break sensitiveList;
+                        }
+                    }
+                }
             }
         }
+
+        // Handle errors
+        let errorMessage = null;
+        let errorOccurred = !(candidates || this.sensitive);
+        if (errorOccurred) {
+            errorMessage = this.possibleInstructions[this.possibleInstructions.length - 1][3]; //Typically the most lenient option is last
+        }
+
+        return [errorMessage, repass];
     }
 }
 
@@ -168,7 +243,7 @@ class Assembler {
     static escapedCharacterList = Object.keys(Assembler.escapedCharacters).join("")
 
     //Returns number on success, string on failure
-    process(text: string, instructionLength: number, type: Parameter, bits: number, lines: Line[]): any {
+    process(text: string, instructionLength: number, type: Parameter, bits: number, lines: Line[]) {
         let result = {
             errorMessage: null,
             value: null,
@@ -200,10 +275,12 @@ class Assembler {
         case Parameter.offset:
         case Parameter.immediate:
             //Label
-            let reference = lines.filter(line=> line.label == text)[0];
+            let reference = this.linesByLabel[text];
             if (reference !== undefined) {
-                result.context = reference;
-                return result;
+                result.context = reference[0]
+                if (reference[1] === null) {
+                    return result;
+                }
             }
             let value = 0;
             if (value === undefined && this.keywordRegexes[Keyword.char]) {
@@ -222,11 +299,6 @@ class Assembler {
                 let interpretable = array[2];
 
                 value = parseInt(interpretable, radix);
-            }
-
-            if (type == Parameter.offset) {
-                result.context = self;
-                return result;
             }
 
             if (isNaN(value)) {     
@@ -271,10 +343,16 @@ class Assembler {
         return options + ")";
     }
 
-    assemble(lines: Line[], pass: number): boolean {
-        let errors = false;
-        let wipAddress = false;
+    linesByLabel: [Line[], number];
+
+    assemble(lines: Line[], pass: number): [Line, string][] {
+
+        lines.map(line=> line.addressThisPass = null);
+        let errors = [];
         let assemblerModeText = true;
+        let address = 0;
+        let final = true;
+
         for (var i in lines) {
             let line = lines[i];
 
@@ -282,16 +360,24 @@ class Assembler {
             case 0: // Zero Pass - Minimum Possible Size
                 assemblerModeText = line.initialProcess(this, assemblerModeText);
                 if (line.invalidReason !== undefined) {
-                    errors = true;
+                    errors.push([line, line.invalidReason]);
+                }
+                if (line.label !== undefined) {
+                    this.linesByLabel[line.label] = [line, null];
                 }
                 break;
-
-            case 1:
-                let wipAddress = 0;
-                line.assemble(this, lines);
+            default:
+                line.addressThisPass = address;
+                let asm = line.assemble(this, lines, address); // Assumption: Instruction cannot become context-sensitive based on size
+                if (asm[0] !== null) {
+                    errors.push(line, asm[0]);
+                }
+                if (asm[1] !== null) {
+                    return null; // Repass
+                }
+                address += line.machineCode.length;
             }
         }
-
         return errors;
     }
 
