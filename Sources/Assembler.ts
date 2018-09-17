@@ -93,6 +93,7 @@ class Line {
             return true;
         } else {
             let count = null; // byte count
+            let zeroDelimitedString = 0;
             if (this.directive !== undefined) {
                 this.kind = Kind.data;
                 switch(this.directive) {
@@ -113,6 +114,32 @@ class Line {
                     (this.machineCode = []).length = (elements.length * count);
                     this.machineCode.fill(0);
                     this.kind = Kind.data;
+                    break;
+                case Directive.cString:
+                    zeroDelimitedString = 1;
+                case Directive.string:
+                    if (assembler.keywordRegexes[Keyword.string] === null) {
+                        this.invalidReason = "isa.noStringTokenDefined";
+                    }
+                    let match = assembler.keywordRegexes[Keyword.string].exec(this.directiveData);
+                    if (match === null) {
+                        this.invalidReason = "data.invalidString";
+                    } else {
+                        let characters = match[2].match(assembler.generalCharacterRegex);
+                        (this.machineCode = []).length = (characters.length + zeroDelimitedString);
+
+                        for (let c in characters) {
+                            let character = characters[c];
+                            let value = character.charCodeAt(0);
+                            if (character.length > 2) {
+                                value = Assembler.escapedCharacters[character[1]];
+                            }
+                            this.machineCode[c] = value;
+                        }
+                        if (zeroDelimitedString === 1) {
+                            this.machineCode[this.machineCode.length - 1] = 0;
+                        }
+                    }
                     break;
                 default:
                     this.invalidReason = "data.unrecognizedDirective";
@@ -183,6 +210,13 @@ class Line {
         return errorMessage;
     }
 
+    assembleData(assembler: Assembler, lines: Line[], address: number): string {
+        let errorMessage = null;
+
+
+        return null;
+    }
+
     assemble(assembler: Assembler, lines: Line[], address: number): [string, boolean] { // [errorMessage, repass]
         this.sensitive = false;
         let result: [string, boolean] = [null, false];
@@ -191,6 +225,8 @@ class Line {
         case Kind.instruction:
             result[0] = this.assembleText(assembler, lines, address);
             break;
+        case Kind.data:
+            result[0] = this.assembleData(assembler, lines, address);
         }
 
         let lineByLabel = assembler.linesByLabel[this.label];
@@ -226,8 +262,12 @@ class Line {
 
 class Assembler {
     instructionSet: InstructionSet;
+
+    generalCharacters: string;
+    generalCharacterRegex: RegExp;
     keywordRegexes: RegExp[]; //Map<Keyword, RegExp>;
     directives: Directive[]; //Map<string, Directive>;
+
     endianness: Endianness;
     incrementOnFetch: boolean;
     memoryMap: number[];
@@ -406,8 +446,7 @@ class Assembler {
 
         if (instructionSet.keywordRegexes) {
             this.keywordRegexes = instructionSet.keywordRegexes;
-        }
-        else if (instructionSet.keywords) {
+        } else if (instructionSet.keywords) {
             let words = instructionSet.keywords;
             this.keywordRegexes = [];
             
@@ -415,13 +454,6 @@ class Assembler {
                 let options = Assembler.options(instructionSet.keywords[Keyword.directive]);
                 if (options) {
                     this.keywordRegexes[Keyword.directive] = RegExp(options + "([^\\s]+)\\s*(.+)*");
-                }
-            }
-                    
-            if (words[Keyword.stringMarker]) {
-                let options = Assembler.options(words[Keyword.stringMarker]);
-                if (options) {
-                    this.keywordRegexes[Keyword.string] = RegExp(options + "(.*?)" + options);
                 }
             }
 
@@ -452,10 +484,22 @@ class Assembler {
                 let options = Assembler.options(words[Keyword.charMarker]);
                 if (options) {
                     let escapable = options.length > 1 ? "": "\\" + options
-                    this.keywordRegexes[Keyword.char] = RegExp(options + "((?:.)|(\\\\[\\\\" + Assembler.escapedCharacterList + escapable + "]))" + options);
+                    //this.keywordRegexes[Keyword.char] = RegExp(options + "" + options);
+                    this.generalCharacters = "(?:(?:\\\\[\\\\" + Assembler.escapedCharacterList + escapable + "])|(?:[\\x21-\\x5b\\x5d-\\x7e]))"
+                    this.keywordRegexes[Keyword.char] = RegExp(options + '(' + this.generalCharacters + ')' + options);
                 }
-
+            } else {
+                this.generalCharacters = "(?:(?:\\\\[\\\\" + Assembler.escapedCharacterList + "])|(?:[\\x21-\\x5b\\x5d-\\x7e]))"
             }
+            this.generalCharacterRegex = RegExp(this.generalCharacters);
+                    
+            if (words[Keyword.stringMarker]) {
+                let options = Assembler.options(words[Keyword.stringMarker]);
+                if (options) {
+                    this.keywordRegexes[Keyword.string] = RegExp(options + "(" + this.generalCharacters + "*)" + options);
+                }
+            }
+            console.log(this.keywordRegexes[Keyword.string]);
         }
         else {
             console.log("INSTRUCTION SET WARNING: This instruction set doesn't define any keywords.");

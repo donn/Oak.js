@@ -1,4 +1,5 @@
 /// <reference path="Core.ts"/>
+/// <reference path="Assembler.ts"/>
 
 enum Parameter {
     immediate = 0,
