@@ -1,4 +1,4 @@
-SOURCES = $(wildcard Sources/*.ts)
+SOURCES = $(wildcard Sources/**/*.ts) $(wildcard Sources/*.ts)
 FLAGS = --pretty --target ES2016
 BABELFLAGS = --minified --no-comments
 

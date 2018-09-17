@@ -3,8 +3,8 @@ addi t0, s0, 40
 
 loop1:
 beq s0, t0, exit1
-lb a0, 0(s0)
-li a7, 1
+li a0, 1
+lb a1, 0(s0)
 scall
 addi s0, s0, 4
 jal x0, loop1
@@ -20,14 +20,14 @@ addi t0, s0, 40
 
 loop2:
 beq s0, t0, exit2
-lb a0, 0(s0)
-li a7, 1
+li a0, 1
+lb a1, 0(s0)
 scall
 addi s0, s0, 4
 jal x0, loop2
 
 exit2:
-li a7, 10
+li a0, 10
 scall
 
 bubblesort:
@@ -76,4 +76,5 @@ return:
 jalr x0, ra, 0
 
 .data
-array: # .word 9, 5, 17, 6, 8, 2, 4, 39, 18, 3
+array: .word 9, 5, 17, 6, 8, 2, 4, 39, 18, 3
+message: .string "Done!"

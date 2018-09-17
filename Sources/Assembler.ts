@@ -1,5 +1,109 @@
 /// <reference path="InstructionSet.ts"/>
-/// <reference path="Utils.ts" />
+
+namespace Utils {
+    /*
+        signExt
+
+        Sign extends an n-bit value to fit Javascript limits.
+    */
+    export function signExt(value: number, bits: number): number {
+        let mutableValue = value;
+        if ((mutableValue & (1 << (bits - 1))) !== 0) {
+            mutableValue = ((~(0) >>> bits) << bits) | value;
+        }
+        return mutableValue;
+    }
+
+    /*
+        rangeCheck
+
+        Checks if a value can fit within a certain number of bits.
+    */
+    export function rangeCheck(value: number, bits: number): boolean {
+        if (bits >= 32) {
+            return null; // No stable way of checking.
+        }
+        
+        var min = -(1 << bits - 1);
+        var max = (1 << bits - 1) - 1;
+        value = signExt(value, bits);
+        if ((min <= (value >> 0)) && ((value >> 0) <= max)) {
+            return true;
+        }
+        return false;
+    }
+
+    /*
+        catBytes
+        
+        Converts bytes stored in a little endian fashion to a proper js integer.
+    */
+    export function catBytes(bytes: number[], bigEndian: boolean = false): number {
+        if (bytes.length > 4) {
+            return null;
+        }
+
+        if (bigEndian) {
+            bytes.reverse();
+        }
+
+        let storage = 0 >>> 0;
+        for (let i = 0; i < bytes.length; i++) {
+            storage = storage | (bytes[i] << (8 * i));
+        }
+        return storage;
+    }
+
+    /*
+        pad
+        
+        Turns a number to a padded string.
+    */
+    export function pad(number: number, digits: number, radix: number): string {
+        let padded = number.toString(radix);
+        while (digits > padded.length) {
+            padded = "0" + padded
+        }
+        return padded
+    }
+
+
+    export function hex(array: number[]) {
+        let hexadecimal = "";
+        for (let i = 0; i < array.length; i++) {
+            let hexRepresentation = array[i].toString(16).toUpperCase();
+            if (hexRepresentation.length === 1) {
+                hexRepresentation = "0" + hexRepresentation;
+            }
+            hexadecimal += hexRepresentation + " ";
+        }
+        return hexadecimal;
+    }
+}
+
+// Prototypes
+interface String {
+    interpretedBytes(): number[];
+    hasPrefix(search: string) : boolean;
+}
+
+// Changes a string of hex bytes to an array of numbers.
+String.prototype.interpretedBytes = function () {
+    let hexes = this.split(' '); // Remove spaces, then seperate characters
+	let bytes = [];
+	for (let i=0; i < hexes.length; i++) {
+		let value = parseInt(hexes[i], 16);
+		if (!isNaN(value)) {
+			bytes.push(value);
+		}
+	}
+	return bytes;
+}
+
+// Check if haystack has needle in the beginning.
+String.prototype.hasPrefix = function(needle) {
+    return this.substr(0, needle.length) === needle;
+};
 
 enum Kind {
     instruction = 0,
@@ -9,7 +113,7 @@ enum Kind {
 };
 
 class Line {
-    final: boolean = false;
+    number: number;
 
     addressThisPass: number = null;
 
@@ -29,15 +133,17 @@ class Line {
     directive: Directive;
     directiveData: string;
 
-    constructor(raw: string) {
+    constructor(raw: string, number: number) {
         this.raw = raw;
+        this.number = number;
         this.kind = Kind.noise;
+
         this.sensitivityList = [];
         this.possibleInstructions = [];
     }
 
     static arrayFromFile(file: string): Line[] {
-        return file.split('\n').map(line=> new Line(line));
+        return file.split('\n').map((line, index)=> new Line(line, index));
     }
 
     initialProcess(assembler: Assembler, text: boolean = true): boolean {
@@ -125,11 +231,11 @@ class Line {
                     if (match === null) {
                         this.invalidReason = "data.invalidString";
                     } else {
-                        let characters = match[2].match(assembler.generalCharacterRegex);
+                        let characters = match[1].match(assembler.generalCharacterRegex);
                         (this.machineCode = []).length = (characters.length + zeroDelimitedString);
 
                         for (let c in characters) {
-                            let character = characters[c];
+                            let character = String(characters[c]);
                             let value = character.charCodeAt(0);
                             if (character.length > 2) {
                                 value = Assembler.escapedCharacters[character[1]];
@@ -140,9 +246,23 @@ class Line {
                             this.machineCode[this.machineCode.length - 1] = 0;
                         }
                     }
+                    this.kind = Kind.data;
                     break;
                 default:
                     this.invalidReason = "data.unrecognizedDirective";
+                }
+            } else {
+                let isInstruction = false;
+                assembler.instructionSet.instructions.forEach(instruction=> {
+                    let match = instruction.format.regex.exec(this.processed);
+                    if (match !== null && match[1].toUpperCase() === instruction.mnemonic) {
+                        isInstruction = true;
+                    }
+                });
+                if (isInstruction) {
+                    this.invalidReason = "data.instruction";
+                } else {
+                    this.invalidReason = "data.unknownInput";
                 }
             }
             return false;
@@ -212,9 +332,45 @@ class Line {
 
     assembleData(assembler: Assembler, lines: Line[], address: number): string {
         let errorMessage = null;
+        let count: number = null;
+        switch(this.directive) {
+            case Directive._32bit:
+                count = count || 4;
+            case Directive._16bit:
+                count = count || 2;
+            case Directive._8bit:
+                count = count || 1;
+                let elements = this.directiveData.split(/\s*,\s*/);
+                testingElements: for (let i = 0; i < elements.length; i += 1) {
+                    let element = elements[i];
+                    let bits = count << 3;
+                    let store = assembler.process(element, Parameter.immediate, bits, address, 0);
+                    if (store.errorMessage !== null) {
+                        errorMessage = store.errorMessage;
+                        break testingElements;
+                    } else if (store.context !== null && store.value === null) {
+                        store.context.sensitivityList.push(this);
+                        this.sensitive = true;
+                        break testingElements;
+                    } else {
+                        let stored = store.value;
+                        for (let j = 0; j < count; j += 1) {
+                            let offset = (count * i);
+                            this.machineCode[j + offset] = stored & 0xFF;
+                            stored >>>= 8;
+                        }
+                    }
+                }
+                break;
+            case Directive.cString:
+            case Directive.string:
+                // Already handled in pass 0.
+                break;
+            default:
+                this.invalidReason = "data.unrecognizedDirective";
+            }
 
-
-        return null;
+        return errorMessage;
     }
 
     assemble(assembler: Assembler, lines: Line[], address: number): [string, boolean] { // [errorMessage, repass]
@@ -254,6 +410,8 @@ class Line {
                     }
                 }
             }
+        } else {
+            this.invalidReason = result[0];
         }
 
         return result;
@@ -363,7 +521,7 @@ class Assembler {
             if (value === null || isNaN(value)) {     
                 result.errorMessage = `args.valueUnrecognized(${text})`;
                 return result;
-            } else if (!Utils.rangeCheck(value, bits)) {
+            } else if (Utils.rangeCheck(value, bits) === false) {
                 result.errorMessage = `args.outOfRange(${text})`;
                 return result;
             }
@@ -405,7 +563,7 @@ class Assembler {
 
     linesByLabel: [Line[], number][] = [];
 
-    assemble(lines: Line[], pass: number): [Line, string][] {
+    assemble(lines: Line[], pass: number): Line[] {
         lines.map(line=> line.addressThisPass = null);
         let errors = [];
         let assemblerModeText = true;
@@ -418,7 +576,7 @@ class Assembler {
             case 0: // Zero Pass - Minimum Possible Size
                 assemblerModeText = line.initialProcess(this, assemblerModeText);
                 if (line.invalidReason !== undefined) {
-                    errors.push([line, line.invalidReason]);
+                    errors.push(line);
                 }
                 if (line.label !== undefined) {
                     this.linesByLabel[line.label] = [line, null];
@@ -428,7 +586,7 @@ class Assembler {
                 line.addressThisPass = address;
                 let asm = line.assemble(this, lines, address); // Assumption: Instruction cannot become context-sensitive based on size
                 if (asm[0] !== null) {
-                    errors.push(line, asm[0]);
+                    errors.push(line);
                 }
                 if (asm[1]) {
                     return null; // Repass
@@ -499,7 +657,6 @@ class Assembler {
                     this.keywordRegexes[Keyword.string] = RegExp(options + "(" + this.generalCharacters + "*)" + options);
                 }
             }
-            console.log(this.keywordRegexes[Keyword.string]);
         }
         else {
             console.log("INSTRUCTION SET WARNING: This instruction set doesn't define any keywords.");

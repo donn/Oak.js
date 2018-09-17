@@ -1,6 +1,4 @@
-/// <reference path="InstructionSet.ts"/>
-/// <reference path="Utils.ts" />
-/// <reference path="Assembler.ts" />
+/// <reference path="../Assembler.ts" />
 
 //The RISC-V Instruction Set Architecture, Version 2.1
 
@@ -162,7 +160,7 @@ function Oak_gen_RISCV(): InstructionSet {
         ["opcode", "funct3"],
         [0b1100111, 0b000],
         function(core) {
-            core.registerFile.write(core.arguments[0], core.pc);
+            core.registerFile.write(core.arguments[0], core.pc + 4);
             core.pc = (core.registerFile.read(core.arguments[1]) + Utils.signExt(core.arguments[2], 12));
             return null;
         }
@@ -539,6 +537,8 @@ function Oak_gen_RISCV(): InstructionSet {
         function(core) {
             if (core.registerFile.read(core.arguments[0]) === core.registerFile.read(core.arguments[1])) {
                 core.pc += core.arguments[2];
+            } else {
+                core.pc += 4;
             }
             return null;
         }
@@ -552,6 +552,8 @@ function Oak_gen_RISCV(): InstructionSet {
         function(core) {
             if (core.registerFile.read(core.arguments[0]) !== core.registerFile.read(core.arguments[1])) {
                 core.pc += core.arguments[2];
+            } else {
+                core.pc += 4;
             }
             return null;
         }
@@ -565,6 +567,8 @@ function Oak_gen_RISCV(): InstructionSet {
         function(core) {
             if (core.registerFile.read(core.arguments[0]) < core.registerFile.read(core.arguments[1])) {
                 core.pc += core.arguments[2];
+            } else {
+                core.pc += 4;
             }
             return null;
         }
@@ -578,6 +582,8 @@ function Oak_gen_RISCV(): InstructionSet {
         function(core) {
             if (core.registerFile.read(core.arguments[0]) >= core.registerFile.read(core.arguments[1])) {
                 core.pc += core.arguments[2];
+            } else {
+                core.pc += 4;
             }
             return null;
         }
@@ -591,6 +597,8 @@ function Oak_gen_RISCV(): InstructionSet {
         function(core) {
             if ((core.registerFile.read(core.arguments[0]) >>> 0) < (core.registerFile.read(core.arguments[1]) >>> 0)) {
                 core.pc += core.arguments[2];
+            } else {
+                core.pc += 4;
             }
             return null;
         }
@@ -604,6 +612,8 @@ function Oak_gen_RISCV(): InstructionSet {
         function(core) {
             if ((core.registerFile.read(core.arguments[0]) >>> 0) >= (core.registerFile.read(core.arguments[1]) >>> 0)) {
                 core.pc += core.arguments[2];
+            } else {
+                core.pc += 4;
             }
             return null;
         }
@@ -633,9 +643,9 @@ function Oak_gen_RISCV(): InstructionSet {
         ["opcode"],
         [0b1101111],
         function(core) {
-            core.registerFile.write(core.arguments[0], core.pc);
+            core.registerFile.write(core.arguments[0], core.pc + 4);
             //console.log(core.pc);
-            core.pc += core.arguments[1];
+            core.pc += Utils.signExt(core.arguments[1], 21);
             //console.log(core.arguments[1]);
             return null;
         }
@@ -661,10 +671,10 @@ function Oak_gen_RISCV(): InstructionSet {
             allConstSubtype,
             ["const"],
             [0b00000000000000000000000001110011],
-            function(core) {
-                core.ecall();
+            (core)=> {
+                let result = core.ecall();
                 core.pc += 4;
-                return null;
+                return result;
             }
             
         )
@@ -820,7 +830,7 @@ function Oak_gen_RISCV(): InstructionSet {
         directives["half"] = Directive._16bit;
         directives["word"] = Directive._32bit;
 
-    return new InstructionSet("riscv", 32, formats, instructions, pseudoInstructions, abiNames, keywords, directives);
+    return new InstructionSet("riscv", 32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"");
 }
 let RISCV = Oak_gen_RISCV();
 
@@ -899,24 +909,24 @@ class RISCVCore extends Core {
 
     fetch(): string {
         if (this.pc < 0) {
-            return "Fetch Error: Negative program counter.";
+            return "fetch.negativePC";
         }
         let arr = this.memcpy(this.pc, 4);
         if (arr == null) {
-            return "Fetch Error: Illegal memory access.";
+            return "fetch.invalidMemoryAccess";
         }
 
         this.fetched = Utils.catBytes(arr);
         return null;
     }
 
-    constructor(memorySize: number, ecall: () => void, instructionCallback: (data: string) => void) {
+    constructor(memorySize: number, ecall: () => string, instructionCallback: (data: string) => void) {
         super();
-        this.defaultEcallRegType     = 17;
-        this.defaultEcallRegArg      = 10;
-        this.aceStyle = "ace/mode/riscv";
-        this.defaultCode = "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"";
-        this.defaultMachineCode = "13 05 40 01 93 08 40 00 73 00 00 00 93 08 A0 00 73 00 00 00 48 65 6C 6C 6F 2C 20 57 6F 72 6C 64 21 00 ";
+
+        this.virtualOSServiceRegister = 10;
+        this.virtualOSArgumentVectorStart = 11;
+        this.virtualOSArgumentVectorEnd = 17;
+        
         this.instructionSet = RISCV;
         this.pc = 0 >>> 0;
         this.memorySize = memorySize;

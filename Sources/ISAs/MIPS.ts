@@ -1,6 +1,4 @@
-/// <reference path="InstructionSet.ts"/>
-/// <reference path="Utils.ts" />
-// Not updated for new Bullshit
+/// <reference path="../Assembler.ts" />
 //The MIPS Instruction Set Architecture
 
 function Oak_gen_MIPS(): InstructionSet {
@@ -653,68 +651,64 @@ function Oak_gen_MIPS(): InstructionSet {
                 new BitRange("imm", 0, 26).parameterized(0, Parameter.special)
             ],
             /[A-z]+\s*([A-Za-z0-9_]+)/,
-            "@mnem @arg0"
-            // ,function(address: number, text: string, bits: number, labels: string[], addresses: number[]) {
-            //     let array = text.split(""); //Character View
-            //     let result = {
-            //         errorMessage: null,
-            //         value: null
-            //     };
+            "@mnem @arg0",
+            function(text: string, type: Parameter, bits: number, address: number, assembler: Assembler) {
+                let array = text.split(""); //Character View
+                let result = {
+                    errorMessage: null,
+                    context: null,
+                    value: null
+                };
 
-            //     let int = NaN;
-            //     let labelLocation = labels.indexOf(text);
-            //     if (labelLocation !== -1) {
-            //         int = addresses[labelLocation];
-            //     }
-            //     else {
-            //         let radix = 10 >>> 0;
-            //         let splice = false;
+                //Label
+                let value = null;
+                let reference = assembler.linesByLabel[text];
+                if (reference !== undefined) {
+                    result.context = reference[0]
+                    if (reference[1] === null) {
+                        return result;
+                    }
+                    value = reference[1];
+                }
+                if (value === null && assembler.keywordRegexes[Keyword.char]) {
+                    let extraction = assembler.keywordRegexes[Keyword.char].exec(text);
+                    if (extraction !== null && extraction[1] !== undefined) {
+                        value = extraction[1].charCodeAt(0);
+                        if (value > 255) {
+                            result.errorMessage = "Non-ascii character " + extraction[1] + " unsupported.";
+                            return result;
+                        }
+                    }
+                }
+                if (value === null && assembler.keywordRegexes[Keyword.numeric] !== undefined) {
+                    let array = assembler.keywordRegexes[Keyword.numeric].exec(text);
                     
-            //         if (array[0] === "0") {
-            //             if (array[1] == "b") {
-            //                 radix = 2;
-            //                 splice = true;
-            //             }
-            //             if (array[1] == "o") {
-            //                 radix = 8;
-            //                 splice = true;
-            //             }
-            //             if (array[1] == "d") {
-            //                 radix = 10;
-            //                 splice = true;
-            //             }
-            //             if (array[1] == "x") {
-            //                 radix = 16;
-            //                 splice = true;
-            //             }
-            //         }
+                    if (array !== null) {
+                        let radix = Assembler.radixes[array[2]] || 10;
+                        let interpretable = array[1];
 
-            //         let interpretable = text;
-            //         if (splice) {
-            //             interpretable = array.splice(2, array.length - 2).join("");
-            //         }
-            //         int = parseInt(interpretable, radix);
-            //     }
-                    
-            //     if (isNaN(int)) {     
-            //         result.errorMessage = "Offset '" + text + "' is not a recognized label or literal.";
-            //         return result;
-            //     }
+                        value = parseInt(interpretable, radix);
+                    }
+                }
+                if (value === null || isNaN(value)) {     
+                    result.errorMessage = `args.valueUnrecognized(${text})`;
+                    return result;
+                }
 
-            //     if ((int >>> 28) == (address >>> 28)) {
-            //         if ((int & 3 ) == 0) {
-            //             result.value = (int & 0x0ffffffc) >>> 2;
-            //             return result;
-            //         }
-            //         result.errorMessage = "Jumps must be word-aligned.";
-            //         return result;
-            //     }
-            //     result.errorMessage = "The value of '" + text + "' is out of range.";
-            //     return result;
-            // },
-            // function(value: number, address: number) {
-            //     return (value << 2) | (address & 0xf0000000);
-            // }
+                if ((value >>> 28) == (address >>> 28)) {
+                    if ((value & 3) == 0) {
+                        result.value = (value & 0x0ffffffc) >>> 2;
+                    } else {
+                        result.errorMessage = `mips.wordUnlignedJump(${text})`;
+                    }
+                } else {
+                    result.errorMessage = `args.outOfRange(${text})`;
+                }
+                return result;
+            },
+            function(value: number, address: number) {
+                return (value << 2) | (address & 0xf0000000);
+            }
         )
     );
 
@@ -979,7 +973,7 @@ function Oak_gen_MIPS(): InstructionSet {
 
     let abiNames = ["$zero", "$at", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$k0", "$k1", "$gp", "$sp", "$fp", "$ra"];
 
-    return new InstructionSet("mips", 32, formats, instructions, pseudoInstructions, abiNames, keywords, directives);
+    return new InstructionSet("mips", 32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, "    la $a0, str\n    li $v0, 4 #4 is the string print service number...\n    syscall\n    li $v0, 10 #...and 10 is the program termination service number!\n    syscall\n.data\nstr:\    .asciiz \"Hello, World!\"");
 }
 let MIPS = Oak_gen_MIPS();
 
@@ -1059,7 +1053,7 @@ class MIPSCore extends Core {
     fetch(): string {
         let arr = this.memcpy(this.pc, 4);
         if (arr == null) {
-            return "Fetch Error: Illegal memory access.";
+            return "fetch.illegalMemoryAddress";
         }
         this.pc += 4;
 
@@ -1067,12 +1061,12 @@ class MIPSCore extends Core {
         return null;
     }
 
-    constructor(memorySize: number, ecall: () => void, instructionCallback: (data: string) => void) {
+    constructor(memorySize: number, ecall: () => string, instructionCallback: (data: string) => void) {
         super();
-        this.defaultEcallRegType     = 2;
-        this.defaultEcallRegArg      = 4;
-        this.aceStyle = "ace/mode/mips";
-        this.defaultCode = "    la $a0, str\n    li $v0, 4 #4 is the string print service number...\n    syscall\n    li $v0, 10 #...and 10 is the program termination service number!\n    syscall\n.data\nstr:\    .asciiz \"Hello, World!\"";
+
+        this.virtualOSServiceRegister = 2;
+        this.virtualOSArgumentVectorStart = 4;
+        this.virtualOSArgumentVectorEnd = 7;
 
         this.instructionSet = MIPS;
         this.pc = 0 >>> 0;

@@ -1,6 +1,5 @@
 /// <reference path="InstructionSet.ts"/>
 /// <reference path="Memory.ts"/>
-
 abstract class Core {
     //Permanent
     instructionSet: InstructionSet;
@@ -8,13 +7,9 @@ abstract class Core {
     memorySize: number;
 
     // Default Environment Call Regs
-    defaultEcallRegType: number;
-    defaultEcallRegArg: number;
-
-    // Editor Info
-    aceStyle: string;
-    defaultCode: string;
-    defaultMachineCode: string;
+    virtualOSServiceRegister: number;
+    virtualOSArgumentVectorStart: number;
+    virtualOSArgumentVectorEnd: number;
 
     //Transient
     pc: number;
@@ -74,22 +69,22 @@ abstract class Core {
         
         let bitRanges = this.decoded.format.ranges;
 
-        for (let i = 0; i < bitRanges.length; i++) {
-            if (bitRanges[i].parameter != null) {
-                let limit = bitRanges[i].limitStart;
-                let field = bitRanges[i].field;
-                let bits = bitRanges[i].bits;
+        for (let i in bitRanges) {
+            let range = bitRanges[i];
+            if (range.parameter != null) {
+                let limit = range.limitStart;
 
-                let value = ((this.fetched >>> bitRanges[i].start) & ((1 << bitRanges[i].bits) - 1)) << limit;
+                let value = ((this.fetched >>> range.start) & ((1 << range.bits) - 1)) << limit;
                 
-                if (bitRanges[i].parameterType === Parameter.special) {
+                if (range.parameterType === Parameter.special) {
                     value = this.decoded.format.decodeSpecialParameter(value, this.pc); //Unmangle...
                 }
 
-                this.arguments[bitRanges[i].parameter] = this.arguments[bitRanges[i].parameter] | value;
+                this.arguments[range.parameter] = this.arguments[range.parameter] || 0;
+                this.arguments[range.parameter] = this.arguments[range.parameter] | value;
 
-                if (this.decoded.format.ranges[i].signed && bitRanges[i].parameterType !== Parameter.register) {
-                    this.arguments[bitRanges[i].parameter] = Utils.signExt(this.arguments[i], bitRanges[i].totalBits? bitRanges[i].totalBits: bitRanges[i].bits);
+                if (this.decoded.format.ranges[i].signed && range.parameterType !== Parameter.register) {
+                    this.arguments[range.parameter] = Utils.signExt(this.arguments[range.parameter], range.totalBits? range.totalBits: range.bits);
                 }
             }
         }
@@ -98,13 +93,13 @@ abstract class Core {
     }
 
     //Returns null on success, error message on error.
-    execute(): string {
-        return this.decoded.executor(this)
+    execute() {
+        return this.decoded.executor(this);
     }
 
 
     //Environment Call Lambda
-    ecall: () => void;
+    ecall: () => string;
 
     //Instruction Callback
     instructionCallback: (data: string) => void;

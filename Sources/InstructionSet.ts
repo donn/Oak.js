@@ -99,14 +99,14 @@ class Format {
     regex: RegExp;
     disassembly: string; 
 
-    processSpecialParameter: (text: string, bits: number, Line: Line[]) => any;
+    processSpecialParameter: (text: string, type: Parameter, bits: number, address: number, assembler: Assembler) => any;
     decodeSpecialParameter: (value: number, address: number) => number;
 
     constructor (
         ranges: BitRange[],
         regex: RegExp,
         disassembly: string,
-        processSpecialParameter: (text: string, bits: number, lines: Line[]) => any = null,
+        processSpecialParameter: (text: string, type: Parameter, bits: number, address: number, assembler: Assembler) => any = null,
         decodeSpecialParameter: (value: number, address: number) => number = null
     ) {
         this.ranges = ranges;
@@ -126,7 +126,7 @@ class Instruction {
     available: boolean;
     signatoryOverride: boolean; //Optional, if true/false overrides default signing behavior for bitranges
 
-    executor: (core: Core) => string;
+    executor: (core: Core)=>string;
 
     private pad(str: string, length: number): string {
         let padded = str;
@@ -166,42 +166,40 @@ class Instruction {
             return this.computedMask;
         }
 
-            var string = '';
-            for (let i = 0; i < this.bits; i += 1) {
-                string += 'X';
-            }
+        var string = '';
+        for (let i = 0; i < this.bits; i += 1) {
+            string += 'X';
+        }
 
-            for (let i in this.format.ranges) {
-                let range = this.format.ranges[i];
-                let constant = this.constants[range.field];
-                if (constant == null) {
-                    constant = range.constant;
-                }
-                if (constant != null) {
-                    let start = this.bits - range.end - 1;
-                    let end = this.bits - range.start - 1;
-                    string = string.substr(0, start) + Utils.pad(constant, range.bits, 2) + string.substr(end, 0);
-                }
+        for (let i in this.format.ranges) {
+            let range = this.format.ranges[i];
+            let constant = this.constants[range.field];
+            if (constant == null) {
+                constant = range.constant;
             }
-            this.computedMask = string
-            return this.computedMask;
+            if (constant != null) {
+                let before = string.substr(0, this.bits - range.end - 1);
+                let addition = Utils.pad(constant, range.bits, 2);
+                let after = range.start == 0 ? '' : string.substr(-range.start)
+                string =  before + addition + after;
+            }
+        }
+        this.computedMask = string
+        return this.computedMask;
     };
 
     match(machineCode: number): boolean {
         let machineCodeMutable = machineCode >>> 0;
         let maskBits = this.mask.split("");
-        for (let i = 31; i >= 0; i--)
-        {
-            if (maskBits[i] === "X")
-            {
-                machineCodeMutable = machineCodeMutable >>> 1;
+        for (let i = this.bits - 1; i >= 0; i--) {
+            let bit = (machineCodeMutable & 1);
+            machineCodeMutable >>= 1;
+            if (maskBits[i] === "X") {
                 continue;
             }
-            if (parseInt(maskBits[i]) !== (machineCodeMutable & 1))
-            {
+            if (parseInt(maskBits[i]) !== bit) {
                 return false;
             }
-            machineCodeMutable = machineCodeMutable >>> 1;
         }
         
         return true;
@@ -210,7 +208,7 @@ class Instruction {
     computedTemplate: number = null;
     get template(): number {
         if (this.computedTemplate != null) {
-            return 0;
+            return this.computedTemplate;
         }
         let temp = 0 >>> 0;
 
@@ -225,10 +223,11 @@ class Instruction {
             }
         }
 
-        return temp
+        this.computedTemplate = temp;
+        return temp;
     };
 
-    constructor(mnemonic: string, format: Format, constants: string[], constValues: number[], executor: (core: Core) => string, signatoryOverride: boolean = null, pseudoInstructionFor: string[] = []) {
+    constructor(mnemonic: string, format: Format, constants: string[], constValues: number[], executor: (core: Core)=>string, signatoryOverride: boolean = null, pseudoInstructionFor: string[] = []) {
         this.mnemonic = mnemonic;
         this.format = format;
         this.constants = [];
@@ -286,12 +285,11 @@ class InstructionSet {
     public disassemble(instruction: Instruction, args: number[]): string {
         let output = instruction.format.disassembly;
         output = output.replace("@mnem", instruction.mnemonic);
-        for (let i = 0; i < instruction.format.ranges.length; i++)
-        {
+        for (let i = 0; i < instruction.format.ranges.length; i++) {
             let range = instruction.format.ranges[i];
-            if (range.parameter != null)
-            {
-                output = output.replace("@arg" + range.parameter, (range.parameterType === Parameter.register)? this.abiNames[args[i]] : args[i].toString());
+            let parameter = range.parameter;
+            if (parameter != null) {
+                output = output.replace("@arg" + range.parameter, (range.parameterType === Parameter.register)? this.abiNames[args[parameter]] : args[parameter].toString());
             }            
         }
         return output;
@@ -317,6 +315,9 @@ class InstructionSet {
 
     //Assembly Conventions
     incrementOnFetch: boolean;
+
+    //Example Code
+    exampleCode: string;
     
     /*
         InstructionSet initializer
@@ -329,7 +330,8 @@ class InstructionSet {
         pseudoInstructions: PseudoInstruction[],
         abiNames: string[],
         keywords: string[][],
-        directives: Directive[]
+        directives: Directive[],
+        exampleCode: string
     ) {
         this.name = name
         this.bits = bits       
@@ -340,5 +342,6 @@ class InstructionSet {
         this.abiNames = abiNames
         this.keywords = keywords
         this.directives = directives
+        this.exampleCode = exampleCode
     }
 };
