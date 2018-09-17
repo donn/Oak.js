@@ -1061,7 +1061,7 @@ class MIPSCore extends Core {
         return null;
     }
 
-    constructor(memorySize: number, ecall: () => string, instructionCallback: (data: string) => void) {
+    constructor(memorySize: number, ecall: () => string) {
         super();
 
         this.virtualOSServiceRegister = 2;
@@ -1072,7 +1072,6 @@ class MIPSCore extends Core {
         this.pc = 0 >>> 0;
         this.memorySize = memorySize;
         this.ecall = ecall;
-        this.instructionCallback = instructionCallback;
         this.registerFile = new MIPSRegisterFile(memorySize, MIPS.abiNames);
         
         this.memory = new Array(memorySize);

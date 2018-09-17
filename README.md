@@ -35,14 +35,19 @@ Please use Bash on Ubuntu on Windows 10 and follow the instructions for Debian-b
 Like Debian-based OSes, you may need administrative privileges for this.
 
 ## Packages
-
-    npm install typescript
-    npm install babel-cli
+Just run `npm` install.
 
 # Usage
 To use Oak.js, either visit the [GitHub Page](https://skyus.github.io/Oak.js) or download this repository and open index.html using your web browser.
 
 To compile and clean, `make` or `make clean` respectively.
+
+-- Please note that the browser version is not yet integrated on this branch.
+
+## On-computer usage
+Currently, the Terminal UI only supports assembling and simulating RISC-V files.
+
+`node Executables/Oak.js <RISCVAssemblyFile.s>`
 
 # License
 Mozilla Public License 2.0. Check LICENSE.

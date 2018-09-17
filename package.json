@@ -1,0 +1,32 @@
+{
+  "name": "oak-js",
+  "version": "2.0.0-dev",
+  "description": "An online assembler/assembler generator and simulator.",
+  "main": "Executables/Oak.js",
+  "dependencies": {
+    "babel": "^6.23.0",
+    "babel-cli": "^6.26.0",
+    "prompt-sync": "^4.1.6",
+    "readline-sync": "^1.4.9"
+  },
+  "devDependencies": {
+    "typescript": "^3.0.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/donn/Oak.js.git"
+  },
+  "keywords": [
+    "assembly",
+    "assembler",
+    "riscv",
+    "mips",
+    "simulator"
+  ],
+  "author": "Mohamed Gaber",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/donn/Oak.js/issues"
+  },
+  "homepage": "https://github.com/donn/Oak.js#readme"
+}

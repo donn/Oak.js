@@ -39,11 +39,3 @@ class VirtualOS {
         return null;
     }
 }
-
-let cliVirtualOS = new VirtualOS();
-cliVirtualOS.outputInt = (number) => {
-    console.log(number);
-};
-cliVirtualOS.outputString = (string) => {
-    console.log(string);
-};

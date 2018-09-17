@@ -100,8 +100,5 @@ abstract class Core {
 
     //Environment Call Lambda
     ecall: () => string;
-
-    //Instruction Callback
-    instructionCallback: (data: string) => void;
     
 }
