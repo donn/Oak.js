@@ -1,3 +1,5 @@
+note: needs updating
+
 ![Oak.js](Images/logo.png)
 
 A port of [Oak](https://github.com/donn/Oak) to TypeScript used for multiple school projects. It supports both RISCV (RV32I) and MIPS (Core Instruction Set).
@@ -30,12 +32,12 @@ For other Linux-based OSes, substitute aptitude's syntax with that of your packa
 If you get errors about node not being found, try running the following: `ln -s /usr/bin/nodejs /usr/bin/node`.
     
 ### Windows
-Please use Bash on Ubuntu on Windows 10 and follow the instructions for Debian-based OSes for a supported and tested workflow. If you do not wish to use the Linux subsystem, try first installing Node.js from [their website](http://nodejs.org/) and then, in PowerShell:
+Please use Bash on Ubuntu on Windows 10 and follow the instructions for Debian-based OSes for a supported and tested workflow. If you do not wish to use the Linux subsystem, try first installing Node.js from [their website](http://nodejs.org/).
 
 Like Debian-based OSes, you may need administrative privileges for this.
 
 ## Packages
-Just run `npm` install.
+Just run `npm install`.
 
 # Usage
 To use Oak.js, either visit the [GitHub Page](https://skyus.github.io/Oak.js) or download this repository and open index.html using your web browser.

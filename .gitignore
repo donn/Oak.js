@@ -1,2 +1,4 @@
-Build/
+build/
 node_modules/
+bin/
+src/backend.js

@@ -1,23 +1,21 @@
-SOURCES = $(wildcard Sources/**/*.ts) $(wildcard Sources/*.ts)
-FLAGS = --pretty --target ES2016
-BABELFLAGS = --minified --no-comments
+SOURCES = $(wildcard src/backend/**/*.ts) src/backend/Assembler.ts src/backend/Core.ts src/backend/InstructionSet.ts src/backend/Memory.ts src/backend/VirtualOS.ts
+TERMINAL = $(SOURCES) src/backend/main.ts
+BACKEND = $(SOURCES) src/backend/Zero.ts
 
-all: ui
-terminal: Scripts/oak.min.js
-ui: Scripts/ui.min.js Scripts/oak.min.js
+FLAGS = --module amd --pretty --target ES2016 --removeComments --noEmitOnError
 
-Executables/Oak.js: $(SOURCES)
-	mkdir -p Executables
-	./node_modules/typescript/bin/tsc $(FLAGS) Sources/Zero.ts --outFile Executables/Oak.js
+all: terminal
+backend: src/backend.js
+terminal: bin/Oak.js
 
-Scripts/oak.min.js: Executables/Oak.js
-	./node_modules/babel-cli/bin/babel.js $(BABELFLAGS) Executables/Oak.js > Scripts/oak.min.js
-	chmod +x Scripts/oak.min.js
+bin/Oak.js: $(SOURCES)
+	mkdir -p $(@D)
+	./node_modules/typescript/bin/tsc $(FLAGS) src/backend/main.ts --outFile $@
 
-Scripts/ui.min.js: UI/Oak.js 
-	./node_modules/babel-cli/bin/babel.js $(BABELFLAGS) UI/Oak.js > Scripts/ui.min.js
-
+src/backend.js: $(BACKEND)
+	mkdir -p $(@D)
+	./node_modules/typescript/bin/tsc $(FLAGS) src/backend/Zero.ts --outFile $@
+	
 clean:
-	@rm -rf Executables/
-	@rm -f Scripts/oak.min.js
-	@rm -f Scripts/ui.min.js
+	@rm -rf bin/
+	@rm -f src/backend.js

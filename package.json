@@ -2,7 +2,7 @@
   "name": "oak-js",
   "version": "2.0.0-dev",
   "description": "An online assembler/assembler generator and simulator.",
-  "main": "Executables/Oak.js",
+  "main": "bin/Oak.js",
   "dependencies": {
     "babel": "^6.23.0",
     "babel-cli": "^6.26.0",
