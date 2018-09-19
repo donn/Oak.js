@@ -9,12 +9,15 @@ backend: src/backend.js
 terminal: bin/Oak.js
 
 bin/Oak.js: $(SOURCES)
-	mkdir -p $(@D)
-	./node_modules/typescript/bin/tsc $(FLAGS) src/backend/main.ts --outFile $@
+	@mkdir -p $(@D)
+	@./node_modules/typescript/bin/tsc $(FLAGS) src/backend/main.ts --outFile $@
+	@echo "Terminal Compiled"
 
 src/backend.js: $(BACKEND)
-	mkdir -p $(@D)
-	./node_modules/typescript/bin/tsc $(FLAGS) src/backend/Zero.ts --outFile $@
+	@mkdir -p $(@D)
+	@./node_modules/typescript/bin/tsc $(FLAGS) src/backend/Zero.ts --outFile $@
+	@cat src/backend/ZeroPlus.js >> src/backend.js
+	@echo "Backend Compiled"
 	
 clean:
 	@rm -rf bin/
