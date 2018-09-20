@@ -8,7 +8,6 @@ let concatenate = () => {
 
     let fs = require('fs');
     function writeData(content) {
-        content = content + "\n\nexport { v as VirutalOS, e as Endianness, a as Assembler, cf as CoreFactory, l as AssemblerLine}";
         fs.writeFile(path, content, function(err) {
             if (err) throw err;
             console.log('Complete.');

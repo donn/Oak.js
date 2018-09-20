@@ -14,7 +14,7 @@ import PanelConversion from './sections/panelconversion';
 import PanelRegisters from './sections/panelregisters';
 import CoreContext from './coreContext';
 import PanelMachineCode from './sections/panelmachinecode';
-import {Endianness, RISCVCore, MIPSCore, Assembler, AssemblerLine} from './backend.js'
+import {Endianness, CoreFactory, Assembler, AssemblerLine} from './backend.js'
 
 const SIMULATING_OFF  = 0;
 const SIMULATING_STEP = 1;
@@ -28,13 +28,7 @@ const CONSOLE_INPUT_NONE  = 0;
 const CONSOLE_INPUT_NUM = 1;
 const CONSOLE_INPUT_STR = 2;
 
-let instruction_sets = [{
-	name: "RISC-V",
-	core: RISCVCore
-},{
-	name: "MIPS",
-	core: MIPSCore
-}];
+let instruction_sets = ["RISC-V", "MIPS"];
 
 export default class App extends Component {
 	simulation_start;
@@ -320,7 +314,7 @@ export default class App extends Component {
 		
 		let memorySize = 4096;
 
-		let core = new instruction_sets[0].core(memorySize, this.ecallCallback);
+		let core = CoreFactory.getCore(instruction_sets[0], memorySize, this.ecallCallback, []);
 
 		let new_tab = {
 			name: name,
@@ -355,9 +349,7 @@ export default class App extends Component {
 		
 		let memorySize = 4096;
 
-		console.log(RISCVCore);
-		let core = new instruction_sets[0].core(memorySize, this.ecallCallback);
-		console.log(core);
+		let core = CoreFactory.getCore(instruction_sets[0], memorySize, this.ecallCallback, []);
 		let tabs = this.state.core.tabs;
 		let new_tab = {
 			name: "New Tab",
