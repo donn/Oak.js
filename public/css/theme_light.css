@@ -94,6 +94,7 @@
 
 table {
   width: 100%;
+  border-collapse: collapse;
 }
 
 table tr {
@@ -102,7 +103,7 @@ table tr {
 }
 
 table tr td {
-  padding: 0.2rem;
+  padding: 0.3rem;
 }
 
 table tbody tr:nth-child(odd) {
@@ -225,17 +226,18 @@ table tbody tr:nth-child(even) {
 
 .settings_container {
   width: 90%;
-  max-width: 600px;
+  max-width: 900px;
+  max-height: 90vh;
   position: absolute;
   left: 50%;
   top: 50%;
   -webkit-transform: translate(-50%, -50%);
           transform: translate(-50%, -50%);
-  padding: 1rem;
   -webkit-box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
           box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
   background: #f3f3f3;
   border-radius: 8px;
+  overflow-y: auto;
 }
 
 .settings_container h2 {
@@ -250,6 +252,10 @@ table tbody tr:nth-child(even) {
   color: #666;
   padding: 1rem;
   font-size: 1.1rem;
+}
+
+.settings_container .overlay_contents {
+  margin: 1rem;
 }
 
 .drop_down {

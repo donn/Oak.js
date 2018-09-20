@@ -93,14 +93,15 @@
 }
 
 table {
-	width: 100%;
+    width: 100%;
+    border-collapse: collapse;
 
 	tr {
 		font-size: 0.8rem;
 		text-align: center;
 
 		td {
-			padding: 0.2rem;
+			padding: 0.3rem;
         }
     }
     
@@ -223,15 +224,16 @@ table {
 
 .settings_container {
 	width: 90%;
-	max-width: 600px;
+    max-width: 900px;
+    max-height: 90vh;
 	position: absolute;
 	left: 50%;
 	top: 50%;
     transform: translate(-50%, -50%);
-    padding: 1rem;
     box-shadow: $shadow_hover;
     background: $settings_back;
-    border-radius: $radius;
+    border-radius: 8px;
+    overflow-y: auto;
     
     h2 {
         margin: 0;
@@ -245,6 +247,10 @@ table {
         color: $settings_title_text;
         padding: 1rem;
         font-size: 1.1rem;
+    }
+
+    .overlay_contents {
+        margin: 1rem;
     }
 }
 

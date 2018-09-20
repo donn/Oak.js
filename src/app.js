@@ -14,7 +14,7 @@ import PanelConversion from './sections/panelconversion';
 import PanelRegisters from './sections/panelregisters';
 import CoreContext from './coreContext';
 import PanelMachineCode from './sections/panelmachinecode';
-import {Endianness, RISCVCore, MIPSCore, Assembler} from './backend.js'
+import {Endianness, RISCVCore, MIPSCore, Assembler, AssemblerLine} from './backend.js'
 
 const SIMULATING_OFF  = 0;
 const SIMULATING_STEP = 1;
@@ -245,7 +245,7 @@ export default class App extends Component {
 		}
 		}
 		
-		if (exit) {
+		/*if (exit) {
 			this.checkUpdatedTabs();
 			if (this.simulation_status === SIMULATING_STEP) {
 				this.simulation_status = SIMULATING_OFF;
@@ -264,7 +264,7 @@ export default class App extends Component {
 				this.checkUpdatedTabs();
 				this.addConsoleMessage("<b>Simulator Error: </b>" + output);
 			}
-		}
+		}*/
 	}
 
 	continueAfterConsole = (input) => {
@@ -361,10 +361,10 @@ export default class App extends Component {
 		let tabs = this.state.core.tabs;
 		let new_tab = {
 			name: "New Tab",
-			content: core.defaultCode,
+			content: core.instructionSet.exampleCode,
 			log: [],
 			console: [],
-			machine_code: core.defaultMachineCode,
+			machine_code: [],
 			core: core,
 			register_changed: [],
 			instruction_set: instruction_sets[0].name
@@ -517,8 +517,9 @@ export default class App extends Component {
 	uiSimulate = () => {
 		let current_tab = this.state.core.selected;
 		let tab = this.state.core.tabs[current_tab];
+		let core =  tab.core;
 
-		if (this.simulation_status === SIMULATING_STEP) {
+		/*if (this.simulation_status === SIMULATING_STEP) {
 			this.simulation_status = SIMULATING_PLAY;
 			this.simulation_start = performance.now();
 			var output = window.continueSim(tab.core);
@@ -545,6 +546,31 @@ export default class App extends Component {
 				this.checkUpdatedTabs();
 				this.addConsoleMessage(<div className="console_error"><b>Simulator Error: </b> {output}</div>);
 			}
+		}*/
+
+		while (true) {
+			let fetch = core.fetch();
+			if (fetch !== null) {
+				console.log(fetch);
+				break;
+			}
+		
+			let decode = core.decode(); // Decode has the decoded instruction on success
+			tab.log.push(decode);
+			
+			console.log(decode);
+			if (decode === null) {
+				console.log("decode.failure");
+				break;
+			}
+		
+			let execute = core.execute();
+			if (execute !== null) {
+				if (execute !== 'HALT') { // If HALT, then an environment call has been executed.
+					console.log(execute);
+				}
+				break;
+			}
 		}
 	}
 
@@ -553,7 +579,7 @@ export default class App extends Component {
 		let tab = this.state.core.tabs[current_tab];
 		let core = tab.core;
 
-		if (this.simulation_status !== SIMULATING_STEP) {
+		/*if (this.simulation_status !== SIMULATING_STEP) {
 			this.uiAssemble();
 			let bytes = tab.machine_code;
 			var load = window.loadIntoMemory(core, bytes);
@@ -574,6 +600,29 @@ export default class App extends Component {
 		}
 		else if (output !== null && output !== "@Oak_Ecall") {
 			this.addConsoleMessage(<div className="console_error"><b>Simulator Error: </b> {output}</div>);
+		}*/
+
+		let fetch = core.fetch();
+		if (fetch !== null) {
+			console.log(fetch);
+			tab.console.push(fetch);
+		}
+	
+		let decode = core.decode(); // Decode has the decoded instruction on success
+		tab.log.push(decode);
+		
+		console.log(decode);
+		if (decode === null) {
+			console.log("decode.failure");
+			tab.console.push("decode.failure");
+		}
+	
+		let execute = core.execute();
+		if (execute !== null) {
+			if (execute !== 'HALT') { // If HALT, then an environment call has been executed.
+				console.log(execute);
+				tab.console.push(execute);
+			}
 		}
 	}
 	
@@ -588,11 +637,42 @@ export default class App extends Component {
 		var core = tab.core;
 		this.reset();
 		let assembler = new Assembler(core.instructionSet, Endianness.little);
-		var output = assembler.assemble(core, val);
+		
+		let lines = AssemblerLine.arrayFromFile(val);
+		console.log(lines);
+		let passZero = assembler.assemble(lines, 0); // Assembler Pass 0. Returns Line array with errored lines, which are in line.invalidReason
+		if (passZero.length !== 0) {
+			for (let i in passZero) {
+				let line = passZero[i];
+				console.log(line.number, line.invalidReason);
+				return;
+				//process.exit(65);
+			}
+		}
+		let pass = null;
+		let passCounter = 1;
+		do { // Subsequent assembler passes. Typically one pass is needed, but when there's a lot of variance in ISA word sizes, another pass might be needed.
+			pass = assembler.assemble(lines, passCounter);
+			if (pass.length !== 0) {
+				for (let i in passZero) {
+					let line = passZero[i];
+					console.log(line.number, line.invalidReason);
+					return;
+					//process.exit(65);
+				}
+			}
+			passCounter += 1;
+		} while (pass === null);
+
+		let machineCode = lines.map(line=> line.machineCode).reduce((a, b)=> a.concat(b), []); // Get machine code from lines
+		core.memset(0, machineCode); // memset
+		console.log(machineCode);
+
 		this.checkUpdatedTabs();
 
-		if (output.errorMessage===null) {
-			this.setMachineCodeValue(output.machineCode);
+		let error = false; //output.errorMessage===null;
+		if (!error) {
+			this.setMachineCodeValue(machineCode);
 			this.addConsoleMessage(<div className="console_success"><b>Complete:</b> Assembly succeeded.</div>);
 		}
 		else {
