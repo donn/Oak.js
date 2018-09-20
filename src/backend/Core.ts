@@ -1,5 +1,7 @@
 /// <reference path="InstructionSet.ts"/>
 /// <reference path="Memory.ts"/>
+/// <reference path="VirtualOS.ts"/>
+
 abstract class Core {
     //Permanent
     instructionSet: InstructionSet;
@@ -99,6 +101,6 @@ abstract class Core {
 
 
     //Environment Call Lambda
-    ecall: () => string;
+    virtualOS: VirtualOS;
     
 }

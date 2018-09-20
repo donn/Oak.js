@@ -1,7 +1,5 @@
-/// <reference path="Core.ts"/>
-/// <reference path="ISAs/MIPS.ts"/>
-/// <reference path="ISAs/RISCV.ts"/>
-/// <reference path="VirtualOS.ts"/>
+/// <reference path="CoreFactory.ts"/>
+
 declare let require: any
 declare let process: any
 
@@ -16,7 +14,7 @@ console.log("If you did not, a verbatim copy should be available at https://www.
 let Filesystem = require('fs');
 let Prompt = require('prompt-sync')();
 
-let CoreModel = RISCVCore;
+let isa = "RISC-V";
 
 let cliVirtualOS = new VirtualOS(); // The virtual OS handles ecalls. It takes a bunch of callbacks: output Int, output String, etcetera...
 cliVirtualOS.outputInt = (number) => {
@@ -26,10 +24,9 @@ cliVirtualOS.outputString = (string) => {
     console.log(string);
 };
 
-let cpu = new CoreModel(2048, ()=> cliVirtualOS.ecall(cpu)); // CPU: Memory, Virtual OS
+let cpu = CoreFactory.getCore(isa, 2048, cliVirtualOS, []); // CPU: Memory, Virtual OS
 
 let file = Filesystem.readFileSync(args[0]).toString();
-
 
 let assembler = new Assembler(cpu.instructionSet, Endianness.little); // Create new assembler
 

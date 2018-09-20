@@ -852,7 +852,40 @@ class Core {
         return this.decoded.executor(this);
     }
 }
-function Oak_gen_MIPS() {
+class VirtualOS {
+    ecall(core) {
+        let service = core.registerFile.read(core.virtualOSServiceRegister);
+        let args = [];
+        for (let i = core.virtualOSArgumentVectorStart; i <= core.virtualOSArgumentVectorEnd; i += 1) {
+            args.push(core.registerFile.read(i));
+        }
+        switch (service) {
+            case 1:
+                this.outputInt(args[0]);
+                break;
+            case 4:
+                let iterator = args[0];
+                let array = [];
+                let char = null;
+                do {
+                    char = core.memcpy(iterator, 1)[0];
+                    array.push(char);
+                    iterator += 1;
+                } while (char !== 0);
+                let outStr = array.map(c => String.fromCharCode(c)).join('');
+                this.outputString(outStr);
+            case 10:
+                return "HALT";
+        }
+        let j = 0;
+        for (let i = core.virtualOSArgumentVectorStart; i <= core.virtualOSArgumentVectorEnd; i += 1) {
+            core.registerFile.write(i, args[j]);
+            j += 1;
+        }
+        return null;
+    }
+}
+function MIPS(options) {
     let formats = [];
     let instructions = [];
     let pseudoInstructions = [];
@@ -952,7 +985,7 @@ function Oak_gen_MIPS() {
     ], /[a-zA-Z]+/, "@mnem"));
     let rcSubtype = formats[formats.length - 1];
     instructions.push(new Instruction("SYSCALL", rcSubtype, ["funct"], [0xC], function (core) {
-        core.ecall();
+        core.ecall(core);
         return null;
     }));
     formats.push(new Format([
@@ -1329,7 +1362,6 @@ function Oak_gen_MIPS() {
     let abiNames = ["$zero", "$at", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$k0", "$k1", "$gp", "$sp", "$fp", "$ra"];
     return new InstructionSet("mips", 32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, "    la $a0, str\n    li $v0, 4 #4 is the string print service number...\n    syscall\n    li $v0, 10 #...and 10 is the program termination service number!\n    syscall\n.data\nstr:\    .asciiz \"Hello, World!\"");
 }
-let MIPS = Oak_gen_MIPS();
 class MIPSRegisterFile {
     print() {
         console.log("Registers\n------");
@@ -1398,23 +1430,23 @@ class MIPSCore extends Core {
         this.fetched = Utils.catBytes(arr);
         return null;
     }
-    constructor(memorySize, ecall) {
+    constructor(memorySize, ecall, instructionSet) {
         super();
         this.virtualOSServiceRegister = 2;
         this.virtualOSArgumentVectorStart = 4;
         this.virtualOSArgumentVectorEnd = 7;
-        this.instructionSet = MIPS;
+        this.instructionSet = instructionSet;
         this.pc = 0 >>> 0;
         this.memorySize = memorySize;
         this.ecall = ecall;
-        this.registerFile = new MIPSRegisterFile(memorySize, MIPS.abiNames);
+        this.registerFile = new MIPSRegisterFile(memorySize, instructionSet.abiNames);
         this.memory = new Array(memorySize);
         for (let i = 0; i < memorySize; i++) {
             this.memory[i] = 0;
         }
     }
 }
-function Oak_gen_RISCV() {
+function RISCV(options) {
     let formats = [];
     let instructions = [];
     let pseudoInstructions = [];
@@ -1743,7 +1775,7 @@ function Oak_gen_RISCV() {
     ], /([a-zA-Z]+)/, "@mnem"));
     let allConstSubtype = formats[formats.length - 1];
     instructions.push(new Instruction("ECALL", allConstSubtype, ["const"], [0b00000000000000000000000001110011], (core) => {
-        let result = core.ecall();
+        let result = core.ecall(core);
         core.pc += 4;
         return result;
     }));
@@ -1807,7 +1839,6 @@ function Oak_gen_RISCV() {
     directives["word"] = Directive._32bit;
     return new InstructionSet("riscv", 32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"");
 }
-let RISCV = Oak_gen_RISCV();
 class RISCVRegisterFile {
     print() {
         console.log("Registers\n------");
@@ -1878,60 +1909,52 @@ class RISCVCore extends Core {
         this.fetched = Utils.catBytes(arr);
         return null;
     }
-    constructor(memorySize, ecall) {
+    constructor(memorySize, ecall, instructionSet) {
         super();
         this.virtualOSServiceRegister = 10;
         this.virtualOSArgumentVectorStart = 11;
         this.virtualOSArgumentVectorEnd = 17;
-        this.instructionSet = RISCV;
         this.pc = 0 >>> 0;
         this.memorySize = memorySize;
         this.ecall = ecall;
-        this.registerFile = new RISCVRegisterFile(memorySize, RISCV.abiNames);
+        this.instructionSet = instructionSet;
+        this.registerFile = new RISCVRegisterFile(memorySize, instructionSet.abiNames);
         this.memory = new Array(memorySize);
         for (let i = 0; i < memorySize; i++) {
             this.memory[i] = 0;
         }
     }
 }
-class VirtualOS {
-    ecall(core) {
-        let service = core.registerFile.read(core.virtualOSServiceRegister);
-        let args = [];
-        for (let i = core.virtualOSArgumentVectorStart; i <= core.virtualOSArgumentVectorEnd; i += 1) {
-            args.push(core.registerFile.read(i));
+class CoreFactory {
+    static getCore(architecture, memorySize, virtualOS, options) {
+        let isa = this.ISAs[architecture];
+        if (isa === undefined) {
+            return null;
         }
-        switch (service) {
-            case 1:
-                this.outputInt(args[0]);
-                break;
-            case 4:
-                let iterator = args[0];
-                let array = [];
-                let char = null;
-                do {
-                    char = core.memcpy(iterator, 1)[0];
-                    array.push(char);
-                    iterator += 1;
-                } while (char !== 0);
-                let outStr = array.map(c => String.fromCharCode(c)).join('');
-                this.outputString(outStr);
-            case 10:
-                return "HALT";
+        for (let key in options) {
+            if (!isa.options.include(key)) {
+                return null;
+            }
         }
-        let j = 0;
-        for (let i = core.virtualOSArgumentVectorStart; i <= core.virtualOSArgumentVectorEnd; i += 1) {
-            core.registerFile.write(i, args[j]);
-            j += 1;
-        }
-        return null;
+        let instructionSet = isa.generator(options);
+        return new isa.core(memorySize, virtualOS.ecall, instructionSet);
     }
 }
+CoreFactory.ISAs = {
+    "RISC-V": {
+        generator: RISCV,
+        core: RISCVCore,
+        options: ["C", "M", "D"]
+    },
+    "MIPS": {
+        generator: MIPS,
+        core: MIPSCore,
+        options: []
+    }
+};
 let v = VirtualOS;
 let e = Endianness;
 let a = Assembler;
 let l = Line;
-let rvc = RISCVCore;
-let mc = MIPSCore;
-
-export { v as VirutalOS, e as Endianness, a as Assembler, rvc as RISCVCore, mc as MIPSCore, l as AssemblerLine}
+let cf = CoreFactory;
+export { v as VirutalOS, e as Endianness, a as Assembler, cf as CoreFactory, l as AssemblerLine}

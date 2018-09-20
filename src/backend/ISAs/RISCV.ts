@@ -1,8 +1,9 @@
 /// <reference path="../Assembler.ts" />
+/// <reference path="../VirtualOS.ts"/>
 
 //The RISC-V Instruction Set Architecture, Version 2.1
 
-function Oak_gen_RISCV(): InstructionSet {
+function RISCV(options: boolean[]): InstructionSet {
     //Formats and Instructions
     let formats: Format[] = [];
     let instructions: Instruction[] = [];
@@ -672,7 +673,7 @@ function Oak_gen_RISCV(): InstructionSet {
             ["const"],
             [0b00000000000000000000000001110011],
             (core)=> {
-                let result = core.ecall();
+                let result = core.virtualOS.ecall(core);
                 core.pc += 4;
                 return result;
             }
@@ -832,7 +833,6 @@ function Oak_gen_RISCV(): InstructionSet {
 
     return new InstructionSet("riscv", 32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"");
 }
-let RISCV = Oak_gen_RISCV();
 
 class RISCVRegisterFile implements RegisterFile {
     private memorySize: number;
@@ -920,18 +920,18 @@ class RISCVCore extends Core {
         return null;
     }
 
-    constructor(memorySize: number, ecall: () => string) {
+    constructor(memorySize: number, virtualOS: VirtualOS, instructionSet: InstructionSet) {
         super();
 
         this.virtualOSServiceRegister = 10;
         this.virtualOSArgumentVectorStart = 11;
         this.virtualOSArgumentVectorEnd = 17;
 
-        this.instructionSet = RISCV;
         this.pc = 0 >>> 0;
         this.memorySize = memorySize;
-        this.ecall = ecall;
-        this.registerFile = new RISCVRegisterFile(memorySize, RISCV.abiNames);
+        this.virtualOS = virtualOS;
+        this.instructionSet = instructionSet;
+        this.registerFile = new RISCVRegisterFile(memorySize, instructionSet.abiNames);
         
         this.memory = new Array(memorySize);
         for (let i = 0; i < memorySize; i++) {

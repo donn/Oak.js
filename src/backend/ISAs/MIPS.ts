@@ -1,7 +1,9 @@
 /// <reference path="../Assembler.ts" />
+/// <reference path="../VirtualOS.ts"/>
+
 //The MIPS Instruction Set Architecture
 
-function Oak_gen_MIPS(): InstructionSet {
+function MIPS(options: boolean[]): InstructionSet {
     //Formats and Instructions
     let formats: Format[] = [];
     let instructions: Instruction[] = [];
@@ -275,7 +277,7 @@ function Oak_gen_MIPS(): InstructionSet {
             ["funct"],
             [0xC],
             function(core) {
-                core.ecall();
+                core.virtualOS.ecall(core);
                 return null;
             }
         )
@@ -975,7 +977,6 @@ function Oak_gen_MIPS(): InstructionSet {
 
     return new InstructionSet("mips", 32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, "    la $a0, str\n    li $v0, 4 #4 is the string print service number...\n    syscall\n    li $v0, 10 #...and 10 is the program termination service number!\n    syscall\n.data\nstr:\    .asciiz \"Hello, World!\"");
 }
-let MIPS = Oak_gen_MIPS();
 
 class MIPSRegisterFile implements RegisterFile {
     private memorySize: number;
@@ -1061,18 +1062,18 @@ class MIPSCore extends Core {
         return null;
     }
 
-    constructor(memorySize: number, ecall: () => string) {
+    constructor(memorySize: number,  virtualOS: VirtualOS, instructionSet: InstructionSet) {
         super();
 
         this.virtualOSServiceRegister = 2;
         this.virtualOSArgumentVectorStart = 4;
         this.virtualOSArgumentVectorEnd = 7;
 
-        this.instructionSet = MIPS;
+        this.instructionSet = instructionSet;
         this.pc = 0 >>> 0;
         this.memorySize = memorySize;
-        this.ecall = ecall;
-        this.registerFile = new MIPSRegisterFile(memorySize, MIPS.abiNames);
+        this.virtualOS = virtualOS;
+        this.registerFile = new MIPSRegisterFile(memorySize, instructionSet.abiNames);
         
         this.memory = new Array(memorySize);
         for (let i = 0; i < memorySize; i++) {

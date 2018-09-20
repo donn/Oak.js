@@ -1,4 +1,5 @@
 /// <reference path="Memory.ts"/>
+/// <reference path="Core.ts" />
 
 class VirtualOS {
     outputInt: (arg: number) => (void);
