@@ -231,7 +231,12 @@ class Line {
                     if (match === null) {
                         this.invalidReason = "data.invalidString";
                     } else {
-                        let characters = match[1].match(assembler.generalCharacterRegex);
+                        let regex = RegExp(assembler.generalCharacters, "g");
+                        let characters = []
+                        let found = null;
+                        while (found = regex.exec(match[1])) {
+                            characters.push(found);
+                        }
                         (this.machineCode = []).length = (characters.length + zeroDelimitedString);
 
                         for (let c in characters) {
@@ -422,7 +427,6 @@ class Assembler {
     instructionSet: InstructionSet;
 
     generalCharacters: string;
-    generalCharacterRegex: RegExp;
     keywordRegexes: RegExp[]; //Map<Keyword, RegExp>;
     directives: Directive[]; //Map<string, Directive>;
 
@@ -643,13 +647,12 @@ class Assembler {
                 if (options) {
                     let escapable = options.length > 1 ? "": "\\" + options
                     //this.keywordRegexes[Keyword.char] = RegExp(options + "" + options);
-                    this.generalCharacters = "(?:(?:\\\\[\\\\" + Assembler.escapedCharacterList + escapable + "])|(?:[\\x21-\\x5b\\x5d-\\x7e]))"
+                    this.generalCharacters = "(?:(?:\\\\[\\\\" + Assembler.escapedCharacterList + escapable + "])|(?:[\\x20-\\x5b\\x5d-\\x7e]))"
                     this.keywordRegexes[Keyword.char] = RegExp(options + '(' + this.generalCharacters + ')' + options);
                 }
             } else {
-                this.generalCharacters = "(?:(?:\\\\[\\\\" + Assembler.escapedCharacterList + "])|(?:[\\x21-\\x5b\\x5d-\\x7e]))"
+                this.generalCharacters = "(?:(?:\\\\[\\\\" + Assembler.escapedCharacterList + "])|(?:[\\x20-\\x5b\\x5d-\\x7e]))"
             }
-            this.generalCharacterRegex = RegExp(this.generalCharacters);
                     
             if (words[Keyword.stringMarker]) {
                 let options = Assembler.options(words[Keyword.stringMarker]);

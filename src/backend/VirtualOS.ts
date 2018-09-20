@@ -21,8 +21,9 @@ class VirtualOS {
             let array = [];
             let char = null;
             do {
-                char = core.memcpy(iterator, 1);
+                char = core.memcpy(iterator, 1)[0];
                 array.push(char);
+                iterator += 1;
             } while (char !== 0);
             let outStr = array.map(c=> String.fromCharCode(c)).join('');
             this.outputString(outStr);

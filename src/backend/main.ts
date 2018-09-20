@@ -73,6 +73,7 @@ running: while (true) {
         console.log("decode.failure");
         break running;
     }
+    console.log(decode);
 
     let execute = cpu.execute();
     if (execute !== null) {
