@@ -13,7 +13,7 @@ Special thanks to [@alikhaled96](https://github.com/alikhaled96) for helping me 
 Oak.js is a sister project of [RiscBEE](https://github.com/donn/RiscBEE).
 
 # Requirements
-Make, TypeScript 2 or above, UglifyJS 2 or above, and a compatible version of Node.js. It was tested with Node v7.
+TypeScript 2 or above, UglifyJS 2 or above, and a compatible version of Node.js. It was tested with Node v7.
 
 If you just want to use Oak.js, it should work fine on any modern browser, bar modern versions of Internet Explorer.
 
@@ -42,14 +42,14 @@ Just run `npm install`.
 # Usage
 To use Oak.js, either visit the [GitHub Page](https://skyus.github.io/Oak.js) or download this repository and open index.html using your web browser.
 
-To compile and clean, `make` or `make clean` respectively.
-
--- Please note that the browser version is not yet integrated on this branch.
+Run: `node make all`
+To only build for web: `node make web`
+To only build as an executable: `node make exec`
 
 ## On-computer usage
 Currently, the Terminal UI only supports assembling and simulating RISC-V files.
 
-`node Executables/Oak.js <RISCVAssemblyFile.s>`
+`node bin/Oak.js <RISCVAssemblyFile.s>`
 
 # License
 Mozilla Public License 2.0. Check LICENSE.

@@ -15,9 +15,12 @@
     "react-scripts": "1.1.4"
   },
   "scripts": {
-    "build-cli": "./node_modules/typescript/bin/tsc --module amd --pretty --target ES2016 --removeComments --noEmitOnError src/backend/main.ts --outFile bin/Oak.js",
+    "build-all": "node make all",
+    "build-back": "node make backend",
+    "run-cli": "node bin/Oak",
+    "build-cli": "node make",
     "start": "react-scripts start",
-    "build": "./node_modules/typescript/bin/tsc --module amd --pretty --target ES2016 --removeComments --noEmitOnError src/backend/Zero.ts --outFile src/backend.js ; node -e \"let fs = require('fs');fs.appendFileSync('./src/backend.js', fs.readFileSync('./src/backend/ZeroPlus.js'));\" ; react-scripts build",
+    "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   },
