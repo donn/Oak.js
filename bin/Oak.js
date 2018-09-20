@@ -1,4 +1,19 @@
 class VirtualOS {
+    constructor() {
+        this.continueInputString = (core, val) => {
+            let reg = core.virtualOSArgumentVectorStart;
+            let arg = core.registerFile.read(reg);
+            let array = [];
+            for (let i = 0; i < val.length; ++i) {
+                array.push(val[i]);
+            }
+            core.memset(arg, array);
+        };
+        this.continueInputInt = (core, val) => {
+            let reg = core.virtualOSArgumentVectorStart;
+            core.registerFile.write(reg, val);
+        };
+    }
     ecall(core) {
         let service = core.registerFile.read(core.virtualOSServiceRegister);
         let args = [];
@@ -6,10 +21,11 @@ class VirtualOS {
             args.push(core.registerFile.read(i));
         }
         switch (service) {
-            case 1:
+            case 1: {
                 this.outputInt(args[0]);
                 break;
-            case 4:
+            }
+            case 4: {
                 let iterator = args[0];
                 let array = [];
                 let char = null;
@@ -20,8 +36,20 @@ class VirtualOS {
                 } while (char !== 0);
                 let outStr = array.map(c => String.fromCharCode(c)).join('');
                 this.outputString(outStr);
+                break;
+            }
+            case 5: {
+                this.inputInt();
+                break;
+            }
+            case 8: {
+                this.inputString();
+                return "WAIT";
+            }
             case 10:
                 return "HALT";
+            default:
+                return "UNHANDLED";
         }
         let j = 0;
         for (let i = core.virtualOSArgumentVectorStart; i <= core.virtualOSArgumentVectorEnd; i += 1) {
@@ -64,7 +92,7 @@ class Core {
                 break;
             }
         }
-        if (this.decoded == null) {
+        if (this.decoded === null) {
             return null;
         }
         let bitRanges = this.decoded.format.ranges;
@@ -216,13 +244,13 @@ class Instruction {
         for (let i in this.format.ranges) {
             let range = this.format.ranges[i];
             let constant = this.constants[range.field];
-            if (constant == null) {
+            if (constant === null) {
                 constant = range.constant;
             }
             if (constant != null) {
                 let before = string.substr(0, this.bits - range.end - 1);
                 let addition = Utils.pad(constant, range.bits, 2);
-                let after = range.start == 0 ? '' : string.substr(-range.start);
+                let after = range.start === 0 ? '' : string.substr(-range.start);
                 string = before + addition + after;
             }
         }
@@ -239,7 +267,7 @@ class Instruction {
             if (maskBits[i] === "X") {
                 continue;
             }
-            if (parseInt(maskBits[i]) !== bit) {
+            if (parseInt(maskBits[i], 10) !== bit) {
                 return false;
             }
         }
@@ -253,7 +281,7 @@ class Instruction {
         for (let i in this.format.ranges) {
             let range = this.format.ranges[i];
             let constant = this.constants[range.field];
-            if (constant == null) {
+            if (constant === null) {
                 constant = range.constant;
             }
             if (constant != null) {
@@ -275,7 +303,7 @@ class InstructionSet {
     }
     mnemonicSearch(mnemonic) {
         for (let i = 0; i < this.instructions.length; i++) {
-            if (this.instructions[i].mnemonic == mnemonic) {
+            if (this.instructions[i].mnemonic === mnemonic) {
                 return i;
             }
         }
@@ -287,7 +315,7 @@ class InstructionSet {
             let instruction = this.instructions[i];
             if (line.toUpperCase().hasPrefix(instruction.mnemonic)) {
                 let captures = instruction.format.regex.exec(line);
-                if (captures && captures[1].toUpperCase() == instruction.mnemonic) {
+                if (captures && captures[1].toUpperCase() === instruction.mnemonic) {
                     result.push(instruction);
                 }
             }
@@ -474,7 +502,6 @@ class Line {
                     case Directive.text:
                         this.kind = Kind.directive;
                         return true;
-                        break;
                     case Directive._32bit:
                         count = count || 4;
                     case Directive._16bit:
@@ -604,18 +631,18 @@ class Line {
             case Directive._8bit:
                 count = count || 1;
                 let elements = this.directiveData.split(/\s*,\s*/);
-                testingElements: for (let i = 0; i < elements.length; i += 1) {
+                for (let i = 0; i < elements.length; i += 1) {
                     let element = elements[i];
                     let bits = count << 3;
                     let store = assembler.process(element, Parameter.immediate, bits, address, 0);
                     if (store.errorMessage !== null) {
                         errorMessage = store.errorMessage;
-                        break testingElements;
+                        break;
                     }
                     else if (store.context !== null && store.value === null) {
                         store.context.sensitivityList.push(this);
                         this.sensitive = true;
-                        break testingElements;
+                        break;
                     }
                     else {
                         let stored = store.value;
@@ -650,7 +677,7 @@ class Line {
             lineByLabel[1] = address;
         }
         if (result[0] === null) {
-            sensitiveList: for (let i in this.sensitivityList) {
+            for (let i in this.sensitivityList) {
                 let sensor = this.sensitivityList[i];
                 if (sensor.addressThisPass !== null) {
                     let sensorLength = sensor.machineCode.length;
@@ -660,11 +687,11 @@ class Line {
                     else {
                         if (newAssembly[1]) {
                             result[1] = true;
-                            break sensitiveList;
+                            break;
                         }
                         if (sensor.machineCode.length !== sensorLength) {
                             result[1] = true;
-                            break sensitiveList;
+                            break;
                         }
                     }
                 }
@@ -759,7 +786,7 @@ class Assembler {
                     result.errorMessage = `args.registerDoesNotExist(${text})`;
                     return result;
                 }
-                registerNo = parseInt(registerNo);
+                registerNo = parseInt(registerNo, 10);
                 if ((registerNo & (~0 << bits)) !== 0) {
                     result.errorMessage = `args.registerDoesNotExist(${text})`;
                     return result;
@@ -817,17 +844,17 @@ class Assembler {
         }
     }
     static options(list) {
-        if (list.length == 0) {
+        if (list.length === 0) {
             return null;
         }
         let options = "";
         for (let i = 0; i < list.length; i++) {
             let keyword = list[i];
-            if (keyword == "\\") {
+            if (keyword === "\\") {
                 console.log("INSTRUCTION SET WARNING: '\\' used as keyword. This behavior is undefined.");
                 return null;
             }
-            if (options == "") {
+            if (options === "") {
                 options = "(?:";
             }
             else {
@@ -882,7 +909,7 @@ Assembler.escapedCharacters = {
     'n': 10,
     'r': 13,
     '\'': 47,
-    '\"': 42
+    '"': 42
 };
 Assembler.escapedCharacterList = Object.keys(Assembler.escapedCharacters).join("");
 function MIPS(options) {
@@ -1175,8 +1202,8 @@ function MIPS(options) {
             result.errorMessage = `args.valueUnrecognized(${text})`;
             return result;
         }
-        if ((value >>> 28) == (address >>> 28)) {
-            if ((value & 3) == 0) {
+        if ((value >>> 28) === (address >>> 28)) {
+            if ((value & 3) === 0) {
                 result.value = (value & 0x0ffffffc) >>> 2;
             }
             else {
@@ -1225,132 +1252,12 @@ function MIPS(options) {
     instructions.push(new Instruction("LA", liPseudo, ["opcode"], [0x8], function (core) {
         return null;
     }));
-    let process = function (address, text, type, bits, labels, addresses) {
-        let array = text.split("");
-        let result = {
-            errorMessage: null,
-            value: null
-        };
-        switch (type) {
-            case Parameter.register:
-                let registerNo;
-                let index = this.abiNames.indexOf(text);
-                if (index !== -1) {
-                    result.value = index;
-                    return result;
-                }
-                if (array[0] !== "$") {
-                    result.errorMessage = "Register " + text + " does not exist.";
-                    return result;
-                }
-                registerNo = parseInt(array.splice(1, array.length - 1).join(""));
-                if (0 <= registerNo && registerNo <= 31) {
-                    result.value = registerNo;
-                    return result;
-                }
-                else {
-                    result.errorMessage = "Register " + text + " does not exist.";
-                    return result;
-                }
-            case Parameter.immediate:
-                var int = NaN;
-                let labelIndex = labels.indexOf(text);
-                if (labelIndex !== -1) {
-                    int = addresses[labelIndex];
-                }
-                else if (array.length === 3 && (array[0] == "\'") && (array[2] == "\'")) {
-                    int = array[1].charCodeAt(0);
-                }
-                else {
-                    let radix = 10 >>> 0;
-                    let splice = false;
-                    if (array[0] === "0") {
-                        if (array[1] == "b") {
-                            radix = 2;
-                            splice = true;
-                        }
-                        if (array[1] == "o") {
-                            radix = 8;
-                            splice = true;
-                        }
-                        if (array[1] == "d") {
-                            radix = 10;
-                            splice = true;
-                        }
-                        if (array[1] == "x") {
-                            radix = 16;
-                            splice = true;
-                        }
-                    }
-                    let interpretable = text;
-                    if (splice) {
-                        interpretable = array.splice(2, array.length - 2).join("");
-                    }
-                    int = parseInt(interpretable, radix);
-                }
-                if (isNaN(int)) {
-                    result.errorMessage = "Immediate '" + text + "' is not a recognized label, literal or character.";
-                    return result;
-                }
-                if (Utils.rangeCheck(int, bits)) {
-                    result.value = int;
-                    return result;
-                }
-                result.errorMessage = "The value of '" + text + "' is out of range.";
-                return result;
-            case Parameter.offset:
-                var int = NaN;
-                let labelLocation = labels.indexOf(text);
-                if (labelLocation !== -1) {
-                    int = addresses[labelLocation] - address;
-                }
-                else {
-                    let radix = 10 >>> 0;
-                    let splice = false;
-                    if (array[0] === "0") {
-                        if (array[1] == "b") {
-                            radix = 2;
-                            splice = true;
-                        }
-                        if (array[1] == "o") {
-                            radix = 8;
-                            splice = true;
-                        }
-                        if (array[1] == "d") {
-                            radix = 10;
-                            splice = true;
-                        }
-                        if (array[1] == "x") {
-                            radix = 16;
-                            splice = true;
-                        }
-                    }
-                    let interpretable = text;
-                    if (splice) {
-                        interpretable = array.splice(2, array.length - 2).join("");
-                    }
-                    int = parseInt(interpretable, radix);
-                }
-                if (isNaN(int)) {
-                    result.errorMessage = "Offset '" + text + "' is not a recognized label or literal.";
-                    return result;
-                }
-                if (Utils.rangeCheck(int, bits)) {
-                    result.value = int;
-                    return result;
-                }
-                result.errorMessage = "The value of '" + text + "' is out of range.";
-                return result;
-            default:
-                return result;
-        }
-    };
     let keywords = [];
     keywords[Keyword.directive] = ["\\."];
     keywords[Keyword.comment] = ["#"];
     keywords[Keyword.label] = ["\\:"];
     keywords[Keyword.stringMarker] = ["\\\""];
-    keywords[Keyword.charMarker] = ["\\\'"];
+    keywords[Keyword.charMarker] = ["\\'"];
     keywords[Keyword.register] = ["x"];
     let directives = [];
     directives["text"] = Directive.text;
@@ -1360,7 +1267,7 @@ function MIPS(options) {
     directives["half"] = Directive._16bit;
     directives["word"] = Directive._32bit;
     let abiNames = ["$zero", "$at", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$k0", "$k1", "$gp", "$sp", "$fp", "$ra"];
-    return new InstructionSet("mips", 32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, "    la $a0, str\n    li $v0, 4 #4 is the string print service number...\n    syscall\n    li $v0, 10 #...and 10 is the program termination service number!\n    syscall\n.data\nstr:\    .asciiz \"Hello, World!\"");
+    return new InstructionSet("mips", 32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, "    la $a0, str\n    li $v0, 4 #4 is the string print service number...\n    syscall\n    li $v0, 10 #...and 10 is the program termination service number!\n    syscall\n.data\nstr:    .asciiz \"Hello, World!\"");
 }
 class MIPSRegisterFile {
     print() {
@@ -1423,7 +1330,7 @@ class MIPSCore extends Core {
     }
     fetch() {
         let arr = this.memcpy(this.pc, 4);
-        if (arr == null) {
+        if (arr === null) {
             return "fetch.illegalMemoryAddress";
         }
         this.pc += 4;
@@ -1788,7 +1695,7 @@ function RISCV(options) {
         new BitRange("opcode", 0, 7)
     ], /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)/, "@mnem @arg0, @arg1"));
     let mvPseudo = formats[formats.length - 1];
-    instructions.push(new Instruction("MV", mvPseudo, ["opcode", "funct3", "rs1", "funct7"], [0b0110011, 0b000, parseInt("00000"), 0b0000000], function (core) {
+    instructions.push(new Instruction("MV", mvPseudo, ["opcode", "funct3", "rs1", "funct7"], [0b0110011, 0b000, 0b00000, 0b0000000], function (core) {
         return null;
     }, false, ["ADD"]));
     formats.push(new Format([
@@ -1828,7 +1735,7 @@ function RISCV(options) {
     keywords[Keyword.comment] = ["#"];
     keywords[Keyword.label] = ["\\:"];
     keywords[Keyword.stringMarker] = ["\\\""];
-    keywords[Keyword.charMarker] = ["\\\'"];
+    keywords[Keyword.charMarker] = ["\\'"];
     keywords[Keyword.register] = ["x"];
     let directives = [];
     directives["text"] = Directive.text;
@@ -1837,7 +1744,7 @@ function RISCV(options) {
     directives["byte"] = Directive._8bit;
     directives["half"] = Directive._16bit;
     directives["word"] = Directive._32bit;
-    return new InstructionSet("riscv", 32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"");
+    return new InstructionSet("riscv", 32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:    .string \"Hello, World!\"");
 }
 class RISCVRegisterFile {
     print() {
@@ -1903,7 +1810,7 @@ class RISCVCore extends Core {
             return "fetch.negativePC";
         }
         let arr = this.memcpy(this.pc, 4);
-        if (arr == null) {
+        if (arr === null) {
             return "fetch.invalidMemoryAccess";
         }
         this.fetched = Utils.catBytes(arr);

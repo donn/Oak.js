@@ -209,7 +209,6 @@ class Line {
                 case Directive.text:
                     this.kind = Kind.directive;
                     return true;
-                    break;
                 case Directive._32bit:
                     count = count || 4;
                 case Directive._16bit:
@@ -346,17 +345,17 @@ class Line {
             case Directive._8bit:
                 count = count || 1;
                 let elements = this.directiveData.split(/\s*,\s*/);
-                testingElements: for (let i = 0; i < elements.length; i += 1) {
+                for (let i = 0; i < elements.length; i += 1) {
                     let element = elements[i];
                     let bits = count << 3;
                     let store = assembler.process(element, Parameter.immediate, bits, address, 0);
                     if (store.errorMessage !== null) {
                         errorMessage = store.errorMessage;
-                        break testingElements;
+                        break;
                     } else if (store.context !== null && store.value === null) {
                         store.context.sensitivityList.push(this);
                         this.sensitive = true;
-                        break testingElements;
+                        break;
                     } else {
                         let stored = store.value;
                         for (let j = 0; j < count; j += 1) {
@@ -396,7 +395,7 @@ class Line {
         }
 
         if (result[0] === null) {
-            sensitiveList: for (let i in this.sensitivityList) {
+            for (let i in this.sensitivityList) {
                 let sensor = this.sensitivityList[i];
                 if (sensor.addressThisPass !== null) {
                     let sensorLength = sensor.machineCode.length;
@@ -406,11 +405,11 @@ class Line {
                     } else {
                         if (newAssembly[1]) {
                             result[1] = true;
-                            break sensitiveList;
+                            break;
                         }
                         if (sensor.machineCode.length !== sensorLength) {
                             result[1] = true;
-                            break sensitiveList;
+                            break;
                         }
                     }
                 }
@@ -448,7 +447,7 @@ class Assembler {
         'n': 10,
         'r': 13,
         '\'': 47,
-        '\"': 42
+        '"': 42
     }
     static escapedCharacterList = Object.keys(Assembler.escapedCharacters).join("")
 
@@ -474,7 +473,7 @@ class Assembler {
                 result.errorMessage = `args.registerDoesNotExist(${text})`;
                 return result;
             }
-            registerNo = parseInt(registerNo);
+            registerNo = parseInt(registerNo, 10);
             if ((registerNo & (~0 << bits)) !== 0) {
                 result.errorMessage = `args.registerDoesNotExist(${text})`;
                 return result;
@@ -540,7 +539,7 @@ class Assembler {
     }
 
     static options(list: string[]): string {
-        if (list.length == 0) {
+        if (list.length === 0) {
             return null
         }
 
@@ -549,11 +548,11 @@ class Assembler {
         for (let i = 0; i < list.length; i++) {
             let keyword = list[i];
 
-            if (keyword == "\\") {
+            if (keyword === "\\") {
                 console.log("INSTRUCTION SET WARNING: '\\' used as keyword. This behavior is undefined.")
                 return null;
             }
-            if (options == "") {
+            if (options === "") {
                 options = "(?:";
             }
             else {

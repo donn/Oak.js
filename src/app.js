@@ -18,7 +18,7 @@ import {Endianness, CoreFactory, Assembler, AssemblerLine} from './backend.js'
 
 const SIMULATING_OFF  = 0;
 const SIMULATING_STEP = 1;
-const SIMULATING_PLAY = 2;
+//const SIMULATING_PLAY = 2;
 
 const REGISTER_UNASSIGNED = 0;
 const REGISTER_ASSIGNED = 1;
@@ -148,117 +148,6 @@ export default class App extends Component {
 
 	registerWrite = (core, reg, val) => {
 		core.registerFile.physicalFile[reg] = val;
-	}
-
-	ecallCallback = () => {
-		let selected = this.state.core.selected;
-		let tab = this.state.core.tabs[selected];
-
-		var core = tab.core;
-		var reg_type = core.defaultEcallRegType;
-		var reg_arg  = core.defaultEcallRegArg;
-		var type = this.registerRead(core, reg_type);
-		var arg =  this.registerRead(core, reg_arg);
-	
-		if (this.simulation_status === SIMULATING_STEP) {
-			let log = tab.log[tab.log.length-1];
-			this.addConsoleMessage(<div className="console_step"><b>Simulator Step: </b> {log}</div>);
-		}
-			
-		//setConsoleMode(0);
-		let exit = false;
-		let output = "";
-	
-		switch (type) {
-		case 1: { // Integer
-			this.addConsoleMessage(<div className="console_output">> {arg}</div>);
-			break;
-		}
-		case 4: { // String
-			var pointer = arg;
-			var char = core.memory[pointer];
-			while (char !== 0) {
-				output += String.fromCharCode(char);
-				pointer += 1;
-				char = core.memory[pointer];
-			}
-			this.addConsoleMessage(<div className="console_output">> {output}</div>);
-			break;
-		}
-		case 5: {
-			this.setState({console_input_type: CONSOLE_INPUT_NUM});
-			return;
-		}
-		case 8: {
-			this.setState({console_input_type: CONSOLE_INPUT_STR});
-			return;
-		}
-		case 10: {
-			exit = true;
-			break;
-		}
-		case 420: {
-			let link;
-			switch(arg) {
-				default:
-					link = "https://youtube.com/watch?v=KZACorHeE-c";
-					break;
-				case 1:
-					link = "https://youtube.com/watch?v=L_jWHffIx5E";
-					break;
-				case 2:
-					link = "https://youtube.com/watch?v=dQw4w9WgXcQ";
-					break;
-				case 3:
-					link = "https://youtube.com/watch?v=VONRQMx78YI";
-					break;
-				case 4:
-					link = "https://youtube.com/watch?v=mtf7hC17IBM";
-					break;
-				case 5:
-					link = "https://youtube.com/watch?v=yKNxeF4KMsY";
-					break;
-			}
-			let win = window.open(link, "_blank");
-			win.focus();        
-			break;
-		}
-		case 1776: {
-			let win = window.open("https://youtu.be/TOygO4n-CtQ", "_blank");
-			win.focus();
-			break;
-		}
-		case 24601: {
-			let win = window.open("https://youtu.be/IZdjz6lLngU?t=150", "_blank");
-			win.focus();
-			break;
-		}
-		default: {
-			output = "<b>WARNING:</b> Environment call " + type + " unsupported.";
-			break;
-		}
-		}
-		
-		/*if (exit) {
-			this.checkUpdatedTabs();
-			if (this.simulation_status === SIMULATING_STEP) {
-				this.simulation_status = SIMULATING_OFF;
-				this.addConsoleMessage(<div className="console_success"><b>Complete:</b> Simulation completed.</div>);
-			}
-			else {
-				this.simulation_status = SIMULATING_OFF;
-				var time = performance.now() - this.simulation_start;
-				var numInstructions = tab.log.length;
-				var ips = numInstructions*1000.0/time;
-				this.addConsoleMessage(<div className="console_success"><b>Complete:</b> Simulation completed in {Math.round(time)} ms, {numInstructions} instructions, {Math.round(ips)} instructions/second.</div>);
-			}
-		} else if (this.simulation_status !== SIMULATING_STEP) {
-			output = window.continueSim(core);
-			if (output !== "@Oak_Ecall" && output !== null) {
-				this.checkUpdatedTabs();
-				this.addConsoleMessage("<b>Simulator Error: </b>" + output);
-			}
-		}*/
 	}
 
 	continueAfterConsole = (input) => {
@@ -543,16 +432,15 @@ export default class App extends Component {
 		while (true) {
 			let fetch = core.fetch();
 			if (fetch !== null) {
-				console.log(fetch);
+				this.addConsoleMessage(<div className="console_error">{fetch}</div>);
 				break;
 			}
 		
 			let decode = core.decode(); // Decode has the decoded instruction on success
 			tab.log.push(decode);
 			
-			console.log(decode);
 			if (decode === null) {
-				console.log("decode.failure");
+				this.addConsoleMessage(<div className="console_error">decide.failure</div>);
 				break;
 			}
 		
@@ -560,6 +448,7 @@ export default class App extends Component {
 			if (execute !== null) {
 				if (execute !== 'HALT') { // If HALT, then an environment call has been executed.
 					console.log(execute);
+					this.addConsoleMessage(<div className="console_error">{execute}</div>);
 				}
 				break;
 			}
