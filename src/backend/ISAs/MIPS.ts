@@ -655,7 +655,6 @@ function MIPS(options: boolean[]): InstructionSet {
             /[A-z]+\s*([A-Za-z0-9_]+)/,
             "@mnem @arg0",
             function(text: string, type: Parameter, bits: number, address: number, assembler: Assembler) {
-                let array = text.split(""); //Character View
                 let result = {
                     errorMessage: null,
                     context: null,

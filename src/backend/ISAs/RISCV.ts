@@ -923,8 +923,8 @@ class RISCVCore extends Core {
     constructor(memorySize: number, virtualOS: VirtualOS, instructionSet: InstructionSet) {
         super();
 
-        this.virtualOSServiceRegister = 10;
-        this.virtualOSArgumentVectorStart = 11;
+        this.virtualOSServiceRegister = 17;
+        this.virtualOSArgumentVectorStart = 10;
         this.virtualOSArgumentVectorEnd = 17;
 
         this.pc = 0 >>> 0;

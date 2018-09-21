@@ -527,7 +527,7 @@ class Line {
                             let regex = RegExp(assembler.generalCharacters, "g");
                             let characters = [];
                             let found = null;
-                            while (found = regex.exec(match[1])) {
+                            while ((found = regex.exec(match[1]))) {
                                 characters.push(found);
                             }
                             (this.machineCode = []).length = (characters.length + zeroDelimitedString);
@@ -671,6 +671,9 @@ class Line {
                 break;
             case Kind.data:
                 result[0] = this.assembleData(assembler, lines, address);
+                break;
+            default:
+                break;
         }
         let lineByLabel = assembler.linesByLabel[this.label];
         if (lineByLabel !== undefined) {
@@ -1165,7 +1168,6 @@ function MIPS(options) {
         new BitRange("opcode", 26, 6),
         new BitRange("imm", 0, 26).parameterized(0, Parameter.special)
     ], /[A-z]+\s*([A-Za-z0-9_]+)/, "@mnem @arg0", function (text, type, bits, address, assembler) {
-        let array = text.split("");
         let result = {
             errorMessage: null,
             context: null,
@@ -1818,8 +1820,8 @@ class RISCVCore extends Core {
     }
     constructor(memorySize, virtualOS, instructionSet) {
         super();
-        this.virtualOSServiceRegister = 10;
-        this.virtualOSArgumentVectorStart = 11;
+        this.virtualOSServiceRegister = 17;
+        this.virtualOSArgumentVectorStart = 10;
         this.virtualOSArgumentVectorEnd = 17;
         this.pc = 0 >>> 0;
         this.memorySize = memorySize;

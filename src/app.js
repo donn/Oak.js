@@ -14,7 +14,7 @@ import PanelConversion from './sections/panelconversion';
 import PanelRegisters from './sections/panelregisters';
 import CoreContext from './coreContext';
 import PanelMachineCode from './sections/panelmachinecode';
-import {Endianness, CoreFactory, Assembler, AssemblerLine} from './backend.js'
+import {VirtualOS, Endianness, CoreFactory, Assembler, AssemblerLine} from './backend.js'
 
 const SIMULATING_OFF  = 0;
 const SIMULATING_STEP = 1;
@@ -28,11 +28,21 @@ const CONSOLE_INPUT_NONE  = 0;
 const CONSOLE_INPUT_NUM = 1;
 const CONSOLE_INPUT_STR = 2;
 
+const MessageType = {
+	Log: 0,
+	Input: 1,
+	Output: 2,
+	Success: 3,
+	Warning: 4,
+	Error: 5,
+}
+
 let instruction_sets = ["RISC-V", "MIPS"];
 
 export default class App extends Component {
 	simulation_start;
 	simulation_status;
+	virtual_os;
 
 	constructor(props) {
 		super(props);
@@ -61,6 +71,15 @@ export default class App extends Component {
 		this.component_editor = React.createRef();
 		this.component_input = React.createRef();
 		this.component_panel_settings = React.createRef();
+
+		
+		this.virtual_os = new VirtualOS(); // The virtual OS handles ecalls. It takes a bunch of callbacks: output Int, output String, etcetera...
+		this.virtual_os.outputInt = (number) => {
+			this.addConsoleMessage(MessageType.Output, ">> " + number);
+		};
+		this.virtual_os.outputString = (string) => {
+			this.addConsoleMessage(MessageType.Output, ">> " + string);
+		};
 	}
 
 	componentDidMount() {
@@ -129,10 +148,24 @@ export default class App extends Component {
 		}));
 	}
 
-	addConsoleMessage = (data) => {
+	addConsoleMessage = (msg_type, data) => {
 		let tabs = this.state.core.tabs;
 		let tab = tabs[this.state.core.selected];
-		tab.console.push(data);
+		
+		let className;
+		if (msg_type === MessageType.Error)
+			className = "console_error";
+		else if (msg_type === MessageType.Warning)
+			className = "console_warning";
+		else if (msg_type === MessageType.Success)
+			className = "console_success";
+		else if (msg_type === MessageType.Output)
+			className = "console_output";
+		else if (msg_type === MessageType.Input)
+			className = "console_input";
+		else
+			className = "console_log";
+		tab.console.push(<div className={className}>{data}</div>);
 
 		this.setState(prevState => ({
 			core: {
@@ -163,7 +196,7 @@ export default class App extends Component {
 		if (this.state.console_input_type === CONSOLE_INPUT_NUM) {
 			input = parseInt(input, 10);
 			this.registerWrite(core, reg_type, input);
-			this.addConsoleMessage(<div className="console_input">{"<"} {input}</div>);
+			this.addConsoleMessage(MessageType.Log, input);
 		} else if (this.state.console_input_type === CONSOLE_INPUT_STR) {
 			console.log(input);
 			let bytes = [];
@@ -172,7 +205,7 @@ export default class App extends Component {
 			}
 			bytes.push(0);
 			core.memset(arg, bytes);
-			this.addConsoleMessage(<div className="console_input">{"<"} {input}</div>);
+			this.addConsoleMessage(MessageType.Log, input);
 		}
 
 		this.setState({console_input_type: CONSOLE_INPUT_NONE});
@@ -181,7 +214,7 @@ export default class App extends Component {
 			let output = window.continueSim(core);
 			if (output !== "@Oak_Ecall" && output !== null) {
 				this.checkUpdatedTabs();
-				this.addConsoleMessage(<b>Simulator Error: </b> + output);
+				this.addConsoleMessage(MessageType.Log, <span><b>Simulator Error: </b> {output}</span>);
 			}
 		}
 	}
@@ -203,7 +236,7 @@ export default class App extends Component {
 		
 		let memorySize = 4096;
 
-		let core = CoreFactory.getCore(instruction_sets[0], memorySize, this.ecallCallback, []);
+		let core = CoreFactory.getCore(instruction_sets[0], memorySize, this.virtual_os, []);
 
 		let new_tab = {
 			name: name,
@@ -238,7 +271,7 @@ export default class App extends Component {
 		
 		let memorySize = 4096;
 
-		let core = CoreFactory.getCore(instruction_sets[0], memorySize, this.ecallCallback, []);
+		let core = CoreFactory.getCore(instruction_sets[0], memorySize, this.virtual_os, []);
 		let tabs = this.state.core.tabs;
 		let new_tab = {
 			name: "New Tab",
@@ -432,7 +465,7 @@ export default class App extends Component {
 		while (true) {
 			let fetch = core.fetch();
 			if (fetch !== null) {
-				this.addConsoleMessage(<div className="console_error">{fetch}</div>);
+				this.addConsoleMessage(MessageType.Error, fetch);
 				break;
 			}
 		
@@ -440,7 +473,7 @@ export default class App extends Component {
 			tab.log.push(decode);
 			
 			if (decode === null) {
-				this.addConsoleMessage(<div className="console_error">decide.failure</div>);
+				this.addConsoleMessage(MessageType.Error, "decide.failure");
 				break;
 			}
 		
@@ -448,7 +481,7 @@ export default class App extends Component {
 			if (execute !== null) {
 				if (execute !== 'HALT') { // If HALT, then an environment call has been executed.
 					console.log(execute);
-					this.addConsoleMessage(<div className="console_error">{execute}</div>);
+					this.addConsoleMessage(MessageType.Error, execute);
 				}
 				break;
 			}
@@ -554,10 +587,10 @@ export default class App extends Component {
 		let error = false; //output.errorMessage===null;
 		if (!error) {
 			this.setMachineCodeValue(machineCode);
-			this.addConsoleMessage(<div className="console_success"><b>Complete:</b> Assembly succeeded.</div>);
+			this.addConsoleMessage(MessageType.Success, <span><b>Complete:</b> Assembly succeeded.</span>);
 		}
 		else {
-			this.addConsoleMessage(<div className="console_error"><b>Error:</b> Assembler failed.</div>);
+			this.addConsoleMessage(MessageType.Error, <span><b>Error:</b> Assembler failed.</span>);
 		}
 
 		this.simulation_status = SIMULATING_OFF;
@@ -618,7 +651,7 @@ export default class App extends Component {
 			}
 		}));
 
-		this.addConsoleMessage(<div className="console_success"><b>Complete: </b>Successfully changed ISA to {isa_type}.</div>);
+		this.addConsoleMessage(MessageType.Success, <span><b>Complete: </b>Successfully changed ISA to {isa_type}.</span>);
 	}
 
 	handleStartDragX = (event) => {

@@ -211,8 +211,12 @@ class Line {
                     return true;
                 case Directive._32bit:
                     count = count || 4;
+                    // fall through
+
                 case Directive._16bit:
                     count = count || 2;
+                    // fall through
+
                 case Directive._8bit:
                     count = count || 1;
                     let elements = this.directiveData.split(/\s*,\s*/);
@@ -222,6 +226,8 @@ class Line {
                     break;
                 case Directive.cString:
                     zeroDelimitedString = 1;
+                    // fall through
+
                 case Directive.string:
                     if (assembler.keywordRegexes[Keyword.string] === null) {
                         this.invalidReason = "isa.noStringTokenDefined";
@@ -233,7 +239,7 @@ class Line {
                         let regex = RegExp(assembler.generalCharacters, "g");
                         let characters = []
                         let found = null;
-                        while (found = regex.exec(match[1])) {
+                        while ((found = regex.exec(match[1]))) {
                             characters.push(found);
                         }
                         (this.machineCode = []).length = (characters.length + zeroDelimitedString);
@@ -340,8 +346,12 @@ class Line {
         switch(this.directive) {
             case Directive._32bit:
                 count = count || 4;
+                // fall through
+
             case Directive._16bit:
                 count = count || 2;
+                // fall through
+
             case Directive._8bit:
                 count = count || 1;
                 let elements = this.directiveData.split(/\s*,\s*/);
@@ -387,6 +397,9 @@ class Line {
             break;
         case Kind.data:
             result[0] = this.assembleData(assembler, lines, address);
+            break;
+        default:
+            break;
         }
 
         let lineByLabel = assembler.linesByLabel[this.label];

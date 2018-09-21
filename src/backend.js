@@ -1,3 +1,5 @@
+/// <reference path="Memory.ts"/>
+/// <reference path="Core.ts" />
 class VirtualOS {
     constructor() {
         this.continueInputString = (core, val) => {
@@ -29,11 +31,10 @@ class VirtualOS {
                 let iterator = args[0];
                 let array = [];
                 let char = null;
-                do {
-                    char = core.memcpy(iterator, 1)[0];
+                while ((char = core.memcpy(iterator, 1)[0]) !== 0) {
                     array.push(char);
                     iterator += 1;
-                } while (char !== 0);
+                }
                 let outStr = array.map(c => String.fromCharCode(c)).join('');
                 this.outputString(outStr);
                 break;
@@ -59,7 +60,11 @@ class VirtualOS {
         return null;
     }
 }
+/// <reference path="InstructionSet.ts"/>
+/// <reference path="Memory.ts"/>
+/// <reference path="VirtualOS.ts"/>
 class Core {
+    //Returns bytes on success, null on failure
     memcpy(address, bytes) {
         if (((address + bytes) >>> 0) > this.memorySize) {
             return null;
@@ -70,6 +75,8 @@ class Core {
         }
         return result;
     }
+    //Returns boolean indicating success
+    //Use to store machine code in memory so it can be executed.
     memset(address, bytes) {
         if (address < 0) {
             return false;
@@ -102,7 +109,7 @@ class Core {
                 let limit = range.limitStart;
                 let value = ((this.fetched >>> range.start) & ((1 << range.bits) - 1)) << limit;
                 if (range.parameterType === Parameter.special) {
-                    value = this.decoded.format.decodeSpecialParameter(value, this.pc);
+                    value = this.decoded.format.decodeSpecialParameter(value, this.pc); //Unmangle...
                 }
                 this.arguments[range.parameter] = this.arguments[range.parameter] || 0;
                 this.arguments[range.parameter] = this.arguments[range.parameter] | value;
@@ -113,10 +120,13 @@ class Core {
         }
         return this.instructionSet.disassemble(this.decoded, this.arguments);
     }
+    //Returns null on success, error message on error.
     execute() {
         return this.decoded.executor(this);
     }
 }
+/// <reference path="Core.ts"/>
+/// <reference path="Assembler.ts"/>
 var Parameter;
 (function (Parameter) {
     Parameter[Parameter["immediate"] = 0] = "immediate";
@@ -142,6 +152,7 @@ var Keyword;
     Keyword[Keyword["stringMarker"] = 3] = "stringMarker";
     Keyword[Keyword["charMarker"] = 4] = "charMarker";
     Keyword[Keyword["register"] = 5] = "register";
+    //Only send as keywordRegexes,
     Keyword[Keyword["string"] = 6] = "string";
     Keyword[Keyword["char"] = 7] = "char";
     Keyword[Keyword["numeric"] = 8] = "numeric";
@@ -153,12 +164,15 @@ var Directive;
     Directive[Directive["data"] = 1] = "data";
     Directive[Directive["string"] = 2] = "string";
     Directive[Directive["cString"] = 3] = "cString";
+    //Ints and chars,
     Directive[Directive["_8bit"] = 4] = "_8bit";
     Directive[Directive["_16bit"] = 5] = "_16bit";
     Directive[Directive["_32bit"] = 6] = "_32bit";
     Directive[Directive["_64bit"] = 7] = "_64bit";
+    //Fixed point decimals,
     Directive[Directive["fixedPoint"] = 8] = "fixedPoint";
     Directive[Directive["floatingPoint"] = 9] = "floatingPoint";
+    //Custom,
     Directive[Directive["custom"] = 10] = "custom";
 })(Directive || (Directive = {}));
 ;
@@ -200,6 +214,12 @@ class Format {
 class Instruction {
     constructor(mnemonic, format, constants, constValues, executor, signatoryOverride = null, pseudoInstructionFor = []) {
         this.computedBits = null;
+        /*
+         Mask
+         
+         It's basically the bits of each format, but with Xs replacing parts that aren't constant in every instruction.
+         For example, if an 8-bit ISA defines 5 bits for the register and 3 bits for the opcode, and the opcode for ADD is 101 then the ADD instruction's mask is XXXXX101.
+        */
         this.computedMask = null;
         this.computedTemplate = null;
         this.mnemonic = mnemonic;
@@ -298,9 +318,11 @@ class PseudoInstruction {
 }
 ;
 class InstructionSet {
+    //Return Mnemonic Index (pseudo)
     pseudoMnemonicSearch(mnemonic) {
         return -1;
-    }
+    } //Worst case = instructions.length
+    //Return Mnemonic Index (True)
     mnemonicSearch(mnemonic) {
         for (let i = 0; i < this.instructions.length; i++) {
             if (this.instructions[i].mnemonic === mnemonic) {
@@ -308,7 +330,7 @@ class InstructionSet {
             }
         }
         return -1;
-    }
+    } //Worst case = instructions.length
     instructionsPrefixing(line) {
         var result = [];
         for (let i in this.instructions) {
@@ -334,6 +356,9 @@ class InstructionSet {
         }
         return output;
     }
+    /*
+        InstructionSet initializer
+    */
     constructor(name, bits, formats, instructions, pseudoInstructions, abiNames, keywords, directives, exampleCode) {
         this.name = name;
         this.bits = bits;
@@ -348,8 +373,14 @@ class InstructionSet {
     }
 }
 ;
+/// <reference path="InstructionSet.ts"/>
 var Utils;
 (function (Utils) {
+    /*
+        signExt
+
+        Sign extends an n-bit value to fit Javascript limits.
+    */
     function signExt(value, bits) {
         let mutableValue = value;
         if ((mutableValue & (1 << (bits - 1))) !== 0) {
@@ -358,9 +389,14 @@ var Utils;
         return mutableValue;
     }
     Utils.signExt = signExt;
+    /*
+        rangeCheck
+
+        Checks if a value can fit within a certain number of bits.
+    */
     function rangeCheck(value, bits) {
         if (bits >= 32) {
-            return null;
+            return null; // No stable way of checking.
         }
         var min = -(1 << bits - 1);
         var max = (1 << bits - 1) - 1;
@@ -371,6 +407,11 @@ var Utils;
         return false;
     }
     Utils.rangeCheck = rangeCheck;
+    /*
+        catBytes
+        
+        Converts bytes stored in a little endian fashion to a proper js integer.
+    */
     function catBytes(bytes, bigEndian = false) {
         if (bytes.length > 4) {
             return null;
@@ -385,6 +426,11 @@ var Utils;
         return storage;
     }
     Utils.catBytes = catBytes;
+    /*
+        pad
+        
+        Turns a number to a padded string.
+    */
     function pad(number, digits, radix) {
         let padded = number.toString(radix);
         while (digits > padded.length) {
@@ -406,8 +452,9 @@ var Utils;
     }
     Utils.hex = hex;
 })(Utils || (Utils = {}));
+// Changes a string of hex bytes to an array of numbers.
 String.prototype.interpretedBytes = function () {
-    let hexes = this.split(' ');
+    let hexes = this.split(' '); // Remove spaces, then seperate characters
     let bytes = [];
     for (let i = 0; i < hexes.length; i++) {
         let value = parseInt(hexes[i], 16);
@@ -417,6 +464,7 @@ String.prototype.interpretedBytes = function () {
     }
     return bytes;
 };
+// Check if haystack has needle in the beginning.
 String.prototype.hasPrefix = function (needle) {
     return this.substr(0, needle.length) === needle;
 };
@@ -491,7 +539,7 @@ class Line {
             return true;
         }
         else {
-            let count = null;
+            let count = null; // byte count
             let zeroDelimitedString = 0;
             if (this.directive !== undefined) {
                 this.kind = Kind.data;
@@ -504,8 +552,10 @@ class Line {
                         return true;
                     case Directive._32bit:
                         count = count || 4;
+                    // fall through
                     case Directive._16bit:
                         count = count || 2;
+                    // fall through
                     case Directive._8bit:
                         count = count || 1;
                         let elements = this.directiveData.split(/\s*,\s*/);
@@ -515,6 +565,7 @@ class Line {
                         break;
                     case Directive.cString:
                         zeroDelimitedString = 1;
+                    // fall through
                     case Directive.string:
                         if (assembler.keywordRegexes[Keyword.string] === null) {
                             this.invalidReason = "isa.noStringTokenDefined";
@@ -527,7 +578,7 @@ class Line {
                             let regex = RegExp(assembler.generalCharacters, "g");
                             let characters = [];
                             let found = null;
-                            while (found = regex.exec(match[1])) {
+                            while ((found = regex.exec(match[1]))) {
                                 characters.push(found);
                             }
                             (this.machineCode = []).length = (characters.length + zeroDelimitedString);
@@ -596,9 +647,9 @@ class Line {
                     let startBit = range.limitStart;
                     let endBit = range.limitEnd;
                     if (limited !== undefined && startBit !== undefined && endBit !== undefined) {
-                        register >>= startBit;
+                        register >>= startBit; // discard start bits bits
                         let bits = (endBit - startBit + 1);
-                        register &= (1 << bits) - 1;
+                        register &= (1 << bits) - 1; // mask end - start + 1 bits
                     }
                     machineCode |= register << range.start;
                 }
@@ -610,13 +661,15 @@ class Line {
             candidates = true;
         }
         if (candidates) {
+            // Expand machine code if applicable
             let smallestPossibleInstruction = this.possibleInstructions.filter(pi => pi[3] === null)[0];
             this.machineCode = smallestPossibleInstruction[2];
         }
+        // Handle errors
         let errorMessage = null;
         let errorOccurred = !(candidates || this.sensitive);
         if (errorOccurred) {
-            errorMessage = this.possibleInstructions[this.possibleInstructions.length - 1][3];
+            errorMessage = this.possibleInstructions[this.possibleInstructions.length - 1][3]; //Typically the most lenient option is last
         }
         return errorMessage;
     }
@@ -626,8 +679,10 @@ class Line {
         switch (this.directive) {
             case Directive._32bit:
                 count = count || 4;
+            // fall through
             case Directive._16bit:
                 count = count || 2;
+            // fall through
             case Directive._8bit:
                 count = count || 1;
                 let elements = this.directiveData.split(/\s*,\s*/);
@@ -656,6 +711,7 @@ class Line {
                 break;
             case Directive.cString:
             case Directive.string:
+                // Already handled in pass 0.
                 break;
             default:
                 this.invalidReason = "data.unrecognizedDirective";
@@ -671,6 +727,9 @@ class Line {
                 break;
             case Kind.data:
                 result[0] = this.assembleData(assembler, lines, address);
+                break;
+            default:
+                break;
         }
         let lineByLabel = assembler.linesByLabel[this.label];
         if (lineByLabel !== undefined) {
@@ -683,6 +742,7 @@ class Line {
                     let sensorLength = sensor.machineCode.length;
                     let newAssembly = sensor.assemble(assembler, lines, sensor.addressThisPass);
                     if (sensor.sensitive) {
+                        // Still sensitive, leave it alone uwu
                     }
                     else {
                         if (newAssembly[1]) {
@@ -744,6 +804,7 @@ class Assembler {
                 let options = Assembler.options(words[Keyword.charMarker]);
                 if (options) {
                     let escapable = options.length > 1 ? "" : "\\" + options;
+                    //this.keywordRegexes[Keyword.char] = RegExp(options + "" + options);
                     this.generalCharacters = "(?:(?:\\\\[\\\\" + Assembler.escapedCharacterList + escapable + "])|(?:[\\x20-\\x5b\\x5d-\\x7e]))";
                     this.keywordRegexes[Keyword.char] = RegExp(options + '(' + this.generalCharacters + ')' + options);
                 }
@@ -765,6 +826,7 @@ class Assembler {
         this.endianness = (endianness) ? endianness : instructionSet.endianness;
         this.instructionSet = instructionSet;
     }
+    //Returns number on success, string on failure
     process(text, type, bits, address, instructionLength) {
         let result = {
             errorMessage: null,
@@ -795,6 +857,7 @@ class Assembler {
                 return result;
             case Parameter.offset:
             case Parameter.immediate:
+                //Label
                 let value = null;
                 let reference = this.linesByLabel[text];
                 if (reference !== undefined) {
@@ -872,7 +935,7 @@ class Assembler {
         for (var i in lines) {
             let line = lines[i];
             switch (pass) {
-                case 0:
+                case 0: // Zero Pass - Minimum Possible Size
                     assemblerModeText = line.initialProcess(this, assemblerModeText);
                     if (line.invalidReason !== undefined) {
                         errors.push(line);
@@ -883,12 +946,12 @@ class Assembler {
                     break;
                 default:
                     line.addressThisPass = address;
-                    let asm = line.assemble(this, lines, address);
+                    let asm = line.assemble(this, lines, address); // Assumption: Instruction cannot become context-sensitive based on size
                     if (asm[0] !== null) {
                         errors.push(line);
                     }
                     if (asm[1]) {
-                        return null;
+                        return null; // Repass
                     }
                     address += line.machineCode.length;
             }
@@ -912,10 +975,15 @@ Assembler.escapedCharacters = {
     '"': 42
 };
 Assembler.escapedCharacterList = Object.keys(Assembler.escapedCharacters).join("");
+/// <reference path="../Assembler.ts" />
+/// <reference path="../VirtualOS.ts"/>
+//The MIPS Instruction Set Architecture
 function MIPS(options) {
+    //Formats and Instructions
     let formats = [];
     let instructions = [];
     let pseudoInstructions = [];
+    //R-Type
     formats.push(new Format([
         new BitRange("opcode", 26, 6),
         new BitRange("rs", 21, 5).parameterized(1, Parameter.register),
@@ -973,6 +1041,7 @@ function MIPS(options) {
         core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >> core.registerFile.read(core.arguments[2]));
         return null;
     }));
+    //R-Jump Subtype
     formats.push(new Format([
         new BitRange("opcode", 26, 6),
         new BitRange("rs", 21, 5).parameterized(0, Parameter.register),
@@ -986,6 +1055,7 @@ function MIPS(options) {
         core.pc = core.registerFile.read(core.arguments[0]);
         return null;
     }));
+    //R-Shift Subtype
     formats.push(new Format([
         new BitRange("opcode", 26, 6),
         new BitRange("rs", 21, 5, 0),
@@ -1007,6 +1077,7 @@ function MIPS(options) {
         core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >> core.arguments[2]);
         return null;
     }));
+    //R-Constant Subtype
     formats.push(new Format([
         new BitRange("funct", 0, 32)
     ], /[a-zA-Z]+/, "@mnem"));
@@ -1015,6 +1086,7 @@ function MIPS(options) {
         core.virtualOS.ecall(core);
         return null;
     }));
+    //I-Type
     formats.push(new Format([
         new BitRange("opcode", 26, 6),
         new BitRange("rs", 21, 5).parameterized(1, Parameter.register),
@@ -1022,6 +1094,7 @@ function MIPS(options) {
         new BitRange("imm", 0, 16, null, true).parameterized(2, Parameter.immediate)
     ], /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/, "@mnem @arg0, @arg1, @arg2"));
     let iType = formats[formats.length - 1];
+    //I-type instructions
     instructions.push(new Instruction("ADDI", iType, ["opcode"], [0x8], function (core) {
         core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) + core.arguments[2]);
         return null;
@@ -1050,6 +1123,7 @@ function MIPS(options) {
         core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) >>> 0) ^ core.arguments[2]);
         return null;
     }));
+    //I-Branch Subtype
     formats.push(new Format([
         new BitRange("opcode", 26, 6),
         new BitRange("rs", 21, 5).parameterized(0, Parameter.register),
@@ -1069,6 +1143,7 @@ function MIPS(options) {
         }
         return null;
     }));
+    //I Load Upper Immediate Subtype
     formats.push(new Format([
         new BitRange("opcode", 26, 6),
         new BitRange("rs", 21, 5, 0),
@@ -1080,6 +1155,7 @@ function MIPS(options) {
         core.registerFile.write(core.arguments[0], (core.arguments[1] << 16));
         return null;
     }));
+    //I Load/Store Subtype
     formats.push(new Format([
         new BitRange("opcode", 26, 6),
         new BitRange("rs", 21, 5).parameterized(2, Parameter.register),
@@ -1087,6 +1163,7 @@ function MIPS(options) {
         new BitRange("imm", 0, 16, null, true).parameterized(1, Parameter.immediate)
     ], /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(-?0?[boxd]?[0-9A-F]+)\(\s*(\$[A-Za-z0-9]+)\s*\)/, "@mnem @arg0, @arg1(@arg2)"));
     let ilsSubtype = formats[formats.length - 1];
+    //TO-DO: Verify function(core) functionality
     instructions.push(new Instruction("LB", ilsSubtype, ["opcode"], [0x20], function (core) {
         let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 1);
         if (bytes === null) {
@@ -1161,16 +1238,17 @@ function MIPS(options) {
         }
         return "Illegal memory access.";
     }));
+    //J-Type
     formats.push(new Format([
         new BitRange("opcode", 26, 6),
         new BitRange("imm", 0, 26).parameterized(0, Parameter.special)
     ], /[A-z]+\s*([A-Za-z0-9_]+)/, "@mnem @arg0", function (text, type, bits, address, assembler) {
-        let array = text.split("");
         let result = {
             errorMessage: null,
             context: null,
             value: null
         };
+        //Label
         let value = null;
         let reference = assembler.linesByLabel[text];
         if (reference !== undefined) {
@@ -1227,6 +1305,8 @@ function MIPS(options) {
         core.pc = core.arguments[0];
         return null;
     }));
+    //Pseudoinstructions
+    //MV
     formats.push(new Format([
         new BitRange("opcode", 26, 6),
         new BitRange("rs", 21, 5).parameterized(1, Parameter.register),
@@ -1237,8 +1317,10 @@ function MIPS(options) {
     ], /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)/, "@mnem @arg0, @arg1"));
     let mvPseudo = formats[formats.length - 1];
     instructions.push(new Instruction("MV", mvPseudo, ["opcode", "funct"], [0x0, 0x20], function (core) {
+        //Captured by ADD
         return null;
     }));
+    //LI/LA
     formats.push(new Format([
         new BitRange("opcode", 26, 6),
         new BitRange("rs", 21, 5, 0),
@@ -1247,9 +1329,11 @@ function MIPS(options) {
     ], /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/, "@mnem @arg0, @arg1"));
     let liPseudo = formats[formats.length - 1];
     instructions.push(new Instruction("LI", liPseudo, ["opcode"], [0x8], function (core) {
+        //Captured by ADDI
         return null;
     }));
     instructions.push(new Instruction("LA", liPseudo, ["opcode"], [0x8], function (core) {
+        //Captured by ADDI
         return null;
     }));
     let keywords = [];
@@ -1314,7 +1398,7 @@ class MIPSRegisterFile {
             this.modifiedRegisters.push(false);
         }
         this.memorySize = memorySize;
-        this.physicalFile[29] = memorySize;
+        this.physicalFile[29] = memorySize; //stack pointer
         this.abiNames = abiNames;
     }
 }
@@ -1353,10 +1437,15 @@ class MIPSCore extends Core {
         }
     }
 }
+/// <reference path="../Assembler.ts" />
+/// <reference path="../VirtualOS.ts"/>
+//The RISC-V Instruction Set Architecture, Version 2.1
 function RISCV(options) {
+    //Formats and Instructions
     let formats = [];
     let instructions = [];
     let pseudoInstructions = [];
+    //R-Type
     formats.push(new Format([
         new BitRange("funct7", 25, 7),
         new BitRange("rs2", 20, 5).parameterized(2, Parameter.register),
@@ -1392,6 +1481,7 @@ function RISCV(options) {
         return null;
     }));
     instructions.push(new Instruction("XOR", rType, ["opcode", "funct3", "funct7"], [0b0110011, 0b100, 0b0000000], function (core) {
+        //
         core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) ^ core.registerFile.read(core.arguments[2]));
         core.pc += 4;
         return null;
@@ -1416,6 +1506,7 @@ function RISCV(options) {
         core.pc += 4;
         return null;
     }));
+    //I-Type
     formats.push(new Format([
         new BitRange("imm", 20, 12, null, true).parameterized(2, Parameter.immediate),
         new BitRange("rs1", 15, 5).parameterized(1, Parameter.register),
@@ -1459,6 +1550,7 @@ function RISCV(options) {
         core.pc += 4;
         return null;
     }));
+    //IL Subtype
     formats.push(new Format([
         new BitRange("imm", 20, 12, null, true).parameterized(1, Parameter.immediate),
         new BitRange("rs1", 15, 5).parameterized(2, Parameter.register),
@@ -1512,6 +1604,7 @@ function RISCV(options) {
         core.pc += 4;
         return null;
     }));
+    // IS Subtype
     formats.push(new Format([
         new BitRange("funct7", 25, 7),
         new BitRange("shamt", 20, 5).parameterized(2, Parameter.immediate),
@@ -1536,6 +1629,7 @@ function RISCV(options) {
         core.pc += 4;
         return null;
     }));
+    //S-Type
     formats.push(new Format([
         new BitRange("imm", 25, 7, null, true).parameterized(1, Parameter.immediate).limited(12, 5, 11),
         new BitRange("rs2", 20, 5).parameterized(0, Parameter.register),
@@ -1582,6 +1676,7 @@ function RISCV(options) {
         }
         return "Illegal memory access.";
     }));
+    //U-Type
     formats.push(new Format([
         new BitRange("imm", 12, 20, null, true).parameterized(1, Parameter.immediate),
         new BitRange("rd", 7, 5).parameterized(0, Parameter.offset),
@@ -1598,6 +1693,7 @@ function RISCV(options) {
         core.pc += 4;
         return null;
     }));
+    //SB-Type
     formats.push(new Format([
         new BitRange("imm", 31, 1, null, true).parameterized(2, Parameter.offset).limited(13, 12, 12),
         new BitRange("imm", 25, 6, null, true).parameterized(2, Parameter.offset).limited(13, 5, 10),
@@ -1663,6 +1759,7 @@ function RISCV(options) {
         }
         return null;
     }));
+    //UJ-Type
     formats.push(new Format([
         new BitRange("imm", 31, 1, null, true).parameterized(1, Parameter.offset).limited(21, 20, 20),
         new BitRange("imm", 21, 10, null, true).parameterized(1, Parameter.offset).limited(21, 1, 10),
@@ -1674,9 +1771,13 @@ function RISCV(options) {
     let ujType = formats[formats.length - 1];
     instructions.push(new Instruction("JAL", ujType, ["opcode"], [0b1101111], function (core) {
         core.registerFile.write(core.arguments[0], core.pc + 4);
+        //console.log(core.pc);
         core.pc += Utils.signExt(core.arguments[1], 21);
+        //console.log(core.arguments[1]);
         return null;
     }));
+    //System Type
+    //All-Const Type
     formats.push(new Format([
         new BitRange("const", 0, 32)
     ], /([a-zA-Z]+)/, "@mnem"));
@@ -1686,6 +1787,9 @@ function RISCV(options) {
         core.pc += 4;
         return result;
     }));
+    //PseudoInstructions
+    //This is a far from ideal implementation of pseudoinstructions and is only there for demo purposes.
+    //MV
     formats.push(new Format([
         new BitRange("funct7", 25, 7),
         new BitRange("rs2", 20, 5).parameterized(1, Parameter.register),
@@ -1696,8 +1800,9 @@ function RISCV(options) {
     ], /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)/, "@mnem @arg0, @arg1"));
     let mvPseudo = formats[formats.length - 1];
     instructions.push(new Instruction("MV", mvPseudo, ["opcode", "funct3", "rs1", "funct7"], [0b0110011, 0b000, 0b00000, 0b0000000], function (core) {
-        return null;
+        return null; //Captured by and
     }, false, ["ADD"]));
+    //LI
     formats.push(new Format([
         new BitRange("imm", 20, 12, null, true).parameterized(1, Parameter.immediate),
         new BitRange("rs1", 15, 5),
@@ -1707,11 +1812,12 @@ function RISCV(options) {
     ], /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/, "@mnem @arg0, @arg1"));
     let liPseudo = formats[formats.length - 1];
     instructions.push(new Instruction("LI", liPseudo, ["opcode", "funct3", "rs1"], [0b0010011, 0b000, 0b00000], function (core) {
-        return null;
+        return null; //Captured by andi
     }, false, ["ADDI"]));
     instructions.push(new Instruction("LA", liPseudo, ["opcode", "funct3", "rs1"], [0b0010011, 0b000, 0b00000], function (core) {
-        return null;
+        return null; //Captured by andi
     }, false, ["ADDI"]));
+    //JR pseudo
     formats.push(new Format([
         new BitRange("imm", 20, 12, null, true),
         new BitRange("rs1", 15, 5).parameterized(0, Parameter.register),
@@ -1721,13 +1827,14 @@ function RISCV(options) {
     ], /([a-zA-Z]+)\s*([A-Za-z0-9]+)/, "@mnem @arg0"));
     let jrPseudo = formats[formats.length - 1];
     instructions.push(new Instruction("JR", jrPseudo, ["opcode", "rd", "funct3", "imm"], [0b1100111, 0b00000, 0b000, 0b000000000000], function (core) {
-        return null;
+        return null; //captured by jalr
     }, false, ["ADDI"]));
+    //Scall, Syscall both as PseudoInstructions
     instructions.push(new Instruction("SCALL", allConstSubtype, ["const"], [0b00000000000000000000000001110011], function (core) {
-        return null;
+        return null; //captured by ecall
     }, false, ["ECALL"]));
     instructions.push(new Instruction("SYSCALL", allConstSubtype, ["const"], [0b00000000000000000000000001110011], function (core) {
-        return null;
+        return null; //captured by ecall
     }, false, ["ECALL"]));
     let abiNames = ['zero', 'ra', 'sp', 'gp', 'tp', 't0', 't1', 't2', 's0', 's1', 'a0', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10', 's11', 't3', 't4', 't5', 't6'];
     let keywords = [];
@@ -1791,7 +1898,7 @@ class RISCVRegisterFile {
             this.modifiedRegisters.push(false);
         }
         this.memorySize = memorySize;
-        this.physicalFile[2] = memorySize;
+        this.physicalFile[2] = memorySize; //stack pointer
         this.abiNames = abiNames;
     }
 }
@@ -1818,8 +1925,8 @@ class RISCVCore extends Core {
     }
     constructor(memorySize, virtualOS, instructionSet) {
         super();
-        this.virtualOSServiceRegister = 10;
-        this.virtualOSArgumentVectorStart = 11;
+        this.virtualOSServiceRegister = 17;
+        this.virtualOSArgumentVectorStart = 10;
         this.virtualOSArgumentVectorEnd = 17;
         this.pc = 0 >>> 0;
         this.memorySize = memorySize;
@@ -1832,6 +1939,8 @@ class RISCVCore extends Core {
         }
     }
 }
+/// <reference path="ISAs/MIPS.ts"/>
+/// <reference path="ISAs/RISCV.ts"/>
 class CoreFactory {
     static getCore(architecture, memorySize, virtualOS, options) {
         let isa = this.ISAs[architecture];
@@ -1860,10 +1969,11 @@ CoreFactory.ISAs = {
         options: []
     }
 };
+/// <reference path="CoreFactory.ts"/>
 let v = VirtualOS;
 let e = Endianness;
 let a = Assembler;
 let l = Line;
 let cf = CoreFactory;
 
-export { v as VirutalOS, e as Endianness, a as Assembler, cf as CoreFactory, l as AssemblerLine}
+export { v as VirtualOS, e as Endianness, a as Assembler, cf as CoreFactory, l as AssemblerLine}

@@ -29,8 +29,8 @@ let concatenate = () => {
 
 let create_tsc = (isBackend) => {
     let tsc = isWin ? "tsc" : "./node_modules/typescript/bin/tsc";
-    let tsc_flags = " --module amd --pretty --target ES2016 --removeComments --noEmitOnError";
-    let tsc_target = isBackend ? " src/backend/Zero.ts --outFile src/backend.js" : " src/backend/main.ts --outFile bin/Oak.js";
+    let tsc_flags = " --module amd --pretty --target ES2016 --noEmitOnError";
+    let tsc_target = isBackend ? " src/backend/Zero.ts --outFile src/backend.js" : " --removeComments src/backend/main.ts --outFile bin/Oak.js";
     exec(tsc + tsc_flags + tsc_target, (error, stdout, stderr) => {
         if (stdout)
             console.log('stdout: ' + stdout);
