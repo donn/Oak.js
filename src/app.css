@@ -44,8 +44,12 @@
 
 .panel {
   display: block;
-  width: 100%;
-  height: calc(100% - 1.9rem);
+  overflow-y: auto;
+  position: absolute;
+  top: 2.2rem;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 .panel_empty {
@@ -135,6 +139,10 @@
   cursor: ew-resize;
   width: 4px;
   height: 100%;
+}
+
+.panel_side .panel {
+  left: 4px;
 }
 
 .panel_bottom {
