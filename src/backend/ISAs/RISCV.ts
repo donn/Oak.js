@@ -20,7 +20,7 @@ function RISCV(options: boolean[]): InstructionSet {
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.register),
                 new BitRange("opcode", 0, 7)
             ],
-            /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)/,
+            /^\s*([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)\s*$/,
             "@mnem @arg0, @arg1, @arg2"
         )
     );
@@ -148,7 +148,7 @@ function RISCV(options: boolean[]): InstructionSet {
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.register),
                 new BitRange("opcode", 0, 7)
             ],
-            /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+),\s*(-?[a-zA-Z0-9_]+)/,
+            /^\s*([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+),\s*(-?[a-zA-Z0-9_]+)\s*$/,
             "@mnem @arg0, @arg1, @arg2"
         )
     );
@@ -250,7 +250,7 @@ function RISCV(options: boolean[]): InstructionSet {
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.register),
                 new BitRange("opcode", 0, 7)
             ],
-            /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*(-?0?[boxd]?[0-9A-F]+)\s*\(\s*([A-Za-z0-9]+)\s*\)/,
+            /^\s*([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*(-?0?[boxd]?[0-9A-F]+)\s*\(\s*([A-Za-z0-9]+)\s*\)\s*$/,
             "@mnem @arg0, @arg2(@arg1)"
         )
     );
@@ -348,7 +348,7 @@ function RISCV(options: boolean[]): InstructionSet {
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.register),
                 new BitRange("opcode", 0, 7)
             ],
-            /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+),\s*(-?0?[boxd]?[0-9A-F]+)/,
+            /^\s*([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+),\s*(-?0?[boxd]?[0-9A-F]+)\s*$/,
             "@mnem @arg0, @arg1, @arg2"
         )
     );
@@ -403,7 +403,7 @@ function RISCV(options: boolean[]): InstructionSet {
                 new BitRange("imm", 7, 5, null, true).parameterized(1, Parameter.immediate).limited(12, 0, 4),
                 new BitRange("opcode", 0, 7)
             ],
-            /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*(-?0?[boxd]?[0-9A-F]+)\(\s*([A-Za-z0-9]+)\s*\)/,
+            /^\s*([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*(-?0?[boxd]?[0-9A-F]+)\(\s*([A-Za-z0-9]+)\s*\)\s*$/,
             "@mnem @arg0, @arg2(@arg1)"
         )
     );
@@ -478,7 +478,7 @@ function RISCV(options: boolean[]): InstructionSet {
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.offset),
                 new BitRange("opcode", 0, 7)
             ],
-            /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)/,
+            /^\s*([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)\s*$/,
             "@mnem @arg0, @arg1"
         )
     );
@@ -522,7 +522,7 @@ function RISCV(options: boolean[]): InstructionSet {
                 new BitRange("imm", 7, 1, null, true).parameterized(2, Parameter.offset).limited(13, 11, 11),
                 new BitRange("opcode", 0, 7)
             ],
-            /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)/,
+            /^\s*([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)\s*$/,
             "@mnem @arg0, @arg1, @arg2"
         )
     );
@@ -631,7 +631,7 @@ function RISCV(options: boolean[]): InstructionSet {
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.register),
                 new BitRange("opcode", 0, 7)
             ],
-            /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)/,
+            /^\s*([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)\s*$/,
             "@mnem @arg0, @arg1"
         )
     );
@@ -659,7 +659,7 @@ function RISCV(options: boolean[]): InstructionSet {
             [
                 new BitRange("const", 0, 32)
             ],
-            /([a-zA-Z]+)/,
+            /^\s*([a-zA-Z]+)\s*$/,
             "@mnem"
         )
     );
@@ -694,7 +694,7 @@ function RISCV(options: boolean[]): InstructionSet {
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.register),
                 new BitRange("opcode", 0, 7)
             ],
-            /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)/,
+            /^\s*([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)\s*$/,
             "@mnem @arg0, @arg1"
         )
     );
@@ -723,7 +723,7 @@ function RISCV(options: boolean[]): InstructionSet {
                 new BitRange("rd", 7, 5).parameterized(0, Parameter.register),
                 new BitRange("opcode", 0, 7)
             ],
-            /([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/,
+            /^\s*([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)\s*$/,
             "@mnem @arg0, @arg1"
         )
     );
@@ -764,7 +764,7 @@ function RISCV(options: boolean[]): InstructionSet {
                 new BitRange("rd", 7, 5),
                 new BitRange("opcode", 0, 7)
             ],
-            /([a-zA-Z]+)\s*([A-Za-z0-9]+)/,
+            /^\s*([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*$/,
             "@mnem @arg0"
         )
     );

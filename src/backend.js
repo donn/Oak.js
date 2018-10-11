@@ -1,3 +1,325 @@
+class VirtualOS {
+    ecall(core) {
+        let service = core.registerFile.read(core.virtualOSServiceRegister);
+        let args = [];
+        for (let i = core.virtualOSArgumentVectorStart; i <= core.virtualOSArgumentVectorEnd; i += 1) {
+            args.push(core.registerFile.read(i));
+        }
+        switch (service) {
+            case 1:
+                this.outputInt(args[0]);
+                break;
+            case 4:
+                let iterator = args[0];
+                let array = [];
+                let char = null;
+                do {
+                    char = core.memcpy(iterator, 1)[0];
+                    array.push(char);
+                    iterator += 1;
+                } while (char !== 0);
+                let outStr = array.map(c => String.fromCharCode(c)).join('');
+                this.outputString(outStr);
+            case 10:
+                return "HALT";
+        }
+        let j = 0;
+        for (let i = core.virtualOSArgumentVectorStart; i <= core.virtualOSArgumentVectorEnd; i += 1) {
+            core.registerFile.write(i, args[j]);
+            j += 1;
+        }
+        return null;
+    }
+}
+class Core {
+    memcpy(address, bytes) {
+        if (((address + bytes) >>> 0) > this.memorySize) {
+            return null;
+        }
+        let result = [];
+        for (let i = 0; i < bytes; i++) {
+            result.push(this.memory[address + i]);
+        }
+        return result;
+    }
+    memset(address, bytes) {
+        if (address < 0) {
+            return false;
+        }
+        if (address + bytes.length > this.memorySize) {
+            return false;
+        }
+        for (let i = 0; i < bytes.length; i++) {
+            this.memory[address + i] = bytes[i];
+        }
+        return true;
+    }
+    decode() {
+        let insts = this.instructionSet.instructions;
+        this.decoded = null;
+        this.arguments = [];
+        for (let i = 0; i < insts.length; i++) {
+            if (insts[i].match(this.fetched)) {
+                this.decoded = insts[i];
+                break;
+            }
+        }
+        if (this.decoded == null) {
+            return null;
+        }
+        let bitRanges = this.decoded.format.ranges;
+        for (let i in bitRanges) {
+            let range = bitRanges[i];
+            if (range.parameter != null) {
+                let limit = range.limitStart;
+                let value = ((this.fetched >>> range.start) & ((1 << range.bits) - 1)) << limit;
+                if (range.parameterType === Parameter.special) {
+                    value = this.decoded.format.decodeSpecialParameter(value, this.pc);
+                }
+                this.arguments[range.parameter] = this.arguments[range.parameter] || 0;
+                this.arguments[range.parameter] = this.arguments[range.parameter] | value;
+                if (this.decoded.format.ranges[i].signed && range.parameterType !== Parameter.register) {
+                    this.arguments[range.parameter] = Utils.signExt(this.arguments[range.parameter], range.totalBits ? range.totalBits : range.bits);
+                }
+            }
+        }
+        return this.instructionSet.disassemble(this.decoded, this.arguments);
+    }
+    execute() {
+        return this.decoded.executor(this);
+    }
+}
+var Parameter;
+(function (Parameter) {
+    Parameter[Parameter["immediate"] = 0] = "immediate";
+    Parameter[Parameter["register"] = 1] = "register";
+    Parameter[Parameter["condition"] = 2] = "condition";
+    Parameter[Parameter["offset"] = 3] = "offset";
+    Parameter[Parameter["special"] = 4] = "special";
+    Parameter[Parameter["fpImmediate"] = 5] = "fpImmediate";
+})(Parameter || (Parameter = {}));
+;
+var Endianness;
+(function (Endianness) {
+    Endianness[Endianness["little"] = 0] = "little";
+    Endianness[Endianness["big"] = 1] = "big";
+    Endianness[Endianness["bi"] = 2] = "bi";
+})(Endianness || (Endianness = {}));
+;
+var Keyword;
+(function (Keyword) {
+    Keyword[Keyword["directive"] = 0] = "directive";
+    Keyword[Keyword["comment"] = 1] = "comment";
+    Keyword[Keyword["label"] = 2] = "label";
+    Keyword[Keyword["stringMarker"] = 3] = "stringMarker";
+    Keyword[Keyword["charMarker"] = 4] = "charMarker";
+    Keyword[Keyword["register"] = 5] = "register";
+    Keyword[Keyword["string"] = 6] = "string";
+    Keyword[Keyword["char"] = 7] = "char";
+    Keyword[Keyword["numeric"] = 8] = "numeric";
+})(Keyword || (Keyword = {}));
+;
+var Directive;
+(function (Directive) {
+    Directive[Directive["text"] = 0] = "text";
+    Directive[Directive["data"] = 1] = "data";
+    Directive[Directive["string"] = 2] = "string";
+    Directive[Directive["cString"] = 3] = "cString";
+    Directive[Directive["_8bit"] = 4] = "_8bit";
+    Directive[Directive["_16bit"] = 5] = "_16bit";
+    Directive[Directive["_32bit"] = 6] = "_32bit";
+    Directive[Directive["_64bit"] = 7] = "_64bit";
+    Directive[Directive["fixedPoint"] = 8] = "fixedPoint";
+    Directive[Directive["floatingPoint"] = 9] = "floatingPoint";
+    Directive[Directive["custom"] = 10] = "custom";
+})(Directive || (Directive = {}));
+;
+class BitRange {
+    get end() {
+        return this.start + this.bits - 1;
+    }
+    constructor(field, start, bits, constant = null, signed = false) {
+        this.field = field;
+        this.start = start;
+        this.bits = bits;
+        this.constant = constant;
+        this.signed = signed;
+    }
+    limited(totalBits, limitStart = null, limitEnd = null) {
+        this.totalBits = totalBits;
+        this.limitStart = limitStart;
+        this.limitEnd = limitEnd;
+        return this;
+    }
+    parameterized(parameter, parameterType, parameterDefaultValue = null) {
+        this.parameter = parameter;
+        this.parameterDefaultValue = parameterDefaultValue;
+        this.parameterType = parameterType;
+        return this;
+    }
+}
+;
+class Format {
+    constructor(ranges, regex, disassembly, processSpecialParameter = null, decodeSpecialParameter = null) {
+        this.ranges = ranges;
+        this.regex = regex;
+        this.disassembly = disassembly;
+        this.processSpecialParameter = processSpecialParameter;
+        this.decodeSpecialParameter = decodeSpecialParameter;
+    }
+}
+;
+class Instruction {
+    constructor(mnemonic, format, constants, constValues, executor, signatoryOverride = null, pseudoInstructionFor = []) {
+        this.computedBits = null;
+        this.computedMask = null;
+        this.computedTemplate = null;
+        this.mnemonic = mnemonic;
+        this.format = format;
+        this.constants = [];
+        for (let i in constants) {
+            this.constants[constants[i]] = constValues[i];
+        }
+        this.executor = executor;
+        this.signatoryOverride = signatoryOverride;
+        this.pseudoInstructionFor = pseudoInstructionFor;
+    }
+    pad(str, length) {
+        let padded = str;
+        for (let i = 0; i < length - str.length; i++) {
+            padded = "0" + padded;
+        }
+        return padded;
+    }
+    get bits() {
+        if (this.computedBits !== null) {
+            return this.computedBits;
+        }
+        let count = 0;
+        for (var i in this.format.ranges) {
+            count += this.format.ranges[i].bits;
+        }
+        this.computedBits = count;
+        return this.computedBits;
+    }
+    get bytes() {
+        return Math.ceil(this.bits / 8);
+    }
+    get mask() {
+        if (this.computedMask !== null) {
+            return this.computedMask;
+        }
+        var string = '';
+        for (let i = 0; i < this.bits; i += 1) {
+            string += 'X';
+        }
+        for (let i in this.format.ranges) {
+            let range = this.format.ranges[i];
+            let constant = this.constants[range.field];
+            if (constant == null) {
+                constant = range.constant;
+            }
+            if (constant != null) {
+                let before = string.substr(0, this.bits - range.end - 1);
+                let addition = Utils.pad(constant, range.bits, 2);
+                let after = range.start == 0 ? '' : string.substr(-range.start);
+                string = before + addition + after;
+            }
+        }
+        this.computedMask = string;
+        return this.computedMask;
+    }
+    ;
+    match(machineCode) {
+        let machineCodeMutable = machineCode >>> 0;
+        let maskBits = this.mask.split("");
+        for (let i = this.bits - 1; i >= 0; i--) {
+            let bit = (machineCodeMutable & 1);
+            machineCodeMutable >>= 1;
+            if (maskBits[i] === "X") {
+                continue;
+            }
+            if (parseInt(maskBits[i]) !== bit) {
+                return false;
+            }
+        }
+        return true;
+    }
+    get template() {
+        if (this.computedTemplate != null) {
+            return this.computedTemplate;
+        }
+        let temp = 0 >>> 0;
+        for (let i in this.format.ranges) {
+            let range = this.format.ranges[i];
+            let constant = this.constants[range.field];
+            if (constant == null) {
+                constant = range.constant;
+            }
+            if (constant != null) {
+                temp |= (constant << range.start);
+            }
+        }
+        this.computedTemplate = temp;
+        return temp;
+    }
+    ;
+}
+;
+class PseudoInstruction {
+}
+;
+class InstructionSet {
+    pseudoMnemonicSearch(mnemonic) {
+        return -1;
+    }
+    mnemonicSearch(mnemonic) {
+        for (let i = 0; i < this.instructions.length; i++) {
+            if (this.instructions[i].mnemonic == mnemonic) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    instructionsPrefixing(line) {
+        var result = [];
+        for (let i in this.instructions) {
+            let instruction = this.instructions[i];
+            if (line.toUpperCase().hasPrefix(instruction.mnemonic)) {
+                let captures = instruction.format.regex.exec(line);
+                if (captures && captures[1].toUpperCase() == instruction.mnemonic) {
+                    result.push(instruction);
+                }
+            }
+        }
+        return result;
+    }
+    disassemble(instruction, args) {
+        let output = instruction.format.disassembly;
+        output = output.replace("@mnem", instruction.mnemonic);
+        for (let i = 0; i < instruction.format.ranges.length; i++) {
+            let range = instruction.format.ranges[i];
+            let parameter = range.parameter;
+            if (parameter != null) {
+                output = output.replace("@arg" + range.parameter, (range.parameterType === Parameter.register) ? this.abiNames[args[parameter]] : args[parameter].toString());
+            }
+        }
+        return output;
+    }
+    constructor(name, bits, formats, instructions, pseudoInstructions, abiNames, keywords, directives, exampleCode) {
+        this.name = name;
+        this.bits = bits;
+        this.formats = formats;
+        this.instructions = instructions;
+        instructions.sort((a, b) => a.bytes - b.bytes);
+        this.pseudoInstructions = pseudoInstructions;
+        this.abiNames = abiNames;
+        this.keywords = keywords;
+        this.directives = directives;
+        this.exampleCode = exampleCode;
+    }
+}
+;
 var Utils;
 (function (Utils) {
     function signExt(value, bits) {
@@ -563,328 +885,6 @@ Assembler.escapedCharacters = {
     '\"': 42
 };
 Assembler.escapedCharacterList = Object.keys(Assembler.escapedCharacters).join("");
-var Parameter;
-(function (Parameter) {
-    Parameter[Parameter["immediate"] = 0] = "immediate";
-    Parameter[Parameter["register"] = 1] = "register";
-    Parameter[Parameter["condition"] = 2] = "condition";
-    Parameter[Parameter["offset"] = 3] = "offset";
-    Parameter[Parameter["special"] = 4] = "special";
-    Parameter[Parameter["fpImmediate"] = 5] = "fpImmediate";
-})(Parameter || (Parameter = {}));
-;
-var Endianness;
-(function (Endianness) {
-    Endianness[Endianness["little"] = 0] = "little";
-    Endianness[Endianness["big"] = 1] = "big";
-    Endianness[Endianness["bi"] = 2] = "bi";
-})(Endianness || (Endianness = {}));
-;
-var Keyword;
-(function (Keyword) {
-    Keyword[Keyword["directive"] = 0] = "directive";
-    Keyword[Keyword["comment"] = 1] = "comment";
-    Keyword[Keyword["label"] = 2] = "label";
-    Keyword[Keyword["stringMarker"] = 3] = "stringMarker";
-    Keyword[Keyword["charMarker"] = 4] = "charMarker";
-    Keyword[Keyword["register"] = 5] = "register";
-    Keyword[Keyword["string"] = 6] = "string";
-    Keyword[Keyword["char"] = 7] = "char";
-    Keyword[Keyword["numeric"] = 8] = "numeric";
-})(Keyword || (Keyword = {}));
-;
-var Directive;
-(function (Directive) {
-    Directive[Directive["text"] = 0] = "text";
-    Directive[Directive["data"] = 1] = "data";
-    Directive[Directive["string"] = 2] = "string";
-    Directive[Directive["cString"] = 3] = "cString";
-    Directive[Directive["_8bit"] = 4] = "_8bit";
-    Directive[Directive["_16bit"] = 5] = "_16bit";
-    Directive[Directive["_32bit"] = 6] = "_32bit";
-    Directive[Directive["_64bit"] = 7] = "_64bit";
-    Directive[Directive["fixedPoint"] = 8] = "fixedPoint";
-    Directive[Directive["floatingPoint"] = 9] = "floatingPoint";
-    Directive[Directive["custom"] = 10] = "custom";
-})(Directive || (Directive = {}));
-;
-class BitRange {
-    get end() {
-        return this.start + this.bits - 1;
-    }
-    constructor(field, start, bits, constant = null, signed = false) {
-        this.field = field;
-        this.start = start;
-        this.bits = bits;
-        this.constant = constant;
-        this.signed = signed;
-    }
-    limited(totalBits, limitStart = null, limitEnd = null) {
-        this.totalBits = totalBits;
-        this.limitStart = limitStart;
-        this.limitEnd = limitEnd;
-        return this;
-    }
-    parameterized(parameter, parameterType, parameterDefaultValue = null) {
-        this.parameter = parameter;
-        this.parameterDefaultValue = parameterDefaultValue;
-        this.parameterType = parameterType;
-        return this;
-    }
-}
-;
-class Format {
-    constructor(ranges, regex, disassembly, processSpecialParameter = null, decodeSpecialParameter = null) {
-        this.ranges = ranges;
-        this.regex = regex;
-        this.disassembly = disassembly;
-        this.processSpecialParameter = processSpecialParameter;
-        this.decodeSpecialParameter = decodeSpecialParameter;
-    }
-}
-;
-class Instruction {
-    constructor(mnemonic, format, constants, constValues, executor, signatoryOverride = null, pseudoInstructionFor = []) {
-        this.computedBits = null;
-        this.computedMask = null;
-        this.computedTemplate = null;
-        this.mnemonic = mnemonic;
-        this.format = format;
-        this.constants = [];
-        for (let i in constants) {
-            this.constants[constants[i]] = constValues[i];
-        }
-        this.executor = executor;
-        this.signatoryOverride = signatoryOverride;
-        this.pseudoInstructionFor = pseudoInstructionFor;
-    }
-    pad(str, length) {
-        let padded = str;
-        for (let i = 0; i < length - str.length; i++) {
-            padded = "0" + padded;
-        }
-        return padded;
-    }
-    get bits() {
-        if (this.computedBits !== null) {
-            return this.computedBits;
-        }
-        let count = 0;
-        for (var i in this.format.ranges) {
-            count += this.format.ranges[i].bits;
-        }
-        this.computedBits = count;
-        return this.computedBits;
-    }
-    get bytes() {
-        return Math.ceil(this.bits / 8);
-    }
-    get mask() {
-        if (this.computedMask !== null) {
-            return this.computedMask;
-        }
-        var string = '';
-        for (let i = 0; i < this.bits; i += 1) {
-            string += 'X';
-        }
-        for (let i in this.format.ranges) {
-            let range = this.format.ranges[i];
-            let constant = this.constants[range.field];
-            if (constant == null) {
-                constant = range.constant;
-            }
-            if (constant != null) {
-                let before = string.substr(0, this.bits - range.end - 1);
-                let addition = Utils.pad(constant, range.bits, 2);
-                let after = range.start == 0 ? '' : string.substr(-range.start);
-                string = before + addition + after;
-            }
-        }
-        this.computedMask = string;
-        return this.computedMask;
-    }
-    ;
-    match(machineCode) {
-        let machineCodeMutable = machineCode >>> 0;
-        let maskBits = this.mask.split("");
-        for (let i = this.bits - 1; i >= 0; i--) {
-            let bit = (machineCodeMutable & 1);
-            machineCodeMutable >>= 1;
-            if (maskBits[i] === "X") {
-                continue;
-            }
-            if (parseInt(maskBits[i]) !== bit) {
-                return false;
-            }
-        }
-        return true;
-    }
-    get template() {
-        if (this.computedTemplate != null) {
-            return this.computedTemplate;
-        }
-        let temp = 0 >>> 0;
-        for (let i in this.format.ranges) {
-            let range = this.format.ranges[i];
-            let constant = this.constants[range.field];
-            if (constant == null) {
-                constant = range.constant;
-            }
-            if (constant != null) {
-                temp |= (constant << range.start);
-            }
-        }
-        this.computedTemplate = temp;
-        return temp;
-    }
-    ;
-}
-;
-class PseudoInstruction {
-}
-;
-class InstructionSet {
-    pseudoMnemonicSearch(mnemonic) {
-        return -1;
-    }
-    mnemonicSearch(mnemonic) {
-        for (let i = 0; i < this.instructions.length; i++) {
-            if (this.instructions[i].mnemonic == mnemonic) {
-                return i;
-            }
-        }
-        return -1;
-    }
-    instructionsPrefixing(line) {
-        var result = [];
-        for (let i in this.instructions) {
-            let instruction = this.instructions[i];
-            if (line.toUpperCase().hasPrefix(instruction.mnemonic)) {
-                let captures = instruction.format.regex.exec(line);
-                if (captures && captures[1].toUpperCase() == instruction.mnemonic) {
-                    result.push(instruction);
-                }
-            }
-        }
-        return result;
-    }
-    disassemble(instruction, args) {
-        let output = instruction.format.disassembly;
-        output = output.replace("@mnem", instruction.mnemonic);
-        for (let i = 0; i < instruction.format.ranges.length; i++) {
-            let range = instruction.format.ranges[i];
-            let parameter = range.parameter;
-            if (parameter != null) {
-                output = output.replace("@arg" + range.parameter, (range.parameterType === Parameter.register) ? this.abiNames[args[parameter]] : args[parameter].toString());
-            }
-        }
-        return output;
-    }
-    constructor(name, bits, formats, instructions, pseudoInstructions, abiNames, keywords, directives, exampleCode) {
-        this.name = name;
-        this.bits = bits;
-        this.formats = formats;
-        this.instructions = instructions;
-        instructions.sort((a, b) => a.bytes - b.bytes);
-        this.pseudoInstructions = pseudoInstructions;
-        this.abiNames = abiNames;
-        this.keywords = keywords;
-        this.directives = directives;
-        this.exampleCode = exampleCode;
-    }
-}
-;
-class Core {
-    memcpy(address, bytes) {
-        if (((address + bytes) >>> 0) > this.memorySize) {
-            return null;
-        }
-        let result = [];
-        for (let i = 0; i < bytes; i++) {
-            result.push(this.memory[address + i]);
-        }
-        return result;
-    }
-    memset(address, bytes) {
-        if (address < 0) {
-            return false;
-        }
-        if (address + bytes.length > this.memorySize) {
-            return false;
-        }
-        for (let i = 0; i < bytes.length; i++) {
-            this.memory[address + i] = bytes[i];
-        }
-        return true;
-    }
-    decode() {
-        let insts = this.instructionSet.instructions;
-        this.decoded = null;
-        this.arguments = [];
-        for (let i = 0; i < insts.length; i++) {
-            if (insts[i].match(this.fetched)) {
-                this.decoded = insts[i];
-                break;
-            }
-        }
-        if (this.decoded == null) {
-            return null;
-        }
-        let bitRanges = this.decoded.format.ranges;
-        for (let i in bitRanges) {
-            let range = bitRanges[i];
-            if (range.parameter != null) {
-                let limit = range.limitStart;
-                let value = ((this.fetched >>> range.start) & ((1 << range.bits) - 1)) << limit;
-                if (range.parameterType === Parameter.special) {
-                    value = this.decoded.format.decodeSpecialParameter(value, this.pc);
-                }
-                this.arguments[range.parameter] = this.arguments[range.parameter] || 0;
-                this.arguments[range.parameter] = this.arguments[range.parameter] | value;
-                if (this.decoded.format.ranges[i].signed && range.parameterType !== Parameter.register) {
-                    this.arguments[range.parameter] = Utils.signExt(this.arguments[range.parameter], range.totalBits ? range.totalBits : range.bits);
-                }
-            }
-        }
-        return this.instructionSet.disassemble(this.decoded, this.arguments);
-    }
-    execute() {
-        return this.decoded.executor(this);
-    }
-}
-class VirtualOS {
-    ecall(core) {
-        let service = core.registerFile.read(core.virtualOSServiceRegister);
-        let args = [];
-        for (let i = core.virtualOSArgumentVectorStart; i <= core.virtualOSArgumentVectorEnd; i += 1) {
-            args.push(core.registerFile.read(i));
-        }
-        switch (service) {
-            case 1:
-                this.outputInt(args[0]);
-                break;
-            case 4:
-                let iterator = args[0];
-                let array = [];
-                let char = null;
-                do {
-                    char = core.memcpy(iterator, 1)[0];
-                    array.push(char);
-                    iterator += 1;
-                } while (char !== 0);
-                let outStr = array.map(c => String.fromCharCode(c)).join('');
-                this.outputString(outStr);
-            case 10:
-                return "HALT";
-        }
-        let j = 0;
-        for (let i = core.virtualOSArgumentVectorStart; i <= core.virtualOSArgumentVectorEnd; i += 1) {
-            core.registerFile.write(i, args[j]);
-            j += 1;
-        }
-        return null;
-    }
-}
 function MIPS(options) {
     let formats = [];
     let instructions = [];
@@ -985,7 +985,7 @@ function MIPS(options) {
     ], /[a-zA-Z]+/, "@mnem"));
     let rcSubtype = formats[formats.length - 1];
     instructions.push(new Instruction("SYSCALL", rcSubtype, ["funct"], [0xC], function (core) {
-        core.ecall(core);
+        core.virtualOS.ecall(core);
         return null;
     }));
     formats.push(new Format([
@@ -1430,7 +1430,7 @@ class MIPSCore extends Core {
         this.fetched = Utils.catBytes(arr);
         return null;
     }
-    constructor(memorySize, ecall, instructionSet) {
+    constructor(memorySize, virtualOS, instructionSet) {
         super();
         this.virtualOSServiceRegister = 2;
         this.virtualOSArgumentVectorStart = 4;
@@ -1438,7 +1438,7 @@ class MIPSCore extends Core {
         this.instructionSet = instructionSet;
         this.pc = 0 >>> 0;
         this.memorySize = memorySize;
-        this.ecall = ecall;
+        this.virtualOS = virtualOS;
         this.registerFile = new MIPSRegisterFile(memorySize, instructionSet.abiNames);
         this.memory = new Array(memorySize);
         for (let i = 0; i < memorySize; i++) {
@@ -1775,7 +1775,7 @@ function RISCV(options) {
     ], /([a-zA-Z]+)/, "@mnem"));
     let allConstSubtype = formats[formats.length - 1];
     instructions.push(new Instruction("ECALL", allConstSubtype, ["const"], [0b00000000000000000000000001110011], (core) => {
-        let result = core.ecall(core);
+        let result = core.virtualOS.ecall(core);
         core.pc += 4;
         return result;
     }));
@@ -1909,14 +1909,14 @@ class RISCVCore extends Core {
         this.fetched = Utils.catBytes(arr);
         return null;
     }
-    constructor(memorySize, ecall, instructionSet) {
+    constructor(memorySize, virtualOS, instructionSet) {
         super();
         this.virtualOSServiceRegister = 10;
         this.virtualOSArgumentVectorStart = 11;
         this.virtualOSArgumentVectorEnd = 17;
         this.pc = 0 >>> 0;
         this.memorySize = memorySize;
-        this.ecall = ecall;
+        this.virtualOS = virtualOS;
         this.instructionSet = instructionSet;
         this.registerFile = new RISCVRegisterFile(memorySize, instructionSet.abiNames);
         this.memory = new Array(memorySize);
@@ -1937,7 +1937,8 @@ class CoreFactory {
             }
         }
         let instructionSet = isa.generator(options);
-        return new isa.core(memorySize, virtualOS.ecall, instructionSet);
+        console.log(virtualOS);
+        return new isa.core(memorySize, virtualOS, instructionSet);
     }
 }
 CoreFactory.ISAs = {
