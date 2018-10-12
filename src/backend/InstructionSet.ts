@@ -174,13 +174,13 @@ class Instruction {
         for (let i in this.format.ranges) {
             let range = this.format.ranges[i];
             let constant = this.constants[range.field];
-            if (constant == null) {
+            if (constant === null) {
                 constant = range.constant;
             }
             if (constant != null) {
                 let before = string.substr(0, this.bits - range.end - 1);
                 let addition = Utils.pad(constant, range.bits, 2);
-                let after = range.start == 0 ? '' : string.substr(-range.start)
+                let after = range.start === 0 ? '' : string.substr(-range.start)
                 string =  before + addition + after;
             }
         }
@@ -197,7 +197,7 @@ class Instruction {
             if (maskBits[i] === "X") {
                 continue;
             }
-            if (parseInt(maskBits[i]) !== bit) {
+            if (parseInt(maskBits[i], 10) !== bit) {
                 return false;
             }
         }
@@ -215,7 +215,7 @@ class Instruction {
         for (let i in this.format.ranges) {
             let range = this.format.ranges[i];
             let constant = this.constants[range.field];
-            if (constant == null) {
+            if (constant === null) {
                 constant = range.constant;
             }
             if (constant != null) {
@@ -244,11 +244,12 @@ class PseudoInstruction { //Note: Redo
 
 class InstructionSet {
     name: string;
-    formats: Format[];   
+    options: string[];
+
+    // Instructions
+    formats: Format[];
     instructions: Instruction[];
-    pseudoInstructions: PseudoInstruction[];
-    dataDirectives: string[];
-    dataDirectiveSizes: number[];            
+    pseudoInstructions: PseudoInstruction[];           
 
     //Return Mnemonic Index (pseudo)
     public pseudoMnemonicSearch(mnemonic: string): number {
@@ -259,7 +260,7 @@ class InstructionSet {
     public mnemonicSearch(mnemonic: string): number {
         for (let i = 0; i < this.instructions.length; i++)
         {
-            if (this.instructions[i].mnemonic == mnemonic)
+            if (this.instructions[i].mnemonic === mnemonic)
             {
                 return i;
             }
@@ -273,7 +274,7 @@ class InstructionSet {
             let instruction = this.instructions[i];
             if (line.toUpperCase().hasPrefix(instruction.mnemonic)) {
                 let captures = instruction.format.regex.exec(line);
-                if (captures && captures[1].toUpperCase() == instruction.mnemonic) {
+                if (captures && captures[1].toUpperCase() === instruction.mnemonic) {
                     result.push(instruction);
                 }
             }
@@ -323,7 +324,6 @@ class InstructionSet {
         InstructionSet initializer
     */
     constructor(
-        name: string,
         bits: number,
         formats: Format[],
         instructions: Instruction[],
@@ -333,15 +333,14 @@ class InstructionSet {
         directives: Directive[],
         exampleCode: string
     ) {
-        this.name = name
-        this.bits = bits       
-        this.formats = formats
-        this.instructions = instructions
+        this.bits = bits;
+        this.formats = formats;
+        this.instructions = instructions;
         instructions.sort((a, b)=> a.bytes-b.bytes);
-        this.pseudoInstructions = pseudoInstructions
-        this.abiNames = abiNames
-        this.keywords = keywords
-        this.directives = directives
-        this.exampleCode = exampleCode
+        this.pseudoInstructions = pseudoInstructions;
+        this.abiNames = abiNames;
+        this.keywords = keywords;
+        this.directives = directives;
+        this.exampleCode = exampleCode;
     }
 };

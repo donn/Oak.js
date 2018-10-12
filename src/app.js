@@ -14,11 +14,11 @@ import PanelConversion from './sections/panelconversion';
 import PanelRegisters from './sections/panelregisters';
 import CoreContext from './coreContext';
 import PanelMachineCode from './sections/panelmachinecode';
-import {Endianness, RISCVCore, MIPSCore, Assembler, AssemblerLine} from './backend.js'
+import {VirtualOS, Endianness, CoreFactory, Assembler, AssemblerLine} from './backend.js'
 
 const SIMULATING_OFF  = 0;
 const SIMULATING_STEP = 1;
-const SIMULATING_PLAY = 2;
+//const SIMULATING_PLAY = 2;
 
 const REGISTER_UNASSIGNED = 0;
 const REGISTER_ASSIGNED = 1;
@@ -28,17 +28,21 @@ const CONSOLE_INPUT_NONE  = 0;
 const CONSOLE_INPUT_NUM = 1;
 const CONSOLE_INPUT_STR = 2;
 
-let instruction_sets = [{
-	name: "RISC-V",
-	core: RISCVCore
-},{
-	name: "MIPS",
-	core: MIPSCore
-}];
+const MessageType = {
+	Log: 0,
+	Input: 1,
+	Output: 2,
+	Success: 3,
+	Warning: 4,
+	Error: 5,
+}
+
+let instruction_sets = ["RISC-V", "MIPS"];
 
 export default class App extends Component {
 	simulation_start;
 	simulation_status;
+	virtual_os;
 
 	constructor(props) {
 		super(props);
@@ -67,6 +71,15 @@ export default class App extends Component {
 		this.component_editor = React.createRef();
 		this.component_input = React.createRef();
 		this.component_panel_settings = React.createRef();
+
+		
+		this.virtual_os = new VirtualOS(); // The virtual OS handles ecalls. It takes a bunch of callbacks: output Int, output String, etcetera...
+		this.virtual_os.outputInt = (number) => {
+			this.addConsoleMessage(MessageType.Output, ">> " + number);
+		};
+		this.virtual_os.outputString = (string) => {
+			this.addConsoleMessage(MessageType.Output, ">> " + string);
+		};
 	}
 
 	componentDidMount() {
@@ -135,10 +148,24 @@ export default class App extends Component {
 		}));
 	}
 
-	addConsoleMessage = (data) => {
+	addConsoleMessage = (msg_type, data) => {
 		let tabs = this.state.core.tabs;
 		let tab = tabs[this.state.core.selected];
-		tab.console.push(data);
+		
+		let className;
+		if (msg_type === MessageType.Error)
+			className = "console_error";
+		else if (msg_type === MessageType.Warning)
+			className = "console_warning";
+		else if (msg_type === MessageType.Success)
+			className = "console_success";
+		else if (msg_type === MessageType.Output)
+			className = "console_output";
+		else if (msg_type === MessageType.Input)
+			className = "console_input";
+		else
+			className = "console_log";
+		tab.console.push(<div className={className}>{data}</div>);
 
 		this.setState(prevState => ({
 			core: {
@@ -156,117 +183,6 @@ export default class App extends Component {
 		core.registerFile.physicalFile[reg] = val;
 	}
 
-	ecallCallback = () => {
-		let selected = this.state.core.selected;
-		let tab = this.state.core.tabs[selected];
-
-		var core = tab.core;
-		var reg_type = core.defaultEcallRegType;
-		var reg_arg  = core.defaultEcallRegArg;
-		var type = this.registerRead(core, reg_type);
-		var arg =  this.registerRead(core, reg_arg);
-	
-		if (this.simulation_status === SIMULATING_STEP) {
-			let log = tab.log[tab.log.length-1];
-			this.addConsoleMessage(<div className="console_step"><b>Simulator Step: </b> {log}</div>);
-		}
-			
-		//setConsoleMode(0);
-		let exit = false;
-		let output = "";
-	
-		switch (type) {
-		case 1: { // Integer
-			this.addConsoleMessage(<div className="console_output">> {arg}</div>);
-			break;
-		}
-		case 4: { // String
-			var pointer = arg;
-			var char = core.memory[pointer];
-			while (char !== 0) {
-				output += String.fromCharCode(char);
-				pointer += 1;
-				char = core.memory[pointer];
-			}
-			this.addConsoleMessage(<div className="console_output">> {output}</div>);
-			break;
-		}
-		case 5: {
-			this.setState({console_input_type: CONSOLE_INPUT_NUM});
-			return;
-		}
-		case 8: {
-			this.setState({console_input_type: CONSOLE_INPUT_STR});
-			return;
-		}
-		case 10: {
-			exit = true;
-			break;
-		}
-		case 420: {
-			let link;
-			switch(arg) {
-				default:
-					link = "https://youtube.com/watch?v=KZACorHeE-c";
-					break;
-				case 1:
-					link = "https://youtube.com/watch?v=L_jWHffIx5E";
-					break;
-				case 2:
-					link = "https://youtube.com/watch?v=dQw4w9WgXcQ";
-					break;
-				case 3:
-					link = "https://youtube.com/watch?v=VONRQMx78YI";
-					break;
-				case 4:
-					link = "https://youtube.com/watch?v=mtf7hC17IBM";
-					break;
-				case 5:
-					link = "https://youtube.com/watch?v=yKNxeF4KMsY";
-					break;
-			}
-			let win = window.open(link, "_blank");
-			win.focus();        
-			break;
-		}
-		case 1776: {
-			let win = window.open("https://youtu.be/TOygO4n-CtQ", "_blank");
-			win.focus();
-			break;
-		}
-		case 24601: {
-			let win = window.open("https://youtu.be/IZdjz6lLngU?t=150", "_blank");
-			win.focus();
-			break;
-		}
-		default: {
-			output = "<b>WARNING:</b> Environment call " + type + " unsupported.";
-			break;
-		}
-		}
-		
-		/*if (exit) {
-			this.checkUpdatedTabs();
-			if (this.simulation_status === SIMULATING_STEP) {
-				this.simulation_status = SIMULATING_OFF;
-				this.addConsoleMessage(<div className="console_success"><b>Complete:</b> Simulation completed.</div>);
-			}
-			else {
-				this.simulation_status = SIMULATING_OFF;
-				var time = performance.now() - this.simulation_start;
-				var numInstructions = tab.log.length;
-				var ips = numInstructions*1000.0/time;
-				this.addConsoleMessage(<div className="console_success"><b>Complete:</b> Simulation completed in {Math.round(time)} ms, {numInstructions} instructions, {Math.round(ips)} instructions/second.</div>);
-			}
-		} else if (this.simulation_status !== SIMULATING_STEP) {
-			output = window.continueSim(core);
-			if (output !== "@Oak_Ecall" && output !== null) {
-				this.checkUpdatedTabs();
-				this.addConsoleMessage("<b>Simulator Error: </b>" + output);
-			}
-		}*/
-	}
-
 	continueAfterConsole = (input) => {
 		let selected = this.state.core.selected;
 		let tab = this.state.core.tabs[selected];
@@ -280,7 +196,7 @@ export default class App extends Component {
 		if (this.state.console_input_type === CONSOLE_INPUT_NUM) {
 			input = parseInt(input, 10);
 			this.registerWrite(core, reg_type, input);
-			this.addConsoleMessage(<div className="console_input">{"<"} {input}</div>);
+			this.addConsoleMessage(MessageType.Log, input);
 		} else if (this.state.console_input_type === CONSOLE_INPUT_STR) {
 			console.log(input);
 			let bytes = [];
@@ -289,7 +205,7 @@ export default class App extends Component {
 			}
 			bytes.push(0);
 			core.memset(arg, bytes);
-			this.addConsoleMessage(<div className="console_input">{"<"} {input}</div>);
+			this.addConsoleMessage(MessageType.Log, input);
 		}
 
 		this.setState({console_input_type: CONSOLE_INPUT_NONE});
@@ -298,7 +214,7 @@ export default class App extends Component {
 			let output = window.continueSim(core);
 			if (output !== "@Oak_Ecall" && output !== null) {
 				this.checkUpdatedTabs();
-				this.addConsoleMessage(<b>Simulator Error: </b> + output);
+				this.addConsoleMessage(MessageType.Log, <span><b>Simulator Error: </b> {output}</span>);
 			}
 		}
 	}
@@ -320,7 +236,7 @@ export default class App extends Component {
 		
 		let memorySize = 4096;
 
-		let core = new instruction_sets[0].core(memorySize, this.ecallCallback);
+		let core = CoreFactory.getCore(instruction_sets[0], memorySize, this.virtual_os, []);
 
 		let new_tab = {
 			name: name,
@@ -355,9 +271,7 @@ export default class App extends Component {
 		
 		let memorySize = 4096;
 
-		console.log(RISCVCore);
-		let core = new instruction_sets[0].core(memorySize, this.ecallCallback);
-		console.log(core);
+		let core = CoreFactory.getCore(instruction_sets[0], memorySize, this.virtual_os, []);
 		let tabs = this.state.core.tabs;
 		let new_tab = {
 			name: "New Tab",
@@ -551,16 +465,15 @@ export default class App extends Component {
 		while (true) {
 			let fetch = core.fetch();
 			if (fetch !== null) {
-				console.log(fetch);
+				this.addConsoleMessage(MessageType.Error, fetch);
 				break;
 			}
 		
 			let decode = core.decode(); // Decode has the decoded instruction on success
 			tab.log.push(decode);
 			
-			console.log(decode);
 			if (decode === null) {
-				console.log("decode.failure");
+				this.addConsoleMessage(MessageType.Error, "decide.failure");
 				break;
 			}
 		
@@ -568,6 +481,7 @@ export default class App extends Component {
 			if (execute !== null) {
 				if (execute !== 'HALT') { // If HALT, then an environment call has been executed.
 					console.log(execute);
+					this.addConsoleMessage(MessageType.Error, execute);
 				}
 				break;
 			}
@@ -673,10 +587,10 @@ export default class App extends Component {
 		let error = false; //output.errorMessage===null;
 		if (!error) {
 			this.setMachineCodeValue(machineCode);
-			this.addConsoleMessage(<div className="console_success"><b>Complete:</b> Assembly succeeded.</div>);
+			this.addConsoleMessage(MessageType.Success, <span><b>Complete:</b> Assembly succeeded.</span>);
 		}
 		else {
-			this.addConsoleMessage(<div className="console_error"><b>Error:</b> Assembler failed.</div>);
+			this.addConsoleMessage(MessageType.Error, <span><b>Error:</b> Assembler failed.</span>);
 		}
 
 		this.simulation_status = SIMULATING_OFF;
@@ -737,7 +651,7 @@ export default class App extends Component {
 			}
 		}));
 
-		this.addConsoleMessage(<div className="console_success"><b>Complete: </b>Successfully changed ISA to {isa_type}.</div>);
+		this.addConsoleMessage(MessageType.Success, <span><b>Complete: </b>Successfully changed ISA to {isa_type}.</span>);
 	}
 
 	handleStartDragX = (event) => {

@@ -65,7 +65,7 @@ abstract class Core {
                 break;
             }
         }
-        if (this.decoded == null) {
+        if (this.decoded === null) {
             return null;
         }
         

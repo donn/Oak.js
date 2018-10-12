@@ -42,7 +42,7 @@ export default class PanelSettings extends Component {
                     <Input onChange={this.handleFileName} value={this.state.file_name} icon="/images/icons/input_name.svg" placeholder="File Name" id="filename" />
                     <Select onChange={this.handleISA} value={this.state.instruction_set} icon="/images/icons/input_code.svg" placeholder="Instruction Set" >
                         {this.props.instruction_sets.map((isa, i) => {
-                            return <option key={isa.name} value={isa.name}>{isa.name}</option>
+                            return <option key={isa} value={isa}>{isa}</option>
                         })}
                     </Select>
                     <Input onChange={this.handleMemorySize} value={this.state.memory_size} icon="/images/icons/input_memory.svg" placeholder="Memory Size (Bytes)" type="number" />

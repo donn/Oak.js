@@ -20,7 +20,7 @@ function MIPS(options: boolean[]): InstructionSet {
                 new BitRange("shamt", 6, 5, 0),
                 new BitRange("funct", 0, 6)
             ],
-            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)/,
+            /^\s*([a-zA-Z]+)\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*$/,
             "@mnem @arg0, @arg1, @arg2"
         )
     );
@@ -188,7 +188,7 @@ function MIPS(options: boolean[]): InstructionSet {
                 new BitRange("shamt", 6, 5, 0),
                 new BitRange("funct", 0, 6)
             ],
-            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)/,
+            /^\s*([a-zA-Z]+)\s*(\$[A-Za-z0-9]+)\s*$/,
             "@mnem @arg0"
         )
     );
@@ -217,7 +217,7 @@ function MIPS(options: boolean[]): InstructionSet {
                 new BitRange("shamt", 6, 5).parameterized(2, Parameter.immediate),
                 new BitRange("funct", 0, 6)
             ],
-            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*([0-9]+)/,
+            /^\s*([a-zA-Z]+)\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*([0-9]+)\s*$/,
             "@mnem @arg0, @arg1, @arg2"
         )
     );
@@ -263,7 +263,7 @@ function MIPS(options: boolean[]): InstructionSet {
             [
                 new BitRange("funct", 0, 32)
             ],
-            /[a-zA-Z]+/,
+            /^\s*([a-zA-Z]+)\s*$/,
             "@mnem"
         )
     );
@@ -292,7 +292,7 @@ function MIPS(options: boolean[]): InstructionSet {
                 new BitRange("rt", 16, 5).parameterized(0, Parameter.register),
                 new BitRange("imm", 0, 16, null, true).parameterized(2, Parameter.immediate)
             ],
-            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/,
+            /^\s*([a-zA-Z]+)\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)\s*$/,
             "@mnem @arg0, @arg1, @arg2"
         )
     );
@@ -410,7 +410,7 @@ function MIPS(options: boolean[]): InstructionSet {
                 new BitRange("rt", 16, 5).parameterized(1, Parameter.register),
                 new BitRange("imm", 0, 16, null, true).parameterized(2, Parameter.immediate).limited(18, 2, 17)
             ],
-            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/,
+            /^\s*([a-zA-Z]+)\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)\s*$/,
             "@mnem @arg0, @arg1, @arg2"
         )
     );
@@ -457,7 +457,7 @@ function MIPS(options: boolean[]): InstructionSet {
                 new BitRange("rt", 16, 5).parameterized(0, Parameter.register),
                 new BitRange("imm", 0, 16, null, true).parameterized(1, Parameter.register)
             ],
-            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/,
+            /^\s*([a-zA-Z]+)\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)\s*$/,
             "@mnem @arg0, @arg1"
         )
     );
@@ -487,7 +487,7 @@ function MIPS(options: boolean[]): InstructionSet {
                 new BitRange("rt", 16, 5).parameterized(0, Parameter.register),
                 new BitRange("imm", 0, 16, null, true).parameterized(1, Parameter.immediate)
             ],
-            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(-?0?[boxd]?[0-9A-F]+)\(\s*(\$[A-Za-z0-9]+)\s*\)/,
+            /^\s*([a-zA-Z]+)\s*(\$[A-Za-z0-9]+)\s*,\s*(-?0?[boxd]?[0-9A-F]+)\(\s*(\$[A-Za-z0-9]+)\s*\)\s*$/,
             "@mnem @arg0, @arg1(@arg2)"
         )
     );
@@ -652,10 +652,9 @@ function MIPS(options: boolean[]): InstructionSet {
                 new BitRange("opcode", 26, 6),
                 new BitRange("imm", 0, 26).parameterized(0, Parameter.special)
             ],
-            /[A-z]+\s*([A-Za-z0-9_]+)/,
+            /^\s*([A-Za-z]+)\s*([A-Za-z0-9_]+)\s*$/,
             "@mnem @arg0",
             function(text: string, type: Parameter, bits: number, address: number, assembler: Assembler) {
-                let array = text.split(""); //Character View
                 let result = {
                     errorMessage: null,
                     context: null,
@@ -697,8 +696,8 @@ function MIPS(options: boolean[]): InstructionSet {
                     return result;
                 }
 
-                if ((value >>> 28) == (address >>> 28)) {
-                    if ((value & 3) == 0) {
+                if ((value >>> 28) === (address >>> 28)) {
+                    if ((value & 3) === 0) {
                         result.value = (value & 0x0ffffffc) >>> 2;
                     } else {
                         result.errorMessage = `mips.wordUnlignedJump(${text})`;
@@ -751,7 +750,7 @@ function MIPS(options: boolean[]): InstructionSet {
                 new BitRange("shamt", 6, 5, 0),
                 new BitRange("funct", 0, 6)
             ],
-            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)/,
+            /^\s*([a-zA-Z]+)\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*$/,
             "@mnem @arg0, @arg1"
         )
     );
@@ -779,7 +778,7 @@ function MIPS(options: boolean[]): InstructionSet {
                 new BitRange("rt", 16, 5).parameterized(0, Parameter.register),
                 new BitRange("imm", 0, 16, null, true).parameterized(1, Parameter.immediate)
             ],
-            /[a-zA-Z]+\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)/,
+            /^\s*([a-zA-Z]+)\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)\s*$/,
             "@mnem @arg0, @arg1"
         )
     );
@@ -812,156 +811,13 @@ function MIPS(options: boolean[]): InstructionSet {
         )
 
     );
-
-
-    /*
-        ARGUMENT PROCESSOR
-        Does what it says on the tin. It needs quite a bit of information, but otherwise successfully interprets
-        any MIPS argument.
-    */
-    let process = function(address: number, text: string, type: Parameter, bits: number, labels: string[], addresses: number[]) {
-        let array = text.split(""); //Character View
-        let result = {
-            errorMessage: null,
-            value: null
-        };
-        switch(type) {
-        case Parameter.register:
-                let registerNo: number;
-                let index = this.abiNames.indexOf(text);
-                if (index !== -1) {
-                    result.value = index;
-                    return result;
-                }
-                if (array[0] !== "$") {
-                    result.errorMessage = "Register " + text + " does not exist.";
-                    return result;
-                }
-                registerNo = parseInt(array.splice(1, array.length - 1).join(""));
-                if (0 <= registerNo && registerNo <= 31) {
-                    result.value = registerNo;
-                    return result;
-                }
-                else {
-                    result.errorMessage = "Register " + text + " does not exist.";
-                    return result;
-                }
-
-
-        case Parameter.immediate:
-            //Label
-            var int = NaN;
-            let labelIndex = labels.indexOf(text);
-            if (labelIndex !== -1) {
-                int = addresses[labelIndex];
-            }
-            else if (array.length === 3 && (array[0] == "\'") && (array[2] == "\'")) {
-                int = array[1].charCodeAt(0);
-            }
-            else {
-                let radix = 10 >>> 0;
-                let splice = false;
-
-                if (array[0] === "0") {
-                    if (array[1] == "b") {
-                        radix = 2;
-                        splice = true;
-                    }
-                    if (array[1] == "o") {
-                        radix = 8;
-                        splice = true;
-                    }
-                    if (array[1] == "d") {
-                        radix = 10;
-                        splice = true;
-                    }
-                    if (array[1] == "x") {
-                        radix = 16;
-                        splice = true;
-                    }
-                }
-
-                let interpretable = text;
-                if (splice) {
-                    interpretable = array.splice(2, array.length - 2).join("");
-                }
-
-                int = parseInt(interpretable, radix);
-            }
-
-            if (isNaN(int)) {
-                result.errorMessage = "Immediate '" + text + "' is not a recognized label, literal or character.";
-                return result;
-            }
-
-            if (Utils.rangeCheck(int, bits)) {
-                result.value = int;
-                return result;
-            }
-            result.errorMessage = "The value of '" + text + "' is out of range.";
-            return result;
-
-
-        case Parameter.offset:
-            var int = NaN;
-            let labelLocation = labels.indexOf(text);
-            if (labelLocation !== -1) {
-                int = addresses[labelLocation] - address;
-            }
-            else {
-                let radix = 10 >>> 0;
-                let splice = false;
-
-                if (array[0] === "0") {
-                    if (array[1] == "b") {
-                        radix = 2;
-                        splice = true;
-                    }
-                    if (array[1] == "o") {
-                        radix = 8;
-                        splice = true;
-                    }
-                    if (array[1] == "d") {
-                        radix = 10;
-                        splice = true;
-                    }
-                    if (array[1] == "x") {
-                        radix = 16;
-                        splice = true;
-                    }
-                }
-
-                let interpretable = text;
-                if (splice) {
-                    interpretable = array.splice(2, array.length - 2).join("");
-                }
-
-                int = parseInt(interpretable, radix);
-            }
-
-            if (isNaN(int)) {
-                result.errorMessage = "Offset '" + text + "' is not a recognized label or literal.";
-                return result;
-            }
-
-            if (Utils.rangeCheck(int, bits)) {
-                result.value = int;
-                return result;
-            }
-            result.errorMessage = "The value of '" + text + "' is out of range.";
-            return result;
-
-        default:
-            return result;
-        }
-    }
     
     let keywords: string[][] = [];
         keywords[Keyword.directive] = ["\\."];
         keywords[Keyword.comment] = ["#"];
         keywords[Keyword.label] = ["\\:"];
         keywords[Keyword.stringMarker] = ["\\\""];
-        keywords[Keyword.charMarker] = ["\\\'"];
+        keywords[Keyword.charMarker] = ["\\'"];
         keywords[Keyword.register] = ["x"];
 
     let directives: Directive[] = [];
@@ -975,7 +831,7 @@ function MIPS(options: boolean[]): InstructionSet {
 
     let abiNames = ["$zero", "$at", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$k0", "$k1", "$gp", "$sp", "$fp", "$ra"];
 
-    return new InstructionSet("mips", 32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, "    la $a0, str\n    li $v0, 4 #4 is the string print service number...\n    syscall\n    li $v0, 10 #...and 10 is the program termination service number!\n    syscall\n.data\nstr:\    .asciiz \"Hello, World!\"");
+    return new InstructionSet(32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, "    la $a0, str\n    li $v0, 4 #4 is the string print service number...\n    syscall\n    li $v0, 10 #...and 10 is the program termination service number!\n    syscall\n.data\nstr:    .asciiz \"Hello, World!\"");
 }
 
 class MIPSRegisterFile implements RegisterFile {
@@ -1053,7 +909,7 @@ class MIPSCore extends Core {
 
     fetch(): string {
         let arr = this.memcpy(this.pc, 4);
-        if (arr == null) {
+        if (arr === null) {
             return "fetch.illegalMemoryAddress";
         }
         this.pc += 4;
@@ -1081,3 +937,9 @@ class MIPSCore extends Core {
         }         
     }
 }
+
+CoreFactory.ISAs["MIPS"] = {
+    generator: MIPS,
+    core: MIPSCore,
+    options: []
+};

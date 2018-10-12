@@ -1,5 +1,6 @@
 /// <reference path="../Assembler.ts" />
 /// <reference path="../VirtualOS.ts"/>
+/// <reference path="../CoreFactory.ts"/>
 
 //The RISC-V Instruction Set Architecture, Version 2.1
 
@@ -705,7 +706,7 @@ function RISCV(options: boolean[]): InstructionSet {
         "MV",
         mvPseudo,
         ["opcode", "funct3", "rs1", "funct7"],
-        [0b0110011, 0b000, parseInt("00000"), 0b0000000],
+        [0b0110011, 0b000, 0b00000, 0b0000000],
         function(core) {
             return null; //Captured by and
         },
@@ -820,7 +821,7 @@ function RISCV(options: boolean[]): InstructionSet {
         keywords[Keyword.comment] = ["#"];
         keywords[Keyword.label] = ["\\:"];
         keywords[Keyword.stringMarker] = ["\\\""];
-        keywords[Keyword.charMarker] = ["\\\'"];
+        keywords[Keyword.charMarker] = ["\\'"];
         keywords[Keyword.register] = ["x"];
 
     let directives: Directive[] = [];
@@ -831,7 +832,7 @@ function RISCV(options: boolean[]): InstructionSet {
         directives["half"] = Directive._16bit;
         directives["word"] = Directive._32bit;
 
-    return new InstructionSet("riscv", 32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:\    .string \"Hello, World!\"");
+    return new InstructionSet(32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:    .string \"Hello, World!\"");
 }
 
 class RISCVRegisterFile implements RegisterFile {
@@ -912,7 +913,7 @@ class RISCVCore extends Core {
             return "fetch.negativePC";
         }
         let arr = this.memcpy(this.pc, 4);
-        if (arr == null) {
+        if (arr === null) {
             return "fetch.invalidMemoryAccess";
         }
 
@@ -939,3 +940,9 @@ class RISCVCore extends Core {
         }         
     }
 }
+
+CoreFactory.ISAs["RISC-V"] = {
+    generator: RISCV,
+    core: RISCVCore,
+    options: []
+};
