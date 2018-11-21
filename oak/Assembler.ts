@@ -295,7 +295,12 @@ class Line {
                 }
                 let limited = range.totalBits;
                 let bits = limited || range.bits;
-                let store = assembler.process(args[range.parameter], range.parameterType, bits, address, instruction.bytes);
+                let store = null;
+                if (range.parameterType == Parameter.special) {
+                    store = instruction.format.processSpecialParameter(args[range.parameter], Parameter.special, bits, address, assembler);
+                } else {
+                    store = assembler.process(args[range.parameter], range.parameterType, bits, address, instruction.bytes);
+                }
                 if (store.errorMessage !== null) {
                     possibleInstruction[3] = store.errorMessage;
                     continue testingInstructions;
@@ -313,7 +318,8 @@ class Line {
                         let bits = (endBit - startBit + 1);
                         register &= (1 << bits) - 1; // mask end - start + 1 bits
                     }
-                    machineCode |= register << range.start;
+                    let masked = register & (1 << bits) - 1; 
+                    machineCode |= masked << range.start;
                 }
             }
 
@@ -530,7 +536,7 @@ class Assembler {
             if (value !== null && type === Parameter.offset) {
                 value -= address;
                 if (this.incrementOnFetch) {
-                    value += instructionLength;
+                    value -= instructionLength;
                 }
             }
 

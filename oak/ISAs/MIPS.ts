@@ -408,7 +408,7 @@ function MIPS(options: boolean[]): InstructionSet {
                 new BitRange("opcode", 26, 6),
                 new BitRange("rs", 21, 5).parameterized(0, Parameter.register),
                 new BitRange("rt", 16, 5).parameterized(1, Parameter.register),
-                new BitRange("imm", 0, 16, null, true).parameterized(2, Parameter.immediate).limited(18, 2, 17)
+                new BitRange("imm", 0, 16, null, true).parameterized(2, Parameter.offset).limited(18, 2, 17)
             ],
             /^\s*([a-zA-Z]+)\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)\s*$/,
             "@mnem @arg0, @arg1, @arg2"
@@ -591,7 +591,11 @@ function MIPS(options: boolean[]): InstructionSet {
             function(core) {
                 let bytes = [];
                 bytes.push(core.registerFile.read(core.arguments[0]) & 255);
-                if(core.memset(core.registerFile.read(core.arguments[2]) + core.arguments[1], bytes)) {
+                let writeAddress = core.registerFile.read(core.arguments[2]) + core.arguments[1];
+                if(core.memset(writeAddress, bytes)) {
+                    console.log("A0 ", core.registerFile.read(core.instructionSet.abiNames.indexOf("$a0")));
+                    console.log("T1 ", core.registerFile.read(core.instructionSet.abiNames.indexOf("$t1")));
+                    console.log("Wrote to ", writeAddress.toString(16));
                     return null;
                 }
                 return "Illegal memory access.";
@@ -665,7 +669,7 @@ function MIPS(options: boolean[]): InstructionSet {
                 let value = null;
                 let reference = assembler.linesByLabel[text];
                 if (reference !== undefined) {
-                    result.context = reference[0]
+                    result.context = reference[0];
                     if (reference[1] === null) {
                         return result;
                     }
@@ -831,7 +835,16 @@ function MIPS(options: boolean[]): InstructionSet {
 
     let abiNames = ["$zero", "$at", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$k0", "$k1", "$gp", "$sp", "$fp", "$ra"];
 
-    return new InstructionSet(32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, "    la $a0, str\n    li $v0, 4 #4 is the string print service number...\n    syscall\n    li $v0, 10 #...and 10 is the program termination service number!\n    syscall\n.data\nstr:    .asciiz \"Hello, World!\"");
+    return new InstructionSet(32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, true,
+`   la $a0, str
+    li $v0, 4 #4 is the string print service number...
+    syscall
+    li $v0, 10 #...and 10 is the program termination service number!
+    syscall
+.data
+str:    .asciiz "Hello, World!"
+`
+    );
 }
 
 class MIPSRegisterFile implements RegisterFile {

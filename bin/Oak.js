@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 class VirtualOS {
     constructor() {
         this.continueInputString = (core, val) => {
@@ -333,7 +334,7 @@ class InstructionSet {
         }
         return output;
     }
-    constructor(bits, formats, instructions, pseudoInstructions, abiNames, keywords, directives, exampleCode) {
+    constructor(bits, formats, instructions, pseudoInstructions, abiNames, keywords, directives, incrementOnFetch, exampleCode) {
         this.bits = bits;
         this.formats = formats;
         this.instructions = instructions;
@@ -342,6 +343,7 @@ class InstructionSet {
         this.abiNames = abiNames;
         this.keywords = keywords;
         this.directives = directives;
+        this.incrementOnFetch = incrementOnFetch;
         this.exampleCode = exampleCode;
     }
 }
@@ -579,7 +581,13 @@ class Line {
                 }
                 let limited = range.totalBits;
                 let bits = limited || range.bits;
-                let store = assembler.process(args[range.parameter], range.parameterType, bits, address, instruction.bytes);
+                let store = null;
+                if (range.parameterType == Parameter.special) {
+                    store = instruction.format.processSpecialParameter(args[range.parameter], Parameter.special, bits, address, assembler);
+                }
+                else {
+                    store = assembler.process(args[range.parameter], range.parameterType, bits, address, instruction.bytes);
+                }
                 if (store.errorMessage !== null) {
                     possibleInstruction[3] = store.errorMessage;
                     continue testingInstructions;
@@ -598,7 +606,8 @@ class Line {
                         let bits = (endBit - startBit + 1);
                         register &= (1 << bits) - 1;
                     }
-                    machineCode |= register << range.start;
+                    let masked = register & (1 << bits) - 1;
+                    machineCode |= masked << range.start;
                 }
             }
             for (let i = 0; i < instruction.bytes; i += 1) {
@@ -826,7 +835,7 @@ class Assembler {
                 if (value !== null && type === Parameter.offset) {
                     value -= address;
                     if (this.incrementOnFetch) {
-                        value += instructionLength;
+                        value -= instructionLength;
                     }
                 }
                 if (value === null || isNaN(value)) {
@@ -1320,7 +1329,15 @@ function RISCV(options) {
     directives["byte"] = Directive._8bit;
     directives["half"] = Directive._16bit;
     directives["word"] = Directive._32bit;
-    return new InstructionSet(32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:    .string \"Hello, World!\"");
+    return new InstructionSet(32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, false, `
+    la a0, str
+    li a7, 4 #4 is the string print service number...
+    ecall
+    li a7, 10 #...and 10 is the program termination service number!
+    ecall
+.data
+str:    .string "Hello, World!"
+`);
 }
 class RISCVRegisterFile {
     print() {
@@ -1555,7 +1572,7 @@ function MIPS(options) {
         new BitRange("opcode", 26, 6),
         new BitRange("rs", 21, 5).parameterized(0, Parameter.register),
         new BitRange("rt", 16, 5).parameterized(1, Parameter.register),
-        new BitRange("imm", 0, 16, null, true).parameterized(2, Parameter.immediate).limited(18, 2, 17)
+        new BitRange("imm", 0, 16, null, true).parameterized(2, Parameter.offset).limited(18, 2, 17)
     ], /^\s*([a-zA-Z]+)\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)\s*$/, "@mnem @arg0, @arg1, @arg2"));
     let ibSubtype = formats[formats.length - 1];
     instructions.push(new Instruction("BEQ", ibSubtype, ["opcode"], [0x04], function (core) {
@@ -1631,7 +1648,11 @@ function MIPS(options) {
     instructions.push(new Instruction("SB", ilsSubtype, ["opcode"], [0x28], function (core) {
         let bytes = [];
         bytes.push(core.registerFile.read(core.arguments[0]) & 255);
-        if (core.memset(core.registerFile.read(core.arguments[2]) + core.arguments[1], bytes)) {
+        let writeAddress = core.registerFile.read(core.arguments[2]) + core.arguments[1];
+        if (core.memset(writeAddress, bytes)) {
+            console.log("A0 ", core.registerFile.read(core.instructionSet.abiNames.indexOf("$a0")));
+            console.log("T1 ", core.registerFile.read(core.instructionSet.abiNames.indexOf("$t1")));
+            console.log("Wrote to ", writeAddress.toString(16));
             return null;
         }
         return "Illegal memory access.";
@@ -1767,7 +1788,14 @@ function MIPS(options) {
     directives["half"] = Directive._16bit;
     directives["word"] = Directive._32bit;
     let abiNames = ["$zero", "$at", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$k0", "$k1", "$gp", "$sp", "$fp", "$ra"];
-    return new InstructionSet(32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, "    la $a0, str\n    li $v0, 4 #4 is the string print service number...\n    syscall\n    li $v0, 10 #...and 10 is the program termination service number!\n    syscall\n.data\nstr:    .asciiz \"Hello, World!\"");
+    return new InstructionSet(32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, true, `   la $a0, str
+    li $v0, 4 #4 is the string print service number...
+    syscall
+    li $v0, 10 #...and 10 is the program termination service number!
+    syscall
+.data
+str:    .asciiz "Hello, World!"
+`);
 }
 class MIPSRegisterFile {
     print() {
@@ -1860,10 +1888,12 @@ CoreFactory.ISAs["MIPS"] = {
 };
 let opt = require('node-getopt').create([
     ['a', 'instructionSetArchitecture=ARG', 'String name of the instruction set architecture to use.', 'RISC-V'],
+    ['d', 'debug', 'String name of the instruction set architecture to use.', false],
     ['o', 'archOptions=ARG+', 'Special options for the instruction set architecture.', []],
     ['h', 'help', 'Show this message and exit.', false],
     ['v', 'verbose', 'Verbose operation mode.', false],
     ['V', 'version', 'Show this message and exit.', false],
+    [null, 'ppmc', 'Pretty prints the machine code for your viewing pleasure.', false]
 ])
     .bindHelp()
     .parseSystem();
@@ -1918,9 +1948,19 @@ do {
     passCounter += 1;
 } while (pass === null);
 let machineCode = lines.map(line => line.machineCode).reduce((a, b) => a.concat(b), []);
+if (options.ppmc) {
+    lines.map(line => {
+        if (line.kind == Kind.data || line.kind == Kind.instruction) {
+            console.log(Utils.hex(line.machineCode));
+        }
+    });
+}
 cpu.memset(0, machineCode);
 running: while (true) {
     let fetch = cpu.fetch();
+    if (options.verbose) {
+        console.log(`@ ${Utils.pad(cpu.pc, 8, 16)}:`);
+    }
     if (fetch !== null) {
         console.error(fetch);
         break running;
@@ -1933,6 +1973,7 @@ running: while (true) {
     if (options.verbose) {
         console.log(decode);
     }
+    ``;
     let execute = cpu.execute();
     if (execute !== null) {
         if (execute !== 'HALT') {

@@ -18,7 +18,6 @@
   "scripts": {
     "build-all": "node make all",
     "build-back": "node make backend",
-    "build-cli": "node ./node_modules/typescript/bin/tsc --module amd --pretty --target ES2016 --removeComments --noEmitOnError src/backend/main.ts --outFile bin/Oak.js",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",

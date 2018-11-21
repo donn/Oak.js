@@ -6,10 +6,12 @@ declare let process: any
 
 let opt = require('node-getopt').create([
     ['a', 'instructionSetArchitecture=ARG'  , 'String name of the instruction set architecture to use.', 'RISC-V'],
+    ['d', 'debug'  , 'String name of the instruction set architecture to use.', false],
     ['o', 'archOptions=ARG+', 'Special options for the instruction set architecture.', []],
     ['h', 'help', 'Show this message and exit.', false],
     ['v', 'verbose', 'Verbose operation mode.', false],
     ['V', 'version', 'Show this message and exit.', false],
+    [null, 'ppmc', 'Pretty prints the machine code for your viewing pleasure.', false]
   ])              // create Getopt instance
 .bindHelp()     // bind option 'help' to default action
 .parseSystem(); // parse command line
@@ -37,7 +39,7 @@ cliVirtualOS.outputString = (string) => {
     console.log(string);
 };
 
-let cpu = null;
+let cpu: Core = null;
 try {
     cpu = CoreFactory.getCore(options.instructionSetArchitecture.toUpperCase(), 2048, cliVirtualOS, options.archOptions); // CPU: Memory, Virtual OS
 } catch (err) {
@@ -72,13 +74,26 @@ do { // Subsequent assembler passes. Typically one pass is needed, but when ther
     passCounter += 1;
 } while (pass === null);
 
+//console.log(lines);
+
 let machineCode = lines.map(line=> line.machineCode).reduce((a, b)=> a.concat(b), []); // Get machine code from lines
+if (options.ppmc) {
+    lines.map(line=> {
+        if (line.kind == Kind.data || line.kind == Kind.instruction) {
+            console.log(Utils.hex(line.machineCode));
+        }
+    });
+}
 cpu.memset(0, machineCode); // memset
 
 running: while (true) {
+    
     let fetch = cpu.fetch();
+    if (options.verbose) {
+        console.log(`@ ${Utils.pad(cpu.pc, 8, 16)}:`)
+    }
     if (fetch !== null) {
-        console.error(fetch);
+        console.error(fetch)
         break running;
     }
 
@@ -90,7 +105,7 @@ running: while (true) {
     }
     if (options.verbose) {
         console.log(decode);
-    }
+    }``
 
     let execute = cpu.execute();
     if (execute !== null) {

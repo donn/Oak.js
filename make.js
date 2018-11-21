@@ -15,7 +15,7 @@ let concatenate = () => {
     }
 
     function readContent(content) {
-        fs.readFile("src/backend/ZeroPlus.js", 'utf8', function (err, data) {
+        fs.readFile("oak/ZeroPlus.js", 'utf8', function (err, data) {
             if (err) throw err;
             writeData(content + "\n" + data);
         });
@@ -30,7 +30,7 @@ let concatenate = () => {
 let create_tsc = (isBackend) => {
     let tsc = isWin ? "tsc" : "./node_modules/typescript/bin/tsc";
     let tsc_flags = " --module amd --pretty --target ES2016 --noEmitOnError";
-    let tsc_target = isBackend ? " src/backend/Zero.ts --outFile src/backend.js" : " --removeComments src/backend/main.ts --outFile bin/Oak.js";
+    let tsc_target = isBackend ? " oak/Zero.ts --outFile src/backend.js" : " --removeComments oak/main.ts --outFile bin/Oak.js";
     exec(tsc + tsc_flags + tsc_target, (error, stdout, stderr) => {
         if (stdout)
             console.log('stdout: ' + stdout);

@@ -832,7 +832,17 @@ function RISCV(options: boolean[]): InstructionSet {
         directives["half"] = Directive._16bit;
         directives["word"] = Directive._32bit;
 
-    return new InstructionSet(32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, "    la a0, str\n    li a7, 4 #4 is the string print service number...\n    ecall\n    li a7, 10 #...and 10 is the program termination service number!\n    ecall\n.data\nstr:    .string \"Hello, World!\"");
+    return new InstructionSet(32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, false,
+`
+    la a0, str
+    li a7, 4 #4 is the string print service number...
+    ecall
+    li a7, 10 #...and 10 is the program termination service number!
+    ecall
+.data
+str:    .string "Hello, World!"
+`
+    );
 }
 
 class RISCVRegisterFile implements RegisterFile {

@@ -1,16 +1,12 @@
-note: needs updating
+![Oak.js](public/images/logo.png)
 
-![Oak.js](Images/logo.png)
+An assembler and simulator generator written in TypeScript.
 
-A port of [Oak](https://github.com/donn/Oak) to TypeScript used for multiple school projects. It supports both RISCV (RV32I) and MIPS (Core Instruction Set).
+It supports both RISCV (RV32I) and MIPS (Core Instruction Set).
 
-Unlike the Swift version, the TypeScript version is less flexible, but developed faster.
+The assembler and simulator were designed by [@donn](https://github.com/donn) and the user interface for the web version was designed by [@KarimIO](https://github.com/KarimIO).
 
-The assembler and simulator were designed by [@donn](https://github.com/donn) and the user interface was designed by [@KarimIO](https://github.com/KarimIO).
-
-Special thanks to [@alikhaled96](https://github.com/alikhaled96) for helping me implement MIPS.
-
-Oak.js is a sister project of [RiscBEE](https://github.com/donn/RiscBEE).
+Special thanks to [@alikhaled96](https://github.com/alikhaled96) for helping implement MIPS.
 
 # Requirements
 TypeScript 2 or above, UglifyJS 2 or above, and a compatible version of Node.js. It was tested with Node v7.
@@ -36,20 +32,20 @@ Please use Bash on Ubuntu on Windows 10 and follow the instructions for Debian-b
 
 Like Debian-based OSes, you may need administrative privileges for this.
 
-## Packages
-Just run `npm install`.
+# Building and Usage
+To use the latest stab;le web version of Oak.js, visit the [GitHub Page](https://donn.github.io/Oak.js).
 
-# Usage
-To use Oak.js, either visit the [GitHub Page](https://skyus.github.io/Oak.js) or download this repository and open index.html using your web browser.
+First of all, you need to install dependencies. You can just write `npm install`.
 
-Run: `node make all`
-To only build for web: `node make web`
-To only build as an executable: `node make exec`
+## Web version
+Simply invoke `node make web`.
 
 ## On-computer usage
-Currently, the Terminal UI only supports assembling and simulating RISC-V files.
+Invoke `make`. This does require a POSIX-y environment and GNU make.
 
-`node bin/Oak.js <RISCVAssemblyFile.s>`
+For more, invoke `./bin/Oak.js --help`.
+
+(There is `node make exec` but it's maintained by the GUI side of the project and I have no guarantees that it will work.)
 
 # License
 Mozilla Public License 2.0. Check LICENSE.

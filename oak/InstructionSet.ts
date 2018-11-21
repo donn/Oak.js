@@ -331,6 +331,7 @@ class InstructionSet {
         abiNames: string[],
         keywords: string[][],
         directives: Directive[],
+        incrementOnFetch: boolean,
         exampleCode: string
     ) {
         this.bits = bits;
@@ -341,6 +342,7 @@ class InstructionSet {
         this.abiNames = abiNames;
         this.keywords = keywords;
         this.directives = directives;
+        this.incrementOnFetch = incrementOnFetch;
         this.exampleCode = exampleCode;
     }
 };
