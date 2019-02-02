@@ -228,8 +228,9 @@
   pointer-events: all;
 }
 
-.editor_area {
+#editor_area {
   height: calc(100% - 1.8rem);
+  overflow-y: auto;
 }
 
 @media screen and (max-width: 600px) {

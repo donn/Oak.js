@@ -191,12 +191,24 @@ table tbody tr:nth-child(even) {
   background-image: url(/images/assemble.png);
 }
 
-.simulate {
+.simulate:not(.assemble_ready) {
   background-image: url(/images/play.png);
 }
 
-.simulate_step {
+.simulate_step:not(.assemble_ready) {
   background-image: url(/images/stepByStep.png);
+}
+
+.simulate.assemble_ready {
+  background-image: url(/images/playAssemble.png);
+}
+
+.simulate_step.assemble_ready {
+  background-image: url(/images/stepByStepAssemble.png);
+}
+
+.simulate_prevent_input {
+  opacity: 0.2;
 }
 
 .no_tabs {

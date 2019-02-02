@@ -1,8 +1,30 @@
 import React, { Component } from 'react';
 import { Translate, withLocalize } from 'react-localize-redux';
+import { connect } from 'react-redux';
+
+const SimulatingStatus = {
+	Stopped:	0,
+	Step:		1,
+	Play:		2
+};
+
+const CONSOLE_INPUT_NONE  = 0;
 
 class Navigation extends Component {
 	render() {
+		let assemble_css = "";
+		const tab  = this.props.tabs[this.props.selectedtab];
+
+		if (tab) {
+			if (tab.runningStatus === SimulatingStatus.Stopped) {
+				assemble_css = " assemble_ready";
+			}
+
+			if (tab.console_input_type !== CONSOLE_INPUT_NONE) {
+				assemble_css += " simulate_prevent_input";
+			}
+		}
+
 		return (
 			<nav id="navigation" className="navigation">
 				<ul>
@@ -22,13 +44,20 @@ class Navigation extends Component {
 				</ul>
 
 				<div className="buttons_right">
-					<button className="assemble" onClick={this.props.assemble}></button>
-					<button className="simulate" onClick={this.props.simulate}></button>
-					<button className="simulate_step" onClick={this.props.stepbystep}></button>
+					<button className={`assemble`} onClick={this.props.assemble}></button>
+					<button className={`simulate${assemble_css}`} onClick={this.props.simulate}></button>
+					<button className={`simulate_step${assemble_css}`} onClick={this.props.stepbystep}></button>
 				</div>
 			</nav>
 		);
 	}
 };
 
-export default withLocalize(Navigation);
+const stateToProps = state => {
+	return {
+		tabs: state.tabs,
+		selectedtab: state.selectedtab
+	};
+};
+
+export default withLocalize(connect(stateToProps)(Navigation));

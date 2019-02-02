@@ -896,13 +896,14 @@ class VirtualOS {
             }
             case 5: {
                 this.inputInt();
-                return null;
+                return "WAIT";
             }
             case 8: {
                 this.inputString();
-                return null;
+                return "WAIT";
             }
             case 10:
+                this.handleHalt();
                 return "HALT";
             default:
                 return "UNHANDLED";

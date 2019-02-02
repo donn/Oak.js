@@ -22,15 +22,17 @@ import enTranslations from "./translations/en.json";
 
 import { selectTab, addTab, updateTab, setProjectSettings, setSettingsVisible, setHelpVisible } from "./actions"
 
-const SIMULATING_OFF  = 0;
-const SIMULATING_STEP = 1;
-//const SIMULATING_PLAY = 2;
+const SimulatingStatus = {
+	Stopped:	0,
+	Step:		1,
+	Play:		2
+};
 
 const REGISTER_UNASSIGNED = 0;
 const REGISTER_ASSIGNED = 1;
 const REGISTER_NEWASSIGNED = 2;
 
-const CONSOLE_INPUT_NONE  = 0;
+const CONSOLE_INPUT_NONE= 0;
 const CONSOLE_INPUT_NUM = 1;
 const CONSOLE_INPUT_STR = 2;
 
@@ -58,11 +60,7 @@ class App extends Component {
 		
 		this.state = {
 			panel_x: 256,
-			panel_y: 256,
-			console_input: "",
-			console_input_type: CONSOLE_INPUT_NONE,
-			cursor_pos: 0,
-			running: true
+			panel_y: 256
 		};
 		
 		this.component_input = React.createRef();
@@ -71,13 +69,19 @@ class App extends Component {
 
 		this.virtual_os = new OakJS.VirtualOS(); // The virtual OS handles ecalls. It takes a bunch of callbacks: output Int, output String, etcetera...
 		this.virtual_os.inputInt = () => {
-			this.setState({console_input_type: CONSOLE_INPUT_NUM});
-			this.startHandlingKeys();
+			let tab = this.props.tabs[this.props.selectedtab];
+			if (tab) {
+				tab.console_input_type = CONSOLE_INPUT_NUM;
+				this.startHandlingKeys();
+			}
 		};
 
 		this.virtual_os.inputString = () => {
-			this.setState({console_input_type: CONSOLE_INPUT_STR});
-			this.startHandlingKeys();
+			let tab = this.props.tabs[this.props.selectedtab];
+			if (tab) {
+				tab.console_input_type = CONSOLE_INPUT_STR;
+				this.startHandlingKeys();
+			}
 		};
 		
 		this.virtual_os.outputInt = (number) => {
@@ -86,6 +90,20 @@ class App extends Component {
 
 		this.virtual_os.outputString = (string) => {
 			this.addConsoleMessage(MessageType.Output, ">> " + string);
+		};
+
+		this.virtual_os.handleHalt = () => {
+			let current_tab = this.props.selectedtab;
+			let tab = this.props.tabs[current_tab];
+
+			if (!tab)
+				return;
+
+			tab.runningStatus = SimulatingStatus.Stopped;
+			
+			this.addConsoleMessage(MessageType.Success, " == SIMULATION COMPLETED == ");
+
+			this.props.updateTab(current_tab, tab);
 		};
 		
 		this.addTabDefault();
@@ -102,44 +120,52 @@ class App extends Component {
 	handleKeyPress = (event) => {
 		event.preventDefault();
 
-		let input = this.state.console_input;
-		let cursor = this.state.cursor_pos;
+		let current_tab = this.props.selectedtab;
+		let tab = this.props.tabs[current_tab];
+		if (!tab) return;
+
+		let input = tab.console_input;
+		let cursor = tab.cursor_pos;
 
 		if (event.key === "Enter") {
 			console.log("Entered!", input);
 			this.continueAfterConsole(input);
-			this.setState({console_input: ""});
+			tab.console_input = "";
 		}
 		else if (event.which === 8) {
 			if (cursor > 0) {
 				let val = input.slice(0, cursor - 1) + input.slice(cursor);
 				
-				this.setState({console_input: val, cursor_pos: cursor - 1});
+				tab.cursor_pos = cursor - 1;
+				tab.console_input = val;
 			}
 		}
 		else if (event.keyCode === 46) {
 			if (cursor < input.length) {
 				let val = input.slice(0, cursor) + input.slice(cursor + 1);
 				
-				this.setState({console_input: val});
+				tab.cursor_pos = cursor - 1;
+				tab.console_input = val;
 			}
 		}
 		else if (event.keyCode === 37) {
-			cursor = (cursor === 0) ? 0 : cursor - 1;
-			this.setState({cursor_pos: cursor});
+			cursor = (cursor <= 0) ? 0 : cursor - 1;
+			tab.cursor_pos = cursor;
 		}
 		else if (event.keyCode === 39) {
-			this.setState({cursor_pos: cursor + 1});
+			let l = tab.console_input.length;
+			cursor = (cursor >= l) ? l : cursor + 1;
+			tab.cursor_pos = l;
 		}
 		else {
 			let out = event.key;
 			
 			const keycode = event.keyCode;
-			const isNum = this.state.console_input_type === CONSOLE_INPUT_NUM;
+			const isNum = tab.console_input_type === CONSOLE_INPUT_NUM;
 			
 			var valid = 
 			(keycode > 47 && keycode < 58)   || // number keys
-			(!isNum && (keycode == 32 || keycode == 13   || // spacebar & return key(s) (if you want to allow carriage returns)
+			(!isNum && (keycode === 32 || keycode === 13   || // spacebar & return key(s) (if you want to allow carriage returns)
 			(keycode > 64 && keycode < 91)   || // letter keys
 			(keycode > 95 && keycode < 112)  || // numpad keys
 			(keycode > 185 && keycode < 193) || // ;=,-./` (in order)
@@ -147,9 +173,12 @@ class App extends Component {
 
 			if (valid) {
 				out = input.slice(0, cursor) + out + input.slice(cursor);
-				this.setState({console_input: out, cursor_pos: cursor + 1});
+				tab.console_input = out;
+				tab.cursor_pos =  cursor + 1;
 			}
 		}
+
+		this.props.updateTab(current_tab, tab);
 
 		return false;
 	}
@@ -187,11 +216,11 @@ class App extends Component {
 		let reg_arg  = core.defaultEcallRegArg;
 		var arg =  core.registerFile.physicalFile[reg_arg];
 
-		if (this.state.console_input_type === CONSOLE_INPUT_NUM) {
+		if (tab.console_input_type === CONSOLE_INPUT_NUM) {
 			input = parseInt(input, 10);
 			core.registerFile.physicalFile[reg_type] = input;
 			this.addConsoleMessage(MessageType.Log, input);
-		} else if (this.state.console_input_type === CONSOLE_INPUT_STR) {
+		} else if (tab.console_input_type === CONSOLE_INPUT_STR) {
 			console.log(input);
 			let bytes = [];
 			for (var i = 0; i < input.length; i++) {
@@ -202,16 +231,8 @@ class App extends Component {
 			this.addConsoleMessage(MessageType.Log, input);
 		}
 
-		this.setState({console_input_type: CONSOLE_INPUT_NONE});
+		tab.console_input_type = CONSOLE_INPUT_NONE;
 		this.endHandlingKeys();
-		
-		if (this.simulation_status !== SIMULATING_STEP) {
-			/*let output = window.continueSim(core);
-			if (output !== "@Oak_Ecall" && output !== null) {
-				this.checkUpdatedTabs();
-				this.addConsoleMessage(MessageType.Log, <span><b>Simulator Error: </b> {output}</span>);
-			}*/
-		}
 
 		this.props.updateTab(selected, tab);
 	}
@@ -242,7 +263,11 @@ class App extends Component {
 			machine_code: machine_code,
 			core: core,
 			register_changed: [],
-			instruction_set: isa
+			runningStatus: SimulatingStatus.Stopped, 
+			instruction_set: isa,
+			console_input: "",
+			console_input_type: CONSOLE_INPUT_NONE,
+			cursor_pos: 0
 		};
 
 		new_tab.register_changed = Array.from({ length: core.registerFile.physicalFile.length }, () => REGISTER_UNASSIGNED);
@@ -363,7 +388,7 @@ class App extends Component {
 	downloadRam = () =>{
 		const current_tab = this.props.selectedtab;
 		let tab = this.props.tabs[current_tab];
-		
+
 		var data = tab.core.memory;
 		var byteArray = new Uint8Array(data);
 		var blob = new Blob([byteArray],
@@ -388,6 +413,11 @@ class App extends Component {
 		tab.log = [];
 		tab.console = [];
 		tab.register_changed = Array.from({ length: tab.register_changed.length }, () => REGISTER_UNASSIGNED);
+		tab.runningStatus = SimulatingStatus.Stopped;
+
+		tab.console_input = "";
+		tab.console_input_type = CONSOLE_INPUT_NONE;
+		tab.cursor_pos = 0;
 
 		this.props.updateTab(current_tab, tab);
 	}
@@ -397,49 +427,29 @@ class App extends Component {
 		let tabs = this.props.tabs;
 		let tab = tabs[current_tab];
 
-		this.resetUI();
 		tab.core.reset();
-		this.props.updateTab(current_tab, tab);
+		this.resetUI();
 	}
 
 	uiSimulate = () => {
 		let current_tab = this.props.selectedtab;
 		let tab = this.props.tabs[current_tab];
+
+		if (tab.console_input_type !== CONSOLE_INPUT_NONE)
+			return;
+
+		if (tab.runningStatus === SimulatingStatus.Stopped)
+			this.uiAssemble();
+
 		let core =  tab.core;
 
-		/*if (this.simulation_status === SIMULATING_STEP) {
-			this.simulation_status = SIMULATING_PLAY;
-			this.simulation_start = performance.now();
-			var output = window.continueSim(tab.core);
-			if (output !== "@Oak_Ecall" && output !== null) {
-				this.checkUpdatedTabs();
-				this.addConsoleMessage(<div className="console_error"><b>Simulator Error: </b> {output}</div>);
-			}
-		}
-		else {
-			if (tab.content) {
-				this.uiAssemble();
-			}
-			else {
-				this.reset();
-			}
-			
-			this.simulation_status = SIMULATING_PLAY;
-			this.simulation_start = performance.now();
-
-			let core = tab.core;
-			let bytes = tab.machine_code;
-			let output = window.simulate(core, bytes);
-			if (output !== "@Oak_Ecall" && output != null) {
-				this.checkUpdatedTabs();
-				this.addConsoleMessage(<div className="console_error"><b>Simulator Error: </b> {output}</div>);
-			}
-		}*/
+		tab.runningStatus = SimulatingStatus.Play;
 
 		while (true) {
 			let fetch = core.fetch();
 			if (fetch !== null) {
 				this.addConsoleMessage(MessageType.Error, fetch);
+				tab.runningStatus = SimulatingStatus.Stopped;
 				break;
 			}
 		
@@ -448,14 +458,15 @@ class App extends Component {
 			
 			if (decode === null) {
 				this.addConsoleMessage(MessageType.Error, "decode.failure");
+				tab.runningStatus = SimulatingStatus.Stopped;
 				break;
 			}
 		
 			let execute = core.execute();
 			if (execute !== null) {
-				if (execute !== 'HALT') { // If HALT, then an environment call has been executed.
-					console.log(execute);
+				if (execute !== 'HALT' && execute !== 'WAIT') { // If HALT, then an environment call has been executed.
 					this.addConsoleMessage(MessageType.Error, execute);
+					tab.runningStatus = SimulatingStatus.Stopped;
 				}
 				break;
 			}
@@ -468,34 +479,23 @@ class App extends Component {
 	uiStepByStep = () => {
 		let current_tab = this.props.selectedtab;
 		let tab = this.props.tabs[current_tab];
+
+		if (tab.console_input_type !== CONSOLE_INPUT_NONE)
+			return;
+
+		if (tab.runningStatus === SimulatingStatus.Stopped)
+			this.uiAssemble();
+
 		let core = tab.core;
 
-		/*if (this.simulation_status !== SIMULATING_STEP) {
-			this.uiAssemble();
-			let bytes = tab.machine_code;
-			var load = window.loadIntoMemory(core, bytes);
-			if (load !== null)
-			{
-				this.addConsoleMessage(<div className="console_error"><b>Failed to load machine code into memory: </b> {load}</div>);
-				return;
-			}
-			this.simulation_status = SIMULATING_STEP;
-		}
-
-		var output = window.simulateStep(core);
-		this.checkUpdatedTabs();
-		
-		if (output !== "@Oak_Ecall") {
-			let log = tab.log[tab.log.length - 1];
-			this.addConsoleMessage(<div className="console_step"><b>Simulator Step: </b> {log}</div>);
-		}
-		else if (output !== null && output !== "@Oak_Ecall") {
-			this.addConsoleMessage(<div className="console_error"><b>Simulator Error: </b> {output}</div>);
-		}*/
+		tab.runningStatus = SimulatingStatus.Step;
 
 		let fetch = core.fetch();
 		if (fetch !== null) {
 			this.addConsoleMessage(MessageType.Error, fetch);
+			tab.runningStatus = SimulatingStatus.Stopped;
+			this.props.updateTab(current_tab, tab);
+			return;
 		}
 	
 		let decode = core.decode(); // Decode has the decoded instruction on success
@@ -503,14 +503,16 @@ class App extends Component {
 		
 		if (decode === null) {
 			this.addConsoleMessage(MessageType.Error, "decode.failure");
+			tab.runningStatus = SimulatingStatus.Stopped;
+			this.props.updateTab(current_tab, tab);
 			return;
 		}
 	
 		let execute = core.execute();
 		if (execute !== null) {
 			if (execute !== 'HALT') { // If HALT, then an environment call has been executed.
-				console.log(execute);
-				tab.console.push(execute);
+				this.addConsoleMessage(MessageType.Error, execute);
+				tab.runningStatus = SimulatingStatus.Stopped;
 			}
 		}
 
@@ -569,8 +571,6 @@ class App extends Component {
 		else {
 			this.addConsoleMessage(MessageType.Error, <span><b>Error:</b> Assembler failed.</span>);
 		}
-
-		this.simulation_status = SIMULATING_OFF;
 
 		this.props.updateTab(current_tab, tab);
 	}
@@ -714,8 +714,14 @@ class App extends Component {
 	}*/
 
 	render() {
+		let current_tab = this.props.selectedtab;
+		let tab = this.props.tabs[current_tab];
+
 		let has_tabs = this.props.tabs.length > 0;
-		let show_input = this.state.console_input_type !== CONSOLE_INPUT_NONE;
+		let show_input = false;
+		
+		if (tab)
+			show_input = tab.console_input_type !== CONSOLE_INPUT_NONE;
 		
 		return (
 			<React.Fragment>
@@ -740,7 +746,7 @@ class App extends Component {
 				{has_tabs && <div className="grid" style={{gridTemplateColumns: `auto ${this.state.panel_x}px`, gridTemplateRows: `auto calc(${this.state.panel_y}px)`}}>
 					<TextEditor is_disabled={show_input} addTab={this.addTabDefault} />
 					<PanelContainer handleStartDrag={this.handleStartDragY} className="panel_bottom">
-						<PanelConsole show_input={show_input} input={this.state.console_input} />
+						<PanelConsole show_input={show_input} input={tab.console_input} />
 						<PanelMachineCode />
 						<PanelMemory />
 						<PanelLog />

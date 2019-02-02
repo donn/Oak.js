@@ -6,6 +6,7 @@ class VirtualOS {
     outputString: (arg: string) => (void);
     inputInt: () => (number);
     inputString: () => (string);
+    handleHalt: () => (void);
 
     ecall(core: Core): string {
         let service = core.registerFile.read(core.virtualOSServiceRegister);
@@ -31,13 +32,14 @@ class VirtualOS {
         }
         case 5: {
             this.inputInt();
-            return null;
+            return "WAIT";
         }
         case 8: {
             this.inputString();
-            return null;
+            return "WAIT";
         }   
         case 10:
+            this.handleHalt();
             return "HALT";
         default:
             return "UNHANDLED";
