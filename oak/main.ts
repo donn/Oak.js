@@ -1,12 +1,13 @@
 /// <reference path="ISAs/RISCV.ts"/>
 /// <reference path="ISAs/MIPS.ts"/>
+/// <reference path="VirtualOS.ts"/>
 
 declare let require: any
 declare let process: any
 
 let opt = require('node-getopt').create([
     ['a', 'instructionSetArchitecture=ARG'  , 'String name of the instruction set architecture to use.', 'RISC-V'],
-    ['d', 'debug'  , 'String name of the instruction set architecture to use.', false],
+    // ['d', 'debug', 'Turn on debug mode. (Beta)', false],
     ['o', 'archOptions=ARG+', 'Special options for the instruction set architecture.', []],
     ['h', 'help', 'Show this message and exit.', false],
     ['v', 'verbose', 'Verbose operation mode.', false],

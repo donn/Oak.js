@@ -13,7 +13,7 @@ class VirtualOS {
         for (let i = core.virtualOSArgumentVectorStart; i <= core.virtualOSArgumentVectorEnd; i += 1) {
             args.push(core.registerFile.read(i));
         }
-
+        
         switch (service) {
         case 1: {
             this.outputInt(args[0]);

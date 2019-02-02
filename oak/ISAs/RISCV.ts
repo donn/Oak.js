@@ -1,5 +1,4 @@
 /// <reference path="../Assembler.ts" />
-/// <reference path="../VirtualOS.ts"/>
 /// <reference path="../CoreFactory.ts"/>
 
 //The RISC-V Instruction Set Architecture, Version 2.1

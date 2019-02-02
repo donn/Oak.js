@@ -1,5 +1,4 @@
 /// <reference path="../Assembler.ts" />
-/// <reference path="../VirtualOS.ts"/>
 
 //The MIPS Instruction Set Architecture
 
@@ -277,8 +276,7 @@ function MIPS(options: boolean[]): InstructionSet {
             ["funct"],
             [0xC],
             function(core) {
-                core.virtualOS.ecall(core);
-                return null;
+                return core.virtualOS.ecall(core);
             }
         )
     );
@@ -593,9 +591,9 @@ function MIPS(options: boolean[]): InstructionSet {
                 bytes.push(core.registerFile.read(core.arguments[0]) & 255);
                 let writeAddress = core.registerFile.read(core.arguments[2]) + core.arguments[1];
                 if(core.memset(writeAddress, bytes)) {
-                    console.log("A0 ", core.registerFile.read(core.instructionSet.abiNames.indexOf("$a0")));
-                    console.log("T1 ", core.registerFile.read(core.instructionSet.abiNames.indexOf("$t1")));
-                    console.log("Wrote to ", writeAddress.toString(16));
+                    // console.log("A0 ", core.registerFile.read(core.instructionSet.abiNames.indexOf("$a0")));
+                    // console.log("T1 ", core.registerFile.read(core.instructionSet.abiNames.indexOf("$t1")));
+                    // console.log("Wrote to ", writeAddress.toString(16));
                     return null;
                 }
                 return "Illegal memory access.";
