@@ -211,6 +211,28 @@ table tbody tr:nth-child(even) {
   opacity: 0.2;
 }
 
+.blinker {
+  -webkit-animation: blinker 0.5s ease-in-out infinite;
+          animation: blinker 0.5s ease-in-out infinite;
+}
+
+.running_console {
+  opacity: 0.5;
+  font-style: italic;
+}
+
+@-webkit-keyframes blinker {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0.25;
+  }
+}
+
 .no_tabs {
   background: #444;
 }

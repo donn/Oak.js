@@ -128,7 +128,6 @@ class App extends Component {
 		let cursor = tab.cursor_pos;
 
 		if (event.key === "Enter") {
-			console.log("Entered!", input);
 			this.continueAfterConsole(input);
 			tab.console_input = "";
 		}
@@ -212,28 +211,19 @@ class App extends Component {
 
 		let core = tab.core;
 
-		let reg_type = core.defaultEcallRegType;
-		let reg_arg  = core.defaultEcallRegArg;
-		var arg =  core.registerFile.physicalFile[reg_arg];
-
 		if (tab.console_input_type === CONSOLE_INPUT_NUM) {
 			input = parseInt(input, 10);
-			core.registerFile.physicalFile[reg_type] = input;
-			this.addConsoleMessage(MessageType.Log, input);
+			this.virtual_os.continueInputInt(core, input);
+			this.addConsoleMessage(MessageType.Log, "<< " + input);
 		} else if (tab.console_input_type === CONSOLE_INPUT_STR) {
-			console.log(input);
-			let bytes = [];
-			for (var i = 0; i < input.length; i++) {
-				bytes.push(input.charCodeAt(i) & 255);
-			}
-			bytes.push(0);
-			core.memset(arg, bytes);
-			this.addConsoleMessage(MessageType.Log, input);
+			this.virtual_os.continueInputString(core, input);
+			this.addConsoleMessage(MessageType.Log, "<< " + input);
 		}
 
 		tab.console_input_type = CONSOLE_INPUT_NONE;
 		this.endHandlingKeys();
 
+		this.checkUpdatedTabs();
 		this.props.updateTab(selected, tab);
 	}
 
@@ -510,7 +500,7 @@ class App extends Component {
 	
 		let execute = core.execute();
 		if (execute !== null) {
-			if (execute !== 'HALT') { // If HALT, then an environment call has been executed.
+			if (execute !== 'HALT' && execute !== 'WAIT') { // If HALT, then an environment call has been executed.
 				this.addConsoleMessage(MessageType.Error, execute);
 				tab.runningStatus = SimulatingStatus.Stopped;
 			}

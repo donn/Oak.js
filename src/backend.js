@@ -864,7 +864,7 @@ class VirtualOS {
             let arg = core.registerFile.read(reg);
             let array = [];
             for (let i = 0; i < val.length; ++i) {
-                array.push(val[i]);
+                array.push(val.charCodeAt(i));
             }
             core.memset(arg, array);
         };
