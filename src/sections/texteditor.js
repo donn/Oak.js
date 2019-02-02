@@ -6,7 +6,7 @@ import 'brace/mode/java';
 import 'brace/theme/github';
 //import './ace_theme';
 
-import { selectTab, deleteTab, updateTab } from "../actions"
+import { selectTab, deleteTab, updateTab, setProjectSettings } from "../actions"
 import { connect } from 'react-redux';
 
 class TextEditor extends Component {
@@ -16,6 +16,11 @@ class TextEditor extends Component {
 	
 	handleTabChange = (id) => {
 		this.props.selectTab(id);
+		let tab = this.props.tabs[id];
+
+		if (tab) {
+			this.props.setProjectSettings(tab.name, tab.core.memorySize, tab.instruction_set);
+		}
 	}
 
 	handleTabClose = (event, id) => {
@@ -25,8 +30,16 @@ class TextEditor extends Component {
 		if (selected >= id)
 			selected -= 1;
 
+		selected = Math.min(Math.max(selected, 0), this.props.tabs.length - 1);
+
 		this.props.selectTab(selected);
-		
+
+		let tab = this.props.tabs[selected];
+
+		if (tab) {
+			this.props.setProjectSettings(tab.name, tab.core.memorySize, tab.instruction_set);
+		}
+
 		this.props.deleteTab(id);
 	}
 
@@ -60,7 +73,7 @@ class TextEditor extends Component {
 					height=""
 					name="editor_area"
 					className="editor_area"
-					value={this.props.tabs[this.props.selectedtab].content}
+					value={tabs[this.props.selectedtab].content}
 					readOnly={this.props.is_disabled}
 					editorProps={{$blockScrolling: Infinity}}
 				/>}
@@ -79,7 +92,8 @@ const stateToProps = state => {
 const dispatchToProps = (dispatch, ownProps) => ({
 	selectTab: (id) => dispatch(selectTab(id)),
 	updateTab: (index, tab) => dispatch(updateTab(index, tab)),
-	deleteTab: (id) => dispatch(deleteTab(id))
+	deleteTab: (id) => dispatch(deleteTab(id)),
+	setProjectSettings: (n, s, i) => dispatch(setProjectSettings(n, s, i))
 })
 
 export default connect(

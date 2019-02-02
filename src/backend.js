@@ -875,17 +875,15 @@ class VirtualOS {
     }
     ecall(core) {
         let service = core.registerFile.read(core.virtualOSServiceRegister);
-        let args = [];
-        for (let i = core.virtualOSArgumentVectorStart; i <= core.virtualOSArgumentVectorEnd; i += 1) {
-            args.push(core.registerFile.read(i));
-        }
+        const start = core.virtualOSArgumentVectorStart;
         switch (service) {
             case 1: {
-                this.outputInt(args[0]);
+                let val = core.registerFile.read(start);
+                this.outputInt(val);
                 break;
             }
             case 4: {
-                let iterator = args[0];
+                let iterator = core.registerFile.read(start);
                 let array = [];
                 let char = null;
                 while ((char = core.memcpy(iterator, 1)[0]) !== 0) {
@@ -894,25 +892,20 @@ class VirtualOS {
                 }
                 let outStr = array.map(c => String.fromCharCode(c)).join('');
                 this.outputString(outStr);
-                break;
+                return null;
             }
             case 5: {
                 this.inputInt();
-                break;
+                return null;
             }
             case 8: {
                 this.inputString();
-                return "WAIT";
+                return null;
             }
             case 10:
                 return "HALT";
             default:
                 return "UNHANDLED";
-        }
-        let j = 0;
-        for (let i = core.virtualOSArgumentVectorStart; i <= core.virtualOSArgumentVectorEnd; i += 1) {
-            core.registerFile.write(i, args[j]);
-            j += 1;
         }
         return null;
     }
@@ -1003,7 +996,6 @@ class CoreFactory {
 }
 CoreFactory.ISAs = {};
 /// <reference path="../Assembler.ts" />
-/// <reference path="../VirtualOS.ts"/>
 /// <reference path="../CoreFactory.ts"/>
 //The RISC-V Instruction Set Architecture, Version 2.1
 function RISCV(options) {
@@ -1417,15 +1409,13 @@ function RISCV(options) {
     directives["byte"] = Directive._8bit;
     directives["half"] = Directive._16bit;
     directives["word"] = Directive._32bit;
-    return new InstructionSet(32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, false, `
-    la a1, str
+    return new InstructionSet(32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, false, `    la a1, str
     li a0, 4 #4 is the string print service number...
     ecall
     li a0, 10 #...and 10 is the program termination service number!
     ecall
 .data
-str:    .string "Hello, World!"
-`);
+str:    .string "Hello, World!"`);
 }
 class RISCVRegisterFile {
     print() {
@@ -1513,13 +1503,12 @@ class RISCVCore extends Core {
         }
     }
 }
-CoreFactory.ISAs["RISC-V"] = {
+CoreFactory.ISAs["RISCV"] = {
     generator: RISCV,
     core: RISCVCore,
     options: []
 };
 /// <reference path="../Assembler.ts" />
-/// <reference path="../VirtualOS.ts"/>
 //The MIPS Instruction Set Architecture
 function MIPS(options) {
     //Formats and Instructions
@@ -1626,8 +1615,7 @@ function MIPS(options) {
     ], /^\s*([a-zA-Z]+)\s*$/, "@mnem"));
     let rcSubtype = formats[formats.length - 1];
     instructions.push(new Instruction("SYSCALL", rcSubtype, ["funct"], [0xC], function (core) {
-        core.virtualOS.ecall(core);
-        return null;
+        return core.virtualOS.ecall(core);
     }));
     //I-Type
     formats.push(new Format([
@@ -1752,9 +1740,9 @@ function MIPS(options) {
         bytes.push(core.registerFile.read(core.arguments[0]) & 255);
         let writeAddress = core.registerFile.read(core.arguments[2]) + core.arguments[1];
         if (core.memset(writeAddress, bytes)) {
-            console.log("A0 ", core.registerFile.read(core.instructionSet.abiNames.indexOf("$a0")));
-            console.log("T1 ", core.registerFile.read(core.instructionSet.abiNames.indexOf("$t1")));
-            console.log("Wrote to ", writeAddress.toString(16));
+            // console.log("A0 ", core.registerFile.read(core.instructionSet.abiNames.indexOf("$a0")));
+            // console.log("T1 ", core.registerFile.read(core.instructionSet.abiNames.indexOf("$t1")));
+            // console.log("Wrote to ", writeAddress.toString(16));
             return null;
         }
         return "Illegal memory access.";
@@ -1898,14 +1886,13 @@ function MIPS(options) {
     directives["half"] = Directive._16bit;
     directives["word"] = Directive._32bit;
     let abiNames = ["$zero", "$at", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$k0", "$k1", "$gp", "$sp", "$fp", "$ra"];
-    return new InstructionSet(32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, true, `   la $a0, str
+    return new InstructionSet(32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, true, `    la $a0, str
     li $v0, 4 #4 is the string print service number...
     syscall
     li $v0, 10 #...and 10 is the program termination service number!
     syscall
 .data
-str:    .asciiz "Hello, World!"
-`);
+str:    .asciiz "Hello, World!"`);
 }
 class MIPSRegisterFile {
     print() {

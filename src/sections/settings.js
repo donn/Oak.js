@@ -2,11 +2,14 @@ import React, { Component } from 'react'
 import HotkeyInput from '../modules/hotkey.js'
 import Select from '../modules/select'
 
-export default class Settings extends Component {
+import { connect } from 'react-redux';
+import { Translate, withLocalize } from "react-localize-redux";
+import { setSettingsVisible } from "../actions"
+
+class Settings extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            shown: false,
             default_isa: "RISC-V",
             theme: "Light"
         };
@@ -19,12 +22,9 @@ export default class Settings extends Component {
 		this.comp_step = React.createRef();
     }
 
-    handleShow = () => {
-        this.setState({shown: true});
-    };
-
-    handleClose = () => {
-        this.setState({shown: false});
+    handleClose = (e) => {
+        e.preventDefault();
+        this.props.setSettingsVisible(false);
     };
 
     handleStopClose = (event) => {
@@ -181,7 +181,7 @@ export default class Settings extends Component {
 
     render() {
         return (
-            <div id="settings" onClick={this.handleClose} className={`settings_overlay overlay fader${this.state.shown ? " fader_shown" : ""}`}>
+            <div id="settings" onClick={this.handleClose} className={`settings_overlay overlay fader${this.props.visible ? " fader_shown" : ""}`}>
                 <div className="settings_container" onClick={this.handleStopClose}>
                     <h2>Settings</h2>
                     <table>
@@ -261,3 +261,18 @@ export default class Settings extends Component {
         );
     }
 }
+
+const stateToProps = state => {
+    return {
+        visible: state.panel_visibility.settings
+    };
+};
+
+const dispatchToProps = (dispatch, ownProps) => ({
+    setSettingsVisible: (visible) => dispatch(setSettingsVisible(visible))
+});
+
+export default withLocalize(
+    connect(stateToProps,
+            dispatchToProps
+    )(Settings));

@@ -20,7 +20,7 @@ import { Translate, withLocalize } from "react-localize-redux";
 import { renderToStaticMarkup } from 'react-dom/server';
 import enTranslations from "./translations/en.json";
 
-import { selectTab, addTab, updateTab, setProjectSettings } from "./actions"
+import { selectTab, addTab, updateTab, setProjectSettings, setSettingsVisible, setHelpVisible } from "./actions"
 
 const SIMULATING_OFF  = 0;
 const SIMULATING_STEP = 1;
@@ -60,14 +60,26 @@ class App extends Component {
 			panel_x: 256,
 			panel_y: 256,
 			console_input: "",
-			console_input_type: 0, //CONSOLE_INPUT_NONE,
-			is_disabled: false,
+			console_input_type: CONSOLE_INPUT_NONE,
 			cursor_pos: 0,
+			running: true
 		};
+		
+		this.component_input = React.createRef();
 		
 		this.props.addTranslationForLanguage(enTranslations, 'en');
 
 		this.virtual_os = new OakJS.VirtualOS(); // The virtual OS handles ecalls. It takes a bunch of callbacks: output Int, output String, etcetera...
+		this.virtual_os.inputInt = () => {
+			this.setState({console_input_type: CONSOLE_INPUT_NUM});
+			this.startHandlingKeys();
+		};
+
+		this.virtual_os.inputString = () => {
+			this.setState({console_input_type: CONSOLE_INPUT_STR});
+			this.startHandlingKeys();
+		};
+		
 		this.virtual_os.outputInt = (number) => {
 			this.addConsoleMessage(MessageType.Output, ">> " + number);
 		};
@@ -79,100 +91,68 @@ class App extends Component {
 		this.addTabDefault();
 	}
 
-	/*simulation_start;
-	simulation_status;
-	virtual_os;
-	default_isa;
-	cursor_pos = 0;
-
-	constructor(props) {
-		super(props);
-		this.state = {
-			panel_x: 256,
-			panel_y: 256,
-			console_input: "",
-			console_input_type: CONSOLE_INPUT_NONE,
-			is_disabled: false,
-			cursor_pos: 0,
-		};
-		
-		this.component_settings = React.createRef();
-		this.component_help = React.createRef();
-		this.component_editor = React.createRef();
-		this.component_input = React.createRef();
-		this.component_panel_settings = React.createRef();
-
-		
-		
-
-	componentDidMount() {
-		window.addEventListener("keypress", this.handleKeyPress);
-
-		instruction_sets = OakJS.CoreFactory.getCoreList();
-		this.default_isa = instruction_sets[0];
-
-		this.addTabDefault();
+	startHandlingKeys = () => {
+		window.addEventListener("keyup", this.handleKeyPress);
 	}
 
+	endHandlingKeys = () => {
+		window.removeEventListener("keyup", this.handleKeyPress);
+	}
 
 	handleKeyPress = (event) => {
-		if (this.state.console_input_type === CONSOLE_INPUT_NONE) {
-			this.component_settings.current.handleKey(event);
+		event.preventDefault();
+
+		let input = this.state.console_input;
+		let cursor = this.state.cursor_pos;
+
+		if (event.key === "Enter") {
+			console.log("Entered!", input);
+			this.continueAfterConsole(input);
+			this.setState({console_input: ""});
+		}
+		else if (event.which === 8) {
+			if (cursor > 0) {
+				let val = input.slice(0, cursor - 1) + input.slice(cursor);
+				
+				this.setState({console_input: val, cursor_pos: cursor - 1});
+			}
+		}
+		else if (event.keyCode === 46) {
+			if (cursor < input.length) {
+				let val = input.slice(0, cursor) + input.slice(cursor + 1);
+				
+				this.setState({console_input: val});
+			}
+		}
+		else if (event.keyCode === 37) {
+			cursor = (cursor === 0) ? 0 : cursor - 1;
+			this.setState({cursor_pos: cursor});
+		}
+		else if (event.keyCode === 39) {
+			this.setState({cursor_pos: cursor + 1});
 		}
 		else {
-			event.preventDefault();
+			let out = event.key;
+			
+			const keycode = event.keyCode;
+			const isNum = this.state.console_input_type === CONSOLE_INPUT_NUM;
+			
+			var valid = 
+			(keycode > 47 && keycode < 58)   || // number keys
+			(!isNum && (keycode == 32 || keycode == 13   || // spacebar & return key(s) (if you want to allow carriage returns)
+			(keycode > 64 && keycode < 91)   || // letter keys
+			(keycode > 95 && keycode < 112)  || // numpad keys
+			(keycode > 185 && keycode < 193) || // ;=,-./` (in order)
+			(keycode > 218 && keycode < 223)));
 
-			let input = this.state.console_input;
-			let cursor = this.state.cursor_pos;
-
-			if (event.key === "Enter") {
-				console.log("Entered!", input);
-				this.continueAfterConsole(input);
-				this.setState({console_input: ""});
-			}
-			else if (event.which === 8) {
-				if (cursor > 0) {
-					let val = input.slice(0, cursor - 1) + input.slice(cursor);
-					
-					this.setState({console_input: val, cursor_pos: cursor - 1});
-				}
-			}
-			else if (event.keyCode === 46) {
-				if (cursor < input.length) {
-					let val = input.slice(0, cursor) + input.slice(cursor + 1);
-					
-					this.setState({console_input: val});
-				}
-			}
-			else if (event.keyCode === 37) {
-				cursor = (cursor === 0) ? 0 : cursor - 1;
-				this.setState({cursor_pos: cursor});
-			}
-			else if (event.keyCode === 39) {
-				this.setState({cursor_pos: cursor + 1});
-			}
-			else {
-				let out = event.key;
+			if (valid) {
 				out = input.slice(0, cursor) + out + input.slice(cursor);
 				this.setState({console_input: out, cursor_pos: cursor + 1});
 			}
-
-			return false;
 		}
+
+		return false;
 	}
-
-	instructionCallback = (data) => {
-		let tabs = this.state.core.tabs;
-		let tab = tabs[this.state.core.selected];
-		tab.log.push(data);
-
-		this.setState(prevState => ({
-			core: {
-				...prevState.core,
-				tabs: tabs
-			}
-		}));
-	}*/
 
 	addConsoleMessage = (msg_type, data) => {
 		let current_tab = this.props.selectedtab;
@@ -197,27 +177,19 @@ class App extends Component {
 		this.props.updateTab(current_tab, tab);
 	}
 
-	/*registerRead = (core, reg) => {
-		return core.registerFile.physicalFile[reg];
-	}
-
-	registerWrite = (core, reg, val) => {
-		core.registerFile.physicalFile[reg] = val;
-	}
-
 	continueAfterConsole = (input) => {
-		let selected = this.state.core.selected;
-		let tab = this.state.core.tabs[selected];
+		let selected = this.props.selectedtab;
+		let tab = this.props.tabs[selected];
 
 		let core = tab.core;
 
 		let reg_type = core.defaultEcallRegType;
 		let reg_arg  = core.defaultEcallRegArg;
-		var arg =  this.registerRead(core, reg_arg);
+		var arg =  core.registerFile.physicalFile[reg_arg];
 
 		if (this.state.console_input_type === CONSOLE_INPUT_NUM) {
 			input = parseInt(input, 10);
-			this.registerWrite(core, reg_type, input);
+			core.registerFile.physicalFile[reg_type] = input;
 			this.addConsoleMessage(MessageType.Log, input);
 		} else if (this.state.console_input_type === CONSOLE_INPUT_STR) {
 			console.log(input);
@@ -231,15 +203,18 @@ class App extends Component {
 		}
 
 		this.setState({console_input_type: CONSOLE_INPUT_NONE});
+		this.endHandlingKeys();
 		
 		if (this.simulation_status !== SIMULATING_STEP) {
-			let output = window.continueSim(core);
+			/*let output = window.continueSim(core);
 			if (output !== "@Oak_Ecall" && output !== null) {
 				this.checkUpdatedTabs();
 				this.addConsoleMessage(MessageType.Log, <span><b>Simulator Error: </b> {output}</span>);
-			}
+			}*/
 		}
-	}*/
+
+		this.props.updateTab(selected, tab);
+	}
 
 	checkUpdatedTabs = () => {
 		let tab = this.props.tabs[this.props.selectedtab];
@@ -287,11 +262,19 @@ class App extends Component {
 		this.addTabFull("New Tab", "", [], 4096, this.getDefaultISA(), true);
 	}
 
+	addTabDefaultRISCV = () => {
+		this.addTabFull("New Tab", "", [], 4096, "RISCV", true);
+	}
+
+	addTabDefaultMIPS = () => {
+		this.addTabFull("New Tab", "", [], 4096, "MIPS", true);
+	}
+
 	getDefaultISA = () => {
 		return OakJS.CoreFactory.getCoreList()[0];
 	}
 
-	/*handleUpload = (event) => {
+	handleUpload = (event) => {
 		let files = this.component_input.current.files;
 		if (files.length <= 0) return;
 
@@ -334,7 +317,8 @@ class App extends Component {
 	}
 
 	handleDownloadAsm = () => {
-		let tab = this.state.core.tabs[this.state.core.selected];
+		const current_tab = this.props.selectedtab;
+		let tab = this.props.tabs[current_tab];
 
 		var data = tab.content;
 		if (data.length === 0)
@@ -352,11 +336,12 @@ class App extends Component {
 		el.style.display = "none";
 		document.body.appendChild(el);
 		el.click();
-		document.body.removeChild(el)
+		document.body.removeChild(el);
 	}
 	
 	downloadBin = () => {
-		let tab = this.state.core.tabs[this.state.core.selected];
+		const current_tab = this.props.selectedtab;
+		let tab = this.props.tabs[current_tab];
 
 		var data = tab.machine_code;
 		var byteArray = new Uint8Array(data);
@@ -376,8 +361,9 @@ class App extends Component {
 	}
 	
 	downloadRam = () =>{
-		let tab = this.state.core.tabs[this.state.core.selected];
-
+		const current_tab = this.props.selectedtab;
+		let tab = this.props.tabs[current_tab];
+		
 		var data = tab.core.memory;
 		var byteArray = new Uint8Array(data);
 		var blob = new Blob([byteArray],
@@ -393,7 +379,7 @@ class App extends Component {
 		document.body.appendChild(element);
 		element.click();
 		document.body.removeChild(element)
-	}*/
+	}
 
 	resetUI = () => {
 		let current_tab = this.props.selectedtab;
@@ -461,7 +447,7 @@ class App extends Component {
 			tab.log.push(decode);
 			
 			if (decode === null) {
-				this.addConsoleMessage(MessageType.Error, "decide.failure");
+				this.addConsoleMessage(MessageType.Error, "decode.failure");
 				break;
 			}
 		
@@ -509,16 +495,15 @@ class App extends Component {
 
 		let fetch = core.fetch();
 		if (fetch !== null) {
-			console.log(fetch);
-			tab.console.push(fetch);
+			this.addConsoleMessage(MessageType.Error, fetch);
 		}
 	
 		let decode = core.decode(); // Decode has the decoded instruction on success
 		tab.log.push(decode);
 		
 		if (decode === null) {
-			console.log("decode.failure");
-			tab.console.push("decode.failure");
+			this.addConsoleMessage(MessageType.Error, "decode.failure");
+			return;
 		}
 	
 		let execute = core.execute();
@@ -708,15 +693,15 @@ class App extends Component {
 		window.removeEventListener("mouseup", this.handleStopDragY);
 	}
 
-	/*showSettings = () => {
-		this.component_settings.current.handleShow();
+	showSettings = () => {
+		this.props.setSettingsVisible(true);
 	}
 
 	showHelp = () => {
-		this.component_help.current.handleShow();
+		this.props.setHelpVisible(true);
 	}
 
-	setEditorValue = (val) => {
+	/*setEditorValue = (val) => {
 		let tabs = this.state.core.tabs;
 		tabs[this.state.core.selected].content = val;
 
@@ -730,8 +715,8 @@ class App extends Component {
 
 	render() {
 		let has_tabs = this.props.tabs.length > 0;
-		let show_input = false; //this.state.console_input_type !== CONSOLE_INPUT_NONE;
-
+		let show_input = this.state.console_input_type !== CONSOLE_INPUT_NONE;
+		
 		return (
 			<React.Fragment>
 				<Help ref={this.component_help} />
@@ -742,7 +727,7 @@ class App extends Component {
 					fn_ass={this.uiAssemble}
 					fn_sim={this.uiSimulate}
 					fn_step={this.uiStepbystep} />
-				<Navigation showSettings={this.showSettings} showHelp={this.showHelp} assemble={this.uiAssemble} simulate={this.uiSimulate} stepbystep={this.uiStepByStep} downloadRam={this.downloadRam} downloadBin={this.downloadBin} handleAddTab={this.addTabDefault} handleLoadAsm={this.handleLoadAsm} handleLoadBin={this.handleLoadBin} handleDownloadAsm={this.handleDownloadAsm} />
+				<Navigation showSettings={this.showSettings} showHelp={this.showHelp} assemble={this.uiAssemble} simulate={this.uiSimulate} stepbystep={this.uiStepByStep} downloadRam={this.downloadRam} downloadBin={this.downloadBin} handleAddTabRiscv={this.addTabDefaultRISCV} handleAddTabMips={this.addTabDefaultMIPS} handleLoadAsm={this.handleLoadAsm} handleLoadBin={this.handleLoadBin} handleDownloadAsm={this.handleDownloadAsm} />
 				{!has_tabs && <div className="no_tabs">
 					<div>
 						<h2><Translate id="welcome.title">Welcome to Oak.js</Translate></h2>
@@ -753,9 +738,9 @@ class App extends Component {
 					</div>
 				</div>}
 				{has_tabs && <div className="grid" style={{gridTemplateColumns: `auto ${this.state.panel_x}px`, gridTemplateRows: `auto calc(${this.state.panel_y}px)`}}>
-					<TextEditor is_disabled={this.state.is_disabled} addTab={this.addTabDefault} />
+					<TextEditor is_disabled={show_input} addTab={this.addTabDefault} />
 					<PanelContainer handleStartDrag={this.handleStartDragY} className="panel_bottom">
-						<PanelConsole />
+						<PanelConsole show_input={show_input} input={this.state.console_input} />
 						<PanelMachineCode />
 						<PanelMemory />
 						<PanelLog />
@@ -772,10 +757,6 @@ class App extends Component {
 	}
 }
 
-/*show_input={show_input} input={this.state.console_input} log={console_vals}*/
-/*<PanelSettings ref={this.component_panel_settings} onSubmit={this.handleSettingsChange} />
-						<PanelRegisters register_changed={register_changed} register_names={register_names} registers={registers} />*/
-
 const appStateToProps = state => {
 	return {
 		tabs: state.tabs,
@@ -788,8 +769,10 @@ const appDispatchToProps = (dispatch, ownProps) => ({
 	addTab: (tab) => dispatch(addTab(tab)),
 	updateTab: (index, tab) => dispatch(updateTab(index, tab)),
 	selectTab: (id) => dispatch(selectTab(id)),
-	setProjectSettings: (n, s, i) => dispatch(setProjectSettings(n, s, i))
-})
+	setProjectSettings: (n, s, i) => dispatch(setProjectSettings(n, s, i)),
+	setHelpVisible: (visible) => dispatch(setHelpVisible(visible)),
+	setSettingsVisible: (visible) => dispatch(setSettingsVisible(visible))
+});
 
 export default withLocalize(
 	connect(appStateToProps,

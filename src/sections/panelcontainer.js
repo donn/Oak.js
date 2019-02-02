@@ -8,11 +8,9 @@ export default class PanelContainer extends Component {
             selected: 0
         };
     }
-
-    componentDidMount() {
-    }
-
-    handleClickTab(key) {
+    
+    handleClickTab(e, key) {
+        e.preventDefault();
         this.setState({selected: key});
     }
 
@@ -20,7 +18,7 @@ export default class PanelContainer extends Component {
         return (
             <ul className="panel_tabs">
                 {React.Children.map(this.props.children, (child, i) => 
-                    <li className={(this.state.selected === i) ? "selected": ""} key={child.type.display_name} onClick={() => this.handleClickTab(i)}>
+                    <li className={(this.state.selected === i) ? "selected": ""} key={child.type.display_name} onClick={(e) => this.handleClickTab(e, i)}>
                         {child.type.display_name}
                     </li>
                 )}

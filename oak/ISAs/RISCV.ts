@@ -832,15 +832,13 @@ function RISCV(options: boolean[]): InstructionSet {
         directives["word"] = Directive._32bit;
 
     return new InstructionSet(32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, false,
-`
-    la a1, str
+`    la a1, str
     li a0, 4 #4 is the string print service number...
     ecall
     li a0, 10 #...and 10 is the program termination service number!
     ecall
 .data
-str:    .string "Hello, World!"
-`
+str:    .string "Hello, World!"`
     );
 }
 

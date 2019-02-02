@@ -3,8 +3,20 @@ export const Actions = {
     ADD_TAB: 'ADD_TAB',
     UPDATE_TAB: 'UPDATE_TAB',
     DELETE_TAB: 'DELETE_TAB',
-    UPDATE_PROJECT_SETTINGS: 'UPDATE_PROJECT_SETTINGS'
+    UPDATE_PROJECT_SETTINGS: 'UPDATE_PROJECT_SETTINGS',
+    SET_HELP_VISIBLE: 'SET_HELP_VISIBLE',
+    SET_SETTINGS_VISIBLE: 'SET_SETTINGS_VISIBLE'
 };
+
+export const setSettingsVisible = (state) => ({
+    type: Actions.SET_SETTINGS_VISIBLE,
+    state
+});
+
+export const setHelpVisible = (state) => ({
+    type: Actions.SET_HELP_VISIBLE,
+    state
+});
 
 export const selectTab = id => ({
     type: Actions.SELECT_TAB,

@@ -9,18 +9,16 @@ class VirtualOS {
 
     ecall(core: Core): string {
         let service = core.registerFile.read(core.virtualOSServiceRegister);
-        let args = [];
-        for (let i = core.virtualOSArgumentVectorStart; i <= core.virtualOSArgumentVectorEnd; i += 1) {
-            args.push(core.registerFile.read(i));
-        }
+        const start = core.virtualOSArgumentVectorStart;
         
         switch (service) {
         case 1: {
-            this.outputInt(args[0]);
+            let val = core.registerFile.read(start);
+            this.outputInt(val);
             break;
         }
         case 4: {
-            let iterator = args[0];
+            let iterator = core.registerFile.read(start);
             let array = [];
             let char = null;
             while ((char = core.memcpy(iterator, 1)[0]) !== 0) {
@@ -29,26 +27,20 @@ class VirtualOS {
             }
             let outStr = array.map(c=> String.fromCharCode(c)).join('');
             this.outputString(outStr);
-            break;
+            return null;
         }
         case 5: {
             this.inputInt();
-            break;
+            return null;
         }
         case 8: {
             this.inputString();
-            return "WAIT";
+            return null;
         }   
         case 10:
             return "HALT";
         default:
             return "UNHANDLED";
-        }
-
-        let j = 0;
-        for (let i = core.virtualOSArgumentVectorStart; i <= core.virtualOSArgumentVectorEnd; i += 1) {
-            core.registerFile.write(i, args[j]);
-            j += 1;
         }
 
         return null;

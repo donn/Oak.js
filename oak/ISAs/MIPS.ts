@@ -834,14 +834,13 @@ function MIPS(options: boolean[]): InstructionSet {
     let abiNames = ["$zero", "$at", "$v0", "$v1", "$a0", "$a1", "$a2", "$a3", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7", "$t8", "$t9", "$k0", "$k1", "$gp", "$sp", "$fp", "$ra"];
 
     return new InstructionSet(32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, true,
-`   la $a0, str
+`    la $a0, str
     li $v0, 4 #4 is the string print service number...
     syscall
     li $v0, 10 #...and 10 is the program termination service number!
     syscall
 .data
-str:    .asciiz "Hello, World!"
-`
+str:    .asciiz "Hello, World!"`
     );
 }
 

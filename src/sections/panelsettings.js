@@ -11,12 +11,10 @@ class PanelSettings extends Component {
     static display_name = "settings";
 
     handleFileName = (event) => {
-        console.log(event.target.value);
         this.props.setProjectSettings(event.target.value, this.props.project_settings.memory_size, this.props.project_settings.isa);
     }
 
     handleISA = (event) => {
-        console.log(event.target.value);
         this.props.setProjectSettings(this.props.project_settings.file_name, this.props.project_settings.memory_size, event.target.value);
     }
 
@@ -24,7 +22,6 @@ class PanelSettings extends Component {
         const re = /^[0-9\b]+$/;
     
         if (event.target.value === '' || re.test(event.target.value)) {
-            console.log(event.target.value);
             this.props.setProjectSettings(this.props.project_settings.file_name, event.target.value, this.props.project_settings.isa);
         }
     }

@@ -61,7 +61,6 @@ class PanelRegisters extends Component {
         let register_changed = tab.register_changed;
         let register_names = core.registerFile.abiNames;
 
-        console.log(register_changed);
         return (
             <div id="panel_registers" className="panel panel_registers">
                 <Select onChange={this.handleType} icon="/images/icons/input_type.svg" placeholder="Display Type" defaultValue="0">
