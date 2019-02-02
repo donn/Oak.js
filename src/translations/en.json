@@ -1,0 +1,24 @@
+{
+    "welcome": {
+        "title": "Welcome to Oak.js",
+        "subtitle": "Oak.js is an online javascript IDE, Assembler, Disassembler, and Simulator for assembly languages such as RISC-V and MIPS."
+    },
+    "menus": {
+        "settings": "Settings",
+        "help": "Help",
+        "add_tab": "Add Tab",
+        "load_assembly": "Load Assembly",
+        "load_binary": "Load Binary",
+        "download_assembly": "Download Assembly",
+        "download_binary": "Download Binary",
+        "download_memory": "Download Memory"
+    },
+    "panels": {
+        "projectsettings": {
+            "name": "Project Settings",
+            "file_name": "File Name",
+            "isa": "File Name",
+            "memory_size": "Memory Size"
+        }
+    }
+}

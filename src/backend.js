@@ -1,121 +1,614 @@
-class VirtualOS {
-    constructor() {
-        this.continueInputString = (core, val) => {
-            let reg = core.virtualOSArgumentVectorStart;
-            let arg = core.registerFile.read(reg);
-            let array = [];
-            for (let i = 0; i < val.length; ++i) {
-                array.push(val[i]);
-            }
-            core.memset(arg, array);
-        };
-        this.continueInputInt = (core, val) => {
-            let reg = core.virtualOSArgumentVectorStart;
-            core.registerFile.write(reg, val);
-        };
+/// <reference path="InstructionSet.ts"/>
+var Utils;
+(function (Utils) {
+    /*
+        signExt
+
+        Sign extends an n-bit value to fit Javascript limits.
+    */
+    function signExt(value, bits) {
+        let mutableValue = value;
+        if ((mutableValue & (1 << (bits - 1))) !== 0) {
+            mutableValue = ((~(0) >>> bits) << bits) | value;
+        }
+        return mutableValue;
     }
-    ecall(core) {
-        let service = core.registerFile.read(core.virtualOSServiceRegister);
-        let args = [];
-        for (let i = core.virtualOSArgumentVectorStart; i <= core.virtualOSArgumentVectorEnd; i += 1) {
-            args.push(core.registerFile.read(i));
+    Utils.signExt = signExt;
+    /*
+        rangeCheck
+
+        Checks if a value can fit within a certain number of bits.
+    */
+    function rangeCheck(value, bits) {
+        if (bits >= 32) {
+            return null; // No stable way of checking.
         }
-        switch (service) {
-            case 1: {
-                this.outputInt(args[0]);
-                break;
-            }
-            case 4: {
-                let iterator = args[0];
-                let array = [];
-                let char = null;
-                while ((char = core.memcpy(iterator, 1)[0]) !== 0) {
-                    array.push(char);
-                    iterator += 1;
-                }
-                let outStr = array.map(c => String.fromCharCode(c)).join('');
-                this.outputString(outStr);
-                break;
-            }
-            case 5: {
-                this.inputInt();
-                break;
-            }
-            case 8: {
-                this.inputString();
-                return "WAIT";
-            }
-            case 10:
-                return "HALT";
-            default:
-                return "UNHANDLED";
+        var min = -(1 << bits - 1);
+        var max = (1 << bits - 1) - 1;
+        value = signExt(value, bits);
+        if ((min <= (value >> 0)) && ((value >> 0) <= max)) {
+            return true;
         }
-        let j = 0;
-        for (let i = core.virtualOSArgumentVectorStart; i <= core.virtualOSArgumentVectorEnd; i += 1) {
-            core.registerFile.write(i, args[j]);
-            j += 1;
-        }
-        return null;
+        return false;
     }
-}
-class Core {
-    memcpy(address, bytes) {
-        if (((address + bytes) >>> 0) > this.memorySize) {
+    Utils.rangeCheck = rangeCheck;
+    /*
+        catBytes
+        
+        Converts bytes stored in a little endian fashion to a proper js integer.
+    */
+    function catBytes(bytes, bigEndian = false) {
+        if (bytes.length > 4) {
             return null;
         }
-        let result = [];
-        for (let i = 0; i < bytes; i++) {
-            result.push(this.memory[address + i]);
+        if (bigEndian) {
+            bytes.reverse();
+        }
+        let storage = 0 >>> 0;
+        for (let i = 0; i < bytes.length; i++) {
+            storage = storage | (bytes[i] << (8 * i));
+        }
+        return storage;
+    }
+    Utils.catBytes = catBytes;
+    /*
+        pad
+        
+        Turns a number to a padded string.
+    */
+    function pad(number, digits, radix) {
+        let padded = number.toString(radix);
+        while (digits > padded.length) {
+            padded = "0" + padded;
+        }
+        return padded;
+    }
+    Utils.pad = pad;
+    function hex(array) {
+        let hexadecimal = "";
+        for (let i = 0; i < array.length; i++) {
+            let hexRepresentation = array[i].toString(16).toUpperCase();
+            if (hexRepresentation.length === 1) {
+                hexRepresentation = "0" + hexRepresentation;
+            }
+            hexadecimal += hexRepresentation + " ";
+        }
+        return hexadecimal;
+    }
+    Utils.hex = hex;
+})(Utils || (Utils = {}));
+// Changes a string of hex bytes to an array of numbers.
+String.prototype.interpretedBytes = function () {
+    let hexes = this.split(' '); // Remove spaces, then seperate characters
+    let bytes = [];
+    for (let i = 0; i < hexes.length; i++) {
+        let value = parseInt(hexes[i], 16);
+        if (!isNaN(value)) {
+            bytes.push(value);
+        }
+    }
+    return bytes;
+};
+// Check if haystack has needle in the beginning.
+String.prototype.hasPrefix = function (needle) {
+    return this.substr(0, needle.length) === needle;
+};
+var Kind;
+(function (Kind) {
+    Kind[Kind["instruction"] = 0] = "instruction";
+    Kind[Kind["data"] = 1] = "data";
+    Kind[Kind["directive"] = 2] = "directive";
+    Kind[Kind["noise"] = 3] = "noise";
+})(Kind || (Kind = {}));
+;
+class Line {
+    constructor(raw, number) {
+        this.addressThisPass = null;
+        this.sensitive = false;
+        this.machineCode = [];
+        this.raw = raw;
+        this.number = number;
+        this.kind = Kind.noise;
+        this.sensitivityList = [];
+        this.possibleInstructions = [];
+    }
+    static arrayFromFile(file) {
+        return file.split('\n').map((line, index) => new Line(line, index));
+    }
+    initialProcess(assembler, text = true) {
+        let comment = assembler.keywordRegexes[Keyword.comment];
+        let tmp = comment.exec(this.raw)[1];
+        let label = assembler.keywordRegexes[Keyword.label];
+        let pieces = label.exec(tmp);
+        this.label = pieces[1];
+        this.processed = pieces[2] || '';
+        if (/^s*$/.exec(this.processed) !== null) {
+            return text;
+        }
+        if (assembler.keywordRegexes[Keyword.directive] != null) {
+            let captures = RegExp(assembler.keywordRegexes[Keyword.directive]).exec(this.processed);
+            if (captures !== null) {
+                this.directive = assembler.directives[captures[1]];
+                this.directiveData = captures[2];
+            }
+        }
+        if (text) {
+            if (this.directive !== undefined) {
+                switch (this.directive) {
+                    case Directive.data:
+                        this.kind = Kind.directive;
+                        return false;
+                    case Directive.text:
+                        this.kind = Kind.directive;
+                        break;
+                    default:
+                        this.invalidReason = "text.unsupportedDirective";
+                }
+                return true;
+            }
+            this.kind = Kind.instruction;
+            assembler.instructionSet.instructions.forEach(instruction => {
+                let match = instruction.format.regex.exec(this.processed);
+                if (match !== null && match[1].toUpperCase() === instruction.mnemonic) {
+                    this.possibleInstructions.push([instruction, match.slice(2), [], null]);
+                }
+                return match !== null;
+            });
+            if (this.possibleInstructions.length === 0) {
+                this.invalidReason = "text.noMatchingInstructions";
+                return true;
+            }
+            let minimum = this.possibleInstructions[0][0].bytes;
+            (this.machineCode = []).length = minimum;
+            this.machineCode.fill(0);
+            return true;
+        }
+        else {
+            let count = null; // byte count
+            let zeroDelimitedString = 0;
+            if (this.directive !== undefined) {
+                this.kind = Kind.data;
+                switch (this.directive) {
+                    case Directive.data:
+                        this.kind = Kind.directive;
+                        break;
+                    case Directive.text:
+                        this.kind = Kind.directive;
+                        return true;
+                    case Directive._32bit:
+                        count = count || 4;
+                    // fall through
+                    case Directive._16bit:
+                        count = count || 2;
+                    // fall through
+                    case Directive._8bit:
+                        count = count || 1;
+                        let elements = this.directiveData.split(/\s*,\s*/);
+                        (this.machineCode = []).length = (elements.length * count);
+                        this.machineCode.fill(0);
+                        this.kind = Kind.data;
+                        break;
+                    case Directive.cString:
+                        zeroDelimitedString = 1;
+                    // fall through
+                    case Directive.string:
+                        if (assembler.keywordRegexes[Keyword.string] === null) {
+                            this.invalidReason = "isa.noStringTokenDefined";
+                        }
+                        let match = assembler.keywordRegexes[Keyword.string].exec(this.directiveData);
+                        if (match === null) {
+                            this.invalidReason = "data.invalidString";
+                        }
+                        else {
+                            let regex = RegExp(assembler.generalCharacters, "g");
+                            let characters = [];
+                            let found = null;
+                            while ((found = regex.exec(match[1]))) {
+                                characters.push(found);
+                            }
+                            (this.machineCode = []).length = (characters.length + zeroDelimitedString);
+                            for (let c in characters) {
+                                let character = String(characters[c]);
+                                let value = character.charCodeAt(0);
+                                if (character.length > 2) {
+                                    value = Assembler.escapedCharacters[character[1]];
+                                }
+                                this.machineCode[c] = value;
+                            }
+                            if (zeroDelimitedString === 1) {
+                                this.machineCode[this.machineCode.length - 1] = 0;
+                            }
+                        }
+                        this.kind = Kind.data;
+                        break;
+                    default:
+                        this.invalidReason = "data.unrecognizedDirective";
+                }
+            }
+            else {
+                let isInstruction = false;
+                assembler.instructionSet.instructions.forEach(instruction => {
+                    let match = instruction.format.regex.exec(this.processed);
+                    if (match !== null && match[1].toUpperCase() === instruction.mnemonic) {
+                        isInstruction = true;
+                    }
+                });
+                if (isInstruction) {
+                    this.invalidReason = "data.instruction";
+                }
+                else {
+                    this.invalidReason = "data.unknownInput";
+                }
+            }
+            return false;
+        }
+    }
+    assembleText(assembler, lines, address) {
+        let candidates = false;
+        testingInstructions: for (let i in this.possibleInstructions) {
+            let possibleInstruction = this.possibleInstructions[i];
+            let instruction = possibleInstruction[0];
+            let args = possibleInstruction[1];
+            let machineCode = instruction.template;
+            for (var j in instruction.format.ranges) {
+                let range = instruction.format.ranges[j];
+                if (range.parameter === undefined) {
+                    continue;
+                }
+                let limited = range.totalBits;
+                let bits = limited || range.bits;
+                let store = null;
+                if (range.parameterType == Parameter.special) {
+                    store = instruction.format.processSpecialParameter(args[range.parameter], Parameter.special, bits, address, assembler);
+                }
+                else {
+                    store = assembler.process(args[range.parameter], range.parameterType, bits, address, instruction.bytes);
+                }
+                if (store.errorMessage !== null) {
+                    possibleInstruction[3] = store.errorMessage;
+                    continue testingInstructions;
+                }
+                else if (store.context !== null && store.value === null) {
+                    store.context.sensitivityList.push(this);
+                    this.sensitive = true;
+                    break testingInstructions;
+                }
+                else {
+                    let register = store.value;
+                    let startBit = range.limitStart;
+                    let endBit = range.limitEnd;
+                    if (limited !== undefined && startBit !== undefined && endBit !== undefined) {
+                        register >>= startBit; // discard start bits bits
+                        let bits = (endBit - startBit + 1);
+                        register &= (1 << bits) - 1; // mask end - start + 1 bits
+                    }
+                    let masked = register & (1 << bits) - 1;
+                    machineCode |= masked << range.start;
+                }
+            }
+            for (let i = 0; i < instruction.bytes; i += 1) {
+                possibleInstruction[2].push(machineCode & 0xFF);
+                machineCode >>>= 8;
+            }
+            candidates = true;
+        }
+        if (candidates) {
+            // Expand machine code if applicable
+            let smallestPossibleInstruction = this.possibleInstructions.filter(pi => pi[3] === null)[0];
+            this.machineCode = smallestPossibleInstruction[2];
+        }
+        // Handle errors
+        let errorMessage = null;
+        let errorOccurred = !(candidates || this.sensitive);
+        if (errorOccurred) {
+            errorMessage = this.possibleInstructions[this.possibleInstructions.length - 1][3]; //Typically the most lenient option is last
+        }
+        return errorMessage;
+    }
+    assembleData(assembler, lines, address) {
+        let errorMessage = null;
+        let count = null;
+        switch (this.directive) {
+            case Directive._32bit:
+                count = count || 4;
+            // fall through
+            case Directive._16bit:
+                count = count || 2;
+            // fall through
+            case Directive._8bit:
+                count = count || 1;
+                let elements = this.directiveData.split(/\s*,\s*/);
+                for (let i = 0; i < elements.length; i += 1) {
+                    let element = elements[i];
+                    let bits = count << 3;
+                    let store = assembler.process(element, Parameter.immediate, bits, address, 0);
+                    if (store.errorMessage !== null) {
+                        errorMessage = store.errorMessage;
+                        break;
+                    }
+                    else if (store.context !== null && store.value === null) {
+                        store.context.sensitivityList.push(this);
+                        this.sensitive = true;
+                        break;
+                    }
+                    else {
+                        let stored = store.value;
+                        for (let j = 0; j < count; j += 1) {
+                            let offset = (count * i);
+                            this.machineCode[j + offset] = stored & 0xFF;
+                            stored >>>= 8;
+                        }
+                    }
+                }
+                break;
+            case Directive.cString:
+            case Directive.string:
+                // Already handled in pass 0.
+                break;
+            default:
+                this.invalidReason = "data.unrecognizedDirective";
+        }
+        return errorMessage;
+    }
+    assemble(assembler, lines, address) {
+        this.sensitive = false;
+        let result = [null, false];
+        switch (this.kind) {
+            case Kind.instruction:
+                result[0] = this.assembleText(assembler, lines, address);
+                break;
+            case Kind.data:
+                result[0] = this.assembleData(assembler, lines, address);
+                break;
+            default:
+                break;
+        }
+        let lineByLabel = assembler.linesByLabel[this.label];
+        if (lineByLabel !== undefined) {
+            lineByLabel[1] = address;
+        }
+        if (result[0] === null) {
+            for (let i in this.sensitivityList) {
+                let sensor = this.sensitivityList[i];
+                if (sensor.addressThisPass !== null) {
+                    let sensorLength = sensor.machineCode.length;
+                    let newAssembly = sensor.assemble(assembler, lines, sensor.addressThisPass);
+                    if (sensor.sensitive) {
+                        // Still sensitive, leave it alone uwu
+                    }
+                    else {
+                        if (newAssembly[1]) {
+                            result[1] = true;
+                            break;
+                        }
+                        if (sensor.machineCode.length !== sensorLength) {
+                            result[1] = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            this.invalidReason = result[0];
         }
         return result;
     }
-    memset(address, bytes) {
-        if (address < 0) {
-            return false;
+}
+class Assembler {
+    constructor(instructionSet, endianness, memoryMap = null) {
+        this.linesByLabel = [];
+        this.incrementOnFetch = instructionSet.incrementOnFetch;
+        this.keywordRegexes = [];
+        this.memoryMap = memoryMap;
+        if (instructionSet.keywordRegexes) {
+            this.keywordRegexes = instructionSet.keywordRegexes;
         }
-        if (address + bytes.length > this.memorySize) {
-            return false;
-        }
-        for (let i = 0; i < bytes.length; i++) {
-            this.memory[address + i] = bytes[i];
-        }
-        return true;
-    }
-    decode() {
-        let insts = this.instructionSet.instructions;
-        this.decoded = null;
-        this.arguments = [];
-        for (let i = 0; i < insts.length; i++) {
-            if (insts[i].match(this.fetched)) {
-                this.decoded = insts[i];
-                break;
+        else if (instructionSet.keywords) {
+            let words = instructionSet.keywords;
+            this.keywordRegexes = [];
+            if (words[Keyword.directive]) {
+                let options = Assembler.options(instructionSet.keywords[Keyword.directive]);
+                if (options) {
+                    this.keywordRegexes[Keyword.directive] = RegExp(options + "([^\\s]+)\\s*(.+)*");
+                }
+            }
+            if (words[Keyword.comment]) {
+                let options = Assembler.options(words[Keyword.comment]);
+                if (options) {
+                    this.keywordRegexes[Keyword.comment] = RegExp("^(.*?)(" + options + ".*)?$");
+                }
+            }
+            if (words[Keyword.label]) {
+                let options = Assembler.options(words[Keyword.label]);
+                if (options) {
+                    this.keywordRegexes[Keyword.label] = RegExp("^(?:([A-Za-z_][A-Za-z0-9_]*)" + options + ")?\\s*(.*)?$");
+                }
+            }
+            if (words[Keyword.register]) {
+                let options = Assembler.options(words[Keyword.register]);
+                if (options) {
+                    this.keywordRegexes[Keyword.register] = RegExp(options + "([0-9]+)");
+                }
+            }
+            this.keywordRegexes[Keyword.numeric] = RegExp("(-?(?:0([" + Assembler.radixList + "]))?[A-F0-9]+)");
+            if (words[Keyword.charMarker]) {
+                let options = Assembler.options(words[Keyword.charMarker]);
+                if (options) {
+                    let escapable = options.length > 1 ? "" : "\\" + options;
+                    //this.keywordRegexes[Keyword.char] = RegExp(options + "" + options);
+                    this.generalCharacters = "(?:(?:\\\\[\\\\" + Assembler.escapedCharacterList + escapable + "])|(?:[\\x20-\\x5b\\x5d-\\x7e]))";
+                    this.keywordRegexes[Keyword.char] = RegExp(options + '(' + this.generalCharacters + ')' + options);
+                }
+            }
+            else {
+                this.generalCharacters = "(?:(?:\\\\[\\\\" + Assembler.escapedCharacterList + "])|(?:[\\x20-\\x5b\\x5d-\\x7e]))";
+            }
+            if (words[Keyword.stringMarker]) {
+                let options = Assembler.options(words[Keyword.stringMarker]);
+                if (options) {
+                    this.keywordRegexes[Keyword.string] = RegExp(options + "(" + this.generalCharacters + "*)" + options);
+                }
             }
         }
-        if (this.decoded === null) {
+        else {
+            console.log("INSTRUCTION SET WARNING: This instruction set doesn't define any keywords.");
+        }
+        this.directives = instructionSet.directives;
+        this.endianness = (endianness) ? endianness : instructionSet.endianness;
+        this.instructionSet = instructionSet;
+    }
+    //Returns number on success, string on failure
+    process(text, type, bits, address, instructionLength) {
+        let result = {
+            errorMessage: null,
+            value: null,
+            context: null
+        };
+        switch (type) {
+            case Parameter.register:
+                let index = this.instructionSet.abiNames.indexOf(text);
+                if (index !== -1) {
+                    result.value = index;
+                    return result;
+                }
+                let registerNo = null;
+                if (this.keywordRegexes[Keyword.register]) {
+                    registerNo = new RegExp(this.keywordRegexes[Parameter.register]).exec(text)[1];
+                }
+                else {
+                    result.errorMessage = `args.registerDoesNotExist(${text})`;
+                    return result;
+                }
+                registerNo = parseInt(registerNo, 10);
+                if ((registerNo & (~0 << bits)) !== 0) {
+                    result.errorMessage = `args.registerDoesNotExist(${text})`;
+                    return result;
+                }
+                result.value = registerNo;
+                return result;
+            case Parameter.offset:
+            case Parameter.immediate:
+                //Label
+                let value = null;
+                let reference = this.linesByLabel[text];
+                if (reference !== undefined) {
+                    result.context = reference[0];
+                    if (reference[1] === null) {
+                        return result;
+                    }
+                    value = reference[1];
+                }
+                if (value === null && this.keywordRegexes[Keyword.char]) {
+                    let extraction = RegExp(this.keywordRegexes[Keyword.char]).exec(text);
+                    if (extraction !== null && extraction[1] !== undefined) {
+                        value = extraction[1].charCodeAt(0);
+                        if (value > 255) {
+                            result.errorMessage = "Non-ascii character " + extraction[1] + " unsupported.";
+                            return result;
+                        }
+                    }
+                }
+                if (value === null && this.keywordRegexes[Keyword.numeric] !== undefined) {
+                    let array = RegExp(this.keywordRegexes[Keyword.numeric]).exec(text);
+                    if (array !== null) {
+                        let radix = Assembler.radixes[array[2]] || 10;
+                        let interpretable = array[1];
+                        value = parseInt(interpretable, radix);
+                    }
+                }
+                if (value !== null && type === Parameter.offset) {
+                    value -= address;
+                    if (this.incrementOnFetch) {
+                        value -= instructionLength;
+                    }
+                }
+                if (value === null || isNaN(value)) {
+                    result.errorMessage = `args.valueUnrecognized(${text})`;
+                    return result;
+                }
+                else if (Utils.rangeCheck(value, bits) === false) {
+                    result.errorMessage = `args.outOfRange(${text})`;
+                    return result;
+                }
+                result.value = value;
+                return result;
+            default:
+                result.errorMessage = "oak.paramUnsupported";
+                return result;
+        }
+    }
+    static options(list) {
+        if (list.length === 0) {
             return null;
         }
-        let bitRanges = this.decoded.format.ranges;
-        for (let i in bitRanges) {
-            let range = bitRanges[i];
-            if (range.parameter != null) {
-                let limit = range.limitStart;
-                let value = ((this.fetched >>> range.start) & ((1 << range.bits) - 1)) << limit;
-                if (range.parameterType === Parameter.special) {
-                    value = this.decoded.format.decodeSpecialParameter(value, this.pc);
-                }
-                this.arguments[range.parameter] = this.arguments[range.parameter] || 0;
-                this.arguments[range.parameter] = this.arguments[range.parameter] | value;
-                if (this.decoded.format.ranges[i].signed && range.parameterType !== Parameter.register) {
-                    this.arguments[range.parameter] = Utils.signExt(this.arguments[range.parameter], range.totalBits ? range.totalBits : range.bits);
-                }
+        let options = "";
+        for (let i = 0; i < list.length; i++) {
+            let keyword = list[i];
+            if (keyword === "\\") {
+                console.log("INSTRUCTION SET WARNING: '\\' used as keyword. This behavior is undefined.");
+                return null;
+            }
+            if (options === "") {
+                options = "(?:";
+            }
+            else {
+                options += "|";
+            }
+            options += keyword;
+        }
+        return options + ")";
+    }
+    assemble(lines, pass) {
+        lines.map(line => line.addressThisPass = null);
+        let errors = [];
+        let assemblerModeText = true;
+        let address = 0;
+        for (var i in lines) {
+            let line = lines[i];
+            switch (pass) {
+                case 0: // Zero Pass - Minimum Possible Size
+                    assemblerModeText = line.initialProcess(this, assemblerModeText);
+                    if (line.invalidReason !== undefined) {
+                        errors.push(line);
+                    }
+                    if (line.label !== undefined) {
+                        this.linesByLabel[line.label] = [line, null];
+                    }
+                    break;
+                default:
+                    line.addressThisPass = address;
+                    let asm = line.assemble(this, lines, address); // Assumption: Instruction cannot become context-sensitive based on size
+                    if (asm[0] !== null) {
+                        errors.push(line);
+                    }
+                    if (asm[1]) {
+                        return null; // Repass
+                    }
+                    address += line.machineCode.length;
             }
         }
-        return this.instructionSet.disassemble(this.decoded, this.arguments);
-    }
-    execute() {
-        return this.decoded.executor(this);
+        return errors;
     }
 }
+Assembler.radixes = {
+    'b': 2,
+    'o': 8,
+    'd': 10,
+    'h': 16
+};
+Assembler.radixList = Object.keys(Assembler.radixes).join("");
+Assembler.escapedCharacters = {
+    '0': 0,
+    't': 9,
+    'n': 10,
+    'r': 13,
+    '\'': 47,
+    '"': 42
+};
+Assembler.escapedCharacterList = Object.keys(Assembler.escapedCharacters).join("");
+/// <reference path="Core.ts"/>
+/// <reference path="Assembler.ts"/>
 var Parameter;
 (function (Parameter) {
     Parameter[Parameter["immediate"] = 0] = "immediate";
@@ -141,6 +634,7 @@ var Keyword;
     Keyword[Keyword["stringMarker"] = 3] = "stringMarker";
     Keyword[Keyword["charMarker"] = 4] = "charMarker";
     Keyword[Keyword["register"] = 5] = "register";
+    //Only send as keywordRegexes,
     Keyword[Keyword["string"] = 6] = "string";
     Keyword[Keyword["char"] = 7] = "char";
     Keyword[Keyword["numeric"] = 8] = "numeric";
@@ -152,12 +646,15 @@ var Directive;
     Directive[Directive["data"] = 1] = "data";
     Directive[Directive["string"] = 2] = "string";
     Directive[Directive["cString"] = 3] = "cString";
+    //Ints and chars,
     Directive[Directive["_8bit"] = 4] = "_8bit";
     Directive[Directive["_16bit"] = 5] = "_16bit";
     Directive[Directive["_32bit"] = 6] = "_32bit";
     Directive[Directive["_64bit"] = 7] = "_64bit";
+    //Fixed point decimals,
     Directive[Directive["fixedPoint"] = 8] = "fixedPoint";
     Directive[Directive["floatingPoint"] = 9] = "floatingPoint";
+    //Custom,
     Directive[Directive["custom"] = 10] = "custom";
 })(Directive || (Directive = {}));
 ;
@@ -199,6 +696,12 @@ class Format {
 class Instruction {
     constructor(mnemonic, format, constants, constValues, executor, signatoryOverride = null, pseudoInstructionFor = []) {
         this.computedBits = null;
+        /*
+         Mask
+         
+         It's basically the bits of each format, but with Xs replacing parts that aren't constant in every instruction.
+         For example, if an 8-bit ISA defines 5 bits for the register and 3 bits for the opcode, and the opcode for ADD is 101 then the ADD instruction's mask is XXXXX101.
+        */
         this.computedMask = null;
         this.computedTemplate = null;
         this.mnemonic = mnemonic;
@@ -297,9 +800,11 @@ class PseudoInstruction {
 }
 ;
 class InstructionSet {
+    //Return Mnemonic Index (pseudo)
     pseudoMnemonicSearch(mnemonic) {
         return -1;
-    }
+    } //Worst case = instructions.length
+    //Return Mnemonic Index (True)
     mnemonicSearch(mnemonic) {
         for (let i = 0; i < this.instructions.length; i++) {
             if (this.instructions[i].mnemonic === mnemonic) {
@@ -307,7 +812,7 @@ class InstructionSet {
             }
         }
         return -1;
-    }
+    } //Worst case = instructions.length
     instructionsPrefixing(line) {
         var result = [];
         for (let i in this.instructions) {
@@ -333,6 +838,9 @@ class InstructionSet {
         }
         return output;
     }
+    /*
+        InstructionSet initializer
+    */
     constructor(bits, formats, instructions, pseudoInstructions, abiNames, keywords, directives, incrementOnFetch, exampleCode) {
         this.bits = bits;
         this.formats = formats;
@@ -347,581 +855,138 @@ class InstructionSet {
     }
 }
 ;
-var Utils;
-(function (Utils) {
-    function signExt(value, bits) {
-        let mutableValue = value;
-        if ((mutableValue & (1 << (bits - 1))) !== 0) {
-            mutableValue = ((~(0) >>> bits) << bits) | value;
-        }
-        return mutableValue;
+/// <reference path="Memory.ts"/>
+/// <reference path="Core.ts" />
+class VirtualOS {
+    constructor() {
+        this.continueInputString = (core, val) => {
+            let reg = core.virtualOSArgumentVectorStart;
+            let arg = core.registerFile.read(reg);
+            let array = [];
+            for (let i = 0; i < val.length; ++i) {
+                array.push(val[i]);
+            }
+            core.memset(arg, array);
+        };
+        this.continueInputInt = (core, val) => {
+            let reg = core.virtualOSArgumentVectorStart;
+            core.registerFile.write(reg, val);
+        };
     }
-    Utils.signExt = signExt;
-    function rangeCheck(value, bits) {
-        if (bits >= 32) {
+    ecall(core) {
+        let service = core.registerFile.read(core.virtualOSServiceRegister);
+        let args = [];
+        for (let i = core.virtualOSArgumentVectorStart; i <= core.virtualOSArgumentVectorEnd; i += 1) {
+            args.push(core.registerFile.read(i));
+        }
+        switch (service) {
+            case 1: {
+                this.outputInt(args[0]);
+                break;
+            }
+            case 4: {
+                let iterator = args[0];
+                let array = [];
+                let char = null;
+                while ((char = core.memcpy(iterator, 1)[0]) !== 0) {
+                    array.push(char);
+                    iterator += 1;
+                }
+                let outStr = array.map(c => String.fromCharCode(c)).join('');
+                this.outputString(outStr);
+                break;
+            }
+            case 5: {
+                this.inputInt();
+                break;
+            }
+            case 8: {
+                this.inputString();
+                return "WAIT";
+            }
+            case 10:
+                return "HALT";
+            default:
+                return "UNHANDLED";
+        }
+        let j = 0;
+        for (let i = core.virtualOSArgumentVectorStart; i <= core.virtualOSArgumentVectorEnd; i += 1) {
+            core.registerFile.write(i, args[j]);
+            j += 1;
+        }
+        return null;
+    }
+}
+/// <reference path="InstructionSet.ts"/>
+/// <reference path="Memory.ts"/>
+/// <reference path="VirtualOS.ts"/>
+class Core {
+    //Returns bytes on success, null on failure
+    memcpy(address, bytes) {
+        if (((address + bytes) >>> 0) > this.memorySize) {
             return null;
         }
-        var min = -(1 << bits - 1);
-        var max = (1 << bits - 1) - 1;
-        value = signExt(value, bits);
-        if ((min <= (value >> 0)) && ((value >> 0) <= max)) {
-            return true;
-        }
-        return false;
-    }
-    Utils.rangeCheck = rangeCheck;
-    function catBytes(bytes, bigEndian = false) {
-        if (bytes.length > 4) {
-            return null;
-        }
-        if (bigEndian) {
-            bytes.reverse();
-        }
-        let storage = 0 >>> 0;
-        for (let i = 0; i < bytes.length; i++) {
-            storage = storage | (bytes[i] << (8 * i));
-        }
-        return storage;
-    }
-    Utils.catBytes = catBytes;
-    function pad(number, digits, radix) {
-        let padded = number.toString(radix);
-        while (digits > padded.length) {
-            padded = "0" + padded;
-        }
-        return padded;
-    }
-    Utils.pad = pad;
-    function hex(array) {
-        let hexadecimal = "";
-        for (let i = 0; i < array.length; i++) {
-            let hexRepresentation = array[i].toString(16).toUpperCase();
-            if (hexRepresentation.length === 1) {
-                hexRepresentation = "0" + hexRepresentation;
-            }
-            hexadecimal += hexRepresentation + " ";
-        }
-        return hexadecimal;
-    }
-    Utils.hex = hex;
-})(Utils || (Utils = {}));
-String.prototype.interpretedBytes = function () {
-    let hexes = this.split(' ');
-    let bytes = [];
-    for (let i = 0; i < hexes.length; i++) {
-        let value = parseInt(hexes[i], 16);
-        if (!isNaN(value)) {
-            bytes.push(value);
-        }
-    }
-    return bytes;
-};
-String.prototype.hasPrefix = function (needle) {
-    return this.substr(0, needle.length) === needle;
-};
-var Kind;
-(function (Kind) {
-    Kind[Kind["instruction"] = 0] = "instruction";
-    Kind[Kind["data"] = 1] = "data";
-    Kind[Kind["directive"] = 2] = "directive";
-    Kind[Kind["noise"] = 3] = "noise";
-})(Kind || (Kind = {}));
-;
-class Line {
-    constructor(raw, number) {
-        this.addressThisPass = null;
-        this.sensitive = false;
-        this.machineCode = [];
-        this.raw = raw;
-        this.number = number;
-        this.kind = Kind.noise;
-        this.sensitivityList = [];
-        this.possibleInstructions = [];
-    }
-    static arrayFromFile(file) {
-        return file.split('\n').map((line, index) => new Line(line, index));
-    }
-    initialProcess(assembler, text = true) {
-        let comment = assembler.keywordRegexes[Keyword.comment];
-        let tmp = comment.exec(this.raw)[1];
-        let label = assembler.keywordRegexes[Keyword.label];
-        let pieces = label.exec(tmp);
-        this.label = pieces[1];
-        this.processed = pieces[2] || '';
-        if (/^s*$/.exec(this.processed) !== null) {
-            return text;
-        }
-        if (assembler.keywordRegexes[Keyword.directive] != null) {
-            let captures = RegExp(assembler.keywordRegexes[Keyword.directive]).exec(this.processed);
-            if (captures !== null) {
-                this.directive = assembler.directives[captures[1]];
-                this.directiveData = captures[2];
-            }
-        }
-        if (text) {
-            if (this.directive !== undefined) {
-                switch (this.directive) {
-                    case Directive.data:
-                        this.kind = Kind.directive;
-                        return false;
-                    case Directive.text:
-                        this.kind = Kind.directive;
-                        break;
-                    default:
-                        this.invalidReason = "text.unsupportedDirective";
-                }
-                return true;
-            }
-            this.kind = Kind.instruction;
-            assembler.instructionSet.instructions.forEach(instruction => {
-                let match = instruction.format.regex.exec(this.processed);
-                if (match !== null && match[1].toUpperCase() === instruction.mnemonic) {
-                    this.possibleInstructions.push([instruction, match.slice(2), [], null]);
-                }
-                return match !== null;
-            });
-            if (this.possibleInstructions.length === 0) {
-                this.invalidReason = "text.noMatchingInstructions";
-                return true;
-            }
-            let minimum = this.possibleInstructions[0][0].bytes;
-            (this.machineCode = []).length = minimum;
-            this.machineCode.fill(0);
-            return true;
-        }
-        else {
-            let count = null;
-            let zeroDelimitedString = 0;
-            if (this.directive !== undefined) {
-                this.kind = Kind.data;
-                switch (this.directive) {
-                    case Directive.data:
-                        this.kind = Kind.directive;
-                        break;
-                    case Directive.text:
-                        this.kind = Kind.directive;
-                        return true;
-                    case Directive._32bit:
-                        count = count || 4;
-                    case Directive._16bit:
-                        count = count || 2;
-                    case Directive._8bit:
-                        count = count || 1;
-                        let elements = this.directiveData.split(/\s*,\s*/);
-                        (this.machineCode = []).length = (elements.length * count);
-                        this.machineCode.fill(0);
-                        this.kind = Kind.data;
-                        break;
-                    case Directive.cString:
-                        zeroDelimitedString = 1;
-                    case Directive.string:
-                        if (assembler.keywordRegexes[Keyword.string] === null) {
-                            this.invalidReason = "isa.noStringTokenDefined";
-                        }
-                        let match = assembler.keywordRegexes[Keyword.string].exec(this.directiveData);
-                        if (match === null) {
-                            this.invalidReason = "data.invalidString";
-                        }
-                        else {
-                            let regex = RegExp(assembler.generalCharacters, "g");
-                            let characters = [];
-                            let found = null;
-                            while ((found = regex.exec(match[1]))) {
-                                characters.push(found);
-                            }
-                            (this.machineCode = []).length = (characters.length + zeroDelimitedString);
-                            for (let c in characters) {
-                                let character = String(characters[c]);
-                                let value = character.charCodeAt(0);
-                                if (character.length > 2) {
-                                    value = Assembler.escapedCharacters[character[1]];
-                                }
-                                this.machineCode[c] = value;
-                            }
-                            if (zeroDelimitedString === 1) {
-                                this.machineCode[this.machineCode.length - 1] = 0;
-                            }
-                        }
-                        this.kind = Kind.data;
-                        break;
-                    default:
-                        this.invalidReason = "data.unrecognizedDirective";
-                }
-            }
-            else {
-                let isInstruction = false;
-                assembler.instructionSet.instructions.forEach(instruction => {
-                    let match = instruction.format.regex.exec(this.processed);
-                    if (match !== null && match[1].toUpperCase() === instruction.mnemonic) {
-                        isInstruction = true;
-                    }
-                });
-                if (isInstruction) {
-                    this.invalidReason = "data.instruction";
-                }
-                else {
-                    this.invalidReason = "data.unknownInput";
-                }
-            }
-            return false;
-        }
-    }
-    assembleText(assembler, lines, address) {
-        let candidates = false;
-        testingInstructions: for (let i in this.possibleInstructions) {
-            let possibleInstruction = this.possibleInstructions[i];
-            let instruction = possibleInstruction[0];
-            let args = possibleInstruction[1];
-            let machineCode = instruction.template;
-            for (var j in instruction.format.ranges) {
-                let range = instruction.format.ranges[j];
-                if (range.parameter === undefined) {
-                    continue;
-                }
-                let limited = range.totalBits;
-                let bits = limited || range.bits;
-                let store = null;
-                if (range.parameterType == Parameter.special) {
-                    store = instruction.format.processSpecialParameter(args[range.parameter], Parameter.special, bits, address, assembler);
-                }
-                else {
-                    store = assembler.process(args[range.parameter], range.parameterType, bits, address, instruction.bytes);
-                }
-                if (store.errorMessage !== null) {
-                    possibleInstruction[3] = store.errorMessage;
-                    continue testingInstructions;
-                }
-                else if (store.context !== null && store.value === null) {
-                    store.context.sensitivityList.push(this);
-                    this.sensitive = true;
-                    break testingInstructions;
-                }
-                else {
-                    let register = store.value;
-                    let startBit = range.limitStart;
-                    let endBit = range.limitEnd;
-                    if (limited !== undefined && startBit !== undefined && endBit !== undefined) {
-                        register >>= startBit;
-                        let bits = (endBit - startBit + 1);
-                        register &= (1 << bits) - 1;
-                    }
-                    let masked = register & (1 << bits) - 1;
-                    machineCode |= masked << range.start;
-                }
-            }
-            for (let i = 0; i < instruction.bytes; i += 1) {
-                possibleInstruction[2].push(machineCode & 0xFF);
-                machineCode >>>= 8;
-            }
-            candidates = true;
-        }
-        if (candidates) {
-            let smallestPossibleInstruction = this.possibleInstructions.filter(pi => pi[3] === null)[0];
-            this.machineCode = smallestPossibleInstruction[2];
-        }
-        let errorMessage = null;
-        let errorOccurred = !(candidates || this.sensitive);
-        if (errorOccurred) {
-            errorMessage = this.possibleInstructions[this.possibleInstructions.length - 1][3];
-        }
-        return errorMessage;
-    }
-    assembleData(assembler, lines, address) {
-        let errorMessage = null;
-        let count = null;
-        switch (this.directive) {
-            case Directive._32bit:
-                count = count || 4;
-            case Directive._16bit:
-                count = count || 2;
-            case Directive._8bit:
-                count = count || 1;
-                let elements = this.directiveData.split(/\s*,\s*/);
-                for (let i = 0; i < elements.length; i += 1) {
-                    let element = elements[i];
-                    let bits = count << 3;
-                    let store = assembler.process(element, Parameter.immediate, bits, address, 0);
-                    if (store.errorMessage !== null) {
-                        errorMessage = store.errorMessage;
-                        break;
-                    }
-                    else if (store.context !== null && store.value === null) {
-                        store.context.sensitivityList.push(this);
-                        this.sensitive = true;
-                        break;
-                    }
-                    else {
-                        let stored = store.value;
-                        for (let j = 0; j < count; j += 1) {
-                            let offset = (count * i);
-                            this.machineCode[j + offset] = stored & 0xFF;
-                            stored >>>= 8;
-                        }
-                    }
-                }
-                break;
-            case Directive.cString:
-            case Directive.string:
-                break;
-            default:
-                this.invalidReason = "data.unrecognizedDirective";
-        }
-        return errorMessage;
-    }
-    assemble(assembler, lines, address) {
-        this.sensitive = false;
-        let result = [null, false];
-        switch (this.kind) {
-            case Kind.instruction:
-                result[0] = this.assembleText(assembler, lines, address);
-                break;
-            case Kind.data:
-                result[0] = this.assembleData(assembler, lines, address);
-                break;
-            default:
-                break;
-        }
-        let lineByLabel = assembler.linesByLabel[this.label];
-        if (lineByLabel !== undefined) {
-            lineByLabel[1] = address;
-        }
-        if (result[0] === null) {
-            for (let i in this.sensitivityList) {
-                let sensor = this.sensitivityList[i];
-                if (sensor.addressThisPass !== null) {
-                    let sensorLength = sensor.machineCode.length;
-                    let newAssembly = sensor.assemble(assembler, lines, sensor.addressThisPass);
-                    if (sensor.sensitive) {
-                    }
-                    else {
-                        if (newAssembly[1]) {
-                            result[1] = true;
-                            break;
-                        }
-                        if (sensor.machineCode.length !== sensorLength) {
-                            result[1] = true;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        else {
-            this.invalidReason = result[0];
+        let result = [];
+        for (let i = 0; i < bytes; i++) {
+            result.push(this.memory[address + i]);
         }
         return result;
     }
-}
-class Assembler {
-    constructor(instructionSet, endianness, memoryMap = null) {
-        this.linesByLabel = [];
-        this.incrementOnFetch = instructionSet.incrementOnFetch;
-        this.keywordRegexes = [];
-        this.memoryMap = memoryMap;
-        if (instructionSet.keywordRegexes) {
-            this.keywordRegexes = instructionSet.keywordRegexes;
+    //Returns boolean indicating success
+    //Use to store machine code in memory so it can be executed.
+    memset(address, bytes) {
+        if (address < 0) {
+            return false;
         }
-        else if (instructionSet.keywords) {
-            let words = instructionSet.keywords;
-            this.keywordRegexes = [];
-            if (words[Keyword.directive]) {
-                let options = Assembler.options(instructionSet.keywords[Keyword.directive]);
-                if (options) {
-                    this.keywordRegexes[Keyword.directive] = RegExp(options + "([^\\s]+)\\s*(.+)*");
-                }
-            }
-            if (words[Keyword.comment]) {
-                let options = Assembler.options(words[Keyword.comment]);
-                if (options) {
-                    this.keywordRegexes[Keyword.comment] = RegExp("^(.*?)(" + options + ".*)?$");
-                }
-            }
-            if (words[Keyword.label]) {
-                let options = Assembler.options(words[Keyword.label]);
-                if (options) {
-                    this.keywordRegexes[Keyword.label] = RegExp("^(?:([A-Za-z_][A-Za-z0-9_]*)" + options + ")?\\s*(.*)?$");
-                }
-            }
-            if (words[Keyword.register]) {
-                let options = Assembler.options(words[Keyword.register]);
-                if (options) {
-                    this.keywordRegexes[Keyword.register] = RegExp(options + "([0-9]+)");
-                }
-            }
-            this.keywordRegexes[Keyword.numeric] = RegExp("(-?(?:0([" + Assembler.radixList + "]))?[A-F0-9]+)");
-            if (words[Keyword.charMarker]) {
-                let options = Assembler.options(words[Keyword.charMarker]);
-                if (options) {
-                    let escapable = options.length > 1 ? "" : "\\" + options;
-                    this.generalCharacters = "(?:(?:\\\\[\\\\" + Assembler.escapedCharacterList + escapable + "])|(?:[\\x20-\\x5b\\x5d-\\x7e]))";
-                    this.keywordRegexes[Keyword.char] = RegExp(options + '(' + this.generalCharacters + ')' + options);
-                }
-            }
-            else {
-                this.generalCharacters = "(?:(?:\\\\[\\\\" + Assembler.escapedCharacterList + "])|(?:[\\x20-\\x5b\\x5d-\\x7e]))";
-            }
-            if (words[Keyword.stringMarker]) {
-                let options = Assembler.options(words[Keyword.stringMarker]);
-                if (options) {
-                    this.keywordRegexes[Keyword.string] = RegExp(options + "(" + this.generalCharacters + "*)" + options);
-                }
-            }
+        if (address + bytes.length > this.memorySize) {
+            return false;
         }
-        else {
-            console.log("INSTRUCTION SET WARNING: This instruction set doesn't define any keywords.");
+        for (let i = 0; i < bytes.length; i++) {
+            this.memory[address + i] = bytes[i];
         }
-        this.directives = instructionSet.directives;
-        this.endianness = (endianness) ? endianness : instructionSet.endianness;
-        this.instructionSet = instructionSet;
+        return true;
     }
-    process(text, type, bits, address, instructionLength) {
-        let result = {
-            errorMessage: null,
-            value: null,
-            context: null
-        };
-        switch (type) {
-            case Parameter.register:
-                let index = this.instructionSet.abiNames.indexOf(text);
-                if (index !== -1) {
-                    result.value = index;
-                    return result;
-                }
-                let registerNo = null;
-                if (this.keywordRegexes[Keyword.register]) {
-                    registerNo = new RegExp(this.keywordRegexes[Parameter.register]).exec(text)[1];
-                }
-                else {
-                    result.errorMessage = `args.registerDoesNotExist(${text})`;
-                    return result;
-                }
-                registerNo = parseInt(registerNo, 10);
-                if ((registerNo & (~0 << bits)) !== 0) {
-                    result.errorMessage = `args.registerDoesNotExist(${text})`;
-                    return result;
-                }
-                result.value = registerNo;
-                return result;
-            case Parameter.offset:
-            case Parameter.immediate:
-                let value = null;
-                let reference = this.linesByLabel[text];
-                if (reference !== undefined) {
-                    result.context = reference[0];
-                    if (reference[1] === null) {
-                        return result;
-                    }
-                    value = reference[1];
-                }
-                if (value === null && this.keywordRegexes[Keyword.char]) {
-                    let extraction = RegExp(this.keywordRegexes[Keyword.char]).exec(text);
-                    if (extraction !== null && extraction[1] !== undefined) {
-                        value = extraction[1].charCodeAt(0);
-                        if (value > 255) {
-                            result.errorMessage = "Non-ascii character " + extraction[1] + " unsupported.";
-                            return result;
-                        }
-                    }
-                }
-                if (value === null && this.keywordRegexes[Keyword.numeric] !== undefined) {
-                    let array = RegExp(this.keywordRegexes[Keyword.numeric]).exec(text);
-                    if (array !== null) {
-                        let radix = Assembler.radixes[array[2]] || 10;
-                        let interpretable = array[1];
-                        value = parseInt(interpretable, radix);
-                    }
-                }
-                if (value !== null && type === Parameter.offset) {
-                    value -= address;
-                    if (this.incrementOnFetch) {
-                        value -= instructionLength;
-                    }
-                }
-                if (value === null || isNaN(value)) {
-                    result.errorMessage = `args.valueUnrecognized(${text})`;
-                    return result;
-                }
-                else if (Utils.rangeCheck(value, bits) === false) {
-                    result.errorMessage = `args.outOfRange(${text})`;
-                    return result;
-                }
-                result.value = value;
-                return result;
-            default:
-                result.errorMessage = "oak.paramUnsupported";
-                return result;
+    decode() {
+        let insts = this.instructionSet.instructions;
+        this.decoded = null;
+        this.arguments = [];
+        for (let i = 0; i < insts.length; i++) {
+            if (insts[i].match(this.fetched)) {
+                this.decoded = insts[i];
+                break;
+            }
         }
-    }
-    static options(list) {
-        if (list.length === 0) {
+        if (this.decoded === null) {
             return null;
         }
-        let options = "";
-        for (let i = 0; i < list.length; i++) {
-            let keyword = list[i];
-            if (keyword === "\\") {
-                console.log("INSTRUCTION SET WARNING: '\\' used as keyword. This behavior is undefined.");
-                return null;
+        let bitRanges = this.decoded.format.ranges;
+        for (let i in bitRanges) {
+            let range = bitRanges[i];
+            if (range.parameter != null) {
+                let limit = range.limitStart;
+                let value = ((this.fetched >>> range.start) & ((1 << range.bits) - 1)) << limit;
+                if (range.parameterType === Parameter.special) {
+                    value = this.decoded.format.decodeSpecialParameter(value, this.pc); //Unmangle...
+                }
+                this.arguments[range.parameter] = this.arguments[range.parameter] || 0;
+                this.arguments[range.parameter] = this.arguments[range.parameter] | value;
+                if (this.decoded.format.ranges[i].signed && range.parameterType !== Parameter.register) {
+                    this.arguments[range.parameter] = Utils.signExt(this.arguments[range.parameter], range.totalBits ? range.totalBits : range.bits);
+                }
             }
-            if (options === "") {
-                options = "(?:";
-            }
-            else {
-                options += "|";
-            }
-            options += keyword;
         }
-        return options + ")";
+        return this.instructionSet.disassemble(this.decoded, this.arguments);
     }
-    assemble(lines, pass) {
-        lines.map(line => line.addressThisPass = null);
-        let errors = [];
-        let assemblerModeText = true;
-        let address = 0;
-        for (var i in lines) {
-            let line = lines[i];
-            switch (pass) {
-                case 0:
-                    assemblerModeText = line.initialProcess(this, assemblerModeText);
-                    if (line.invalidReason !== undefined) {
-                        errors.push(line);
-                    }
-                    if (line.label !== undefined) {
-                        this.linesByLabel[line.label] = [line, null];
-                    }
-                    break;
-                default:
-                    line.addressThisPass = address;
-                    let asm = line.assemble(this, lines, address);
-                    if (asm[0] !== null) {
-                        errors.push(line);
-                    }
-                    if (asm[1]) {
-                        return null;
-                    }
-                    address += line.machineCode.length;
-            }
-        }
-        return errors;
+    //Returns null on success, error message on error.
+    execute() {
+        return this.decoded.executor(this);
     }
 }
-Assembler.radixes = {
-    'b': 2,
-    'o': 8,
-    'd': 10,
-    'h': 16
-};
-Assembler.radixList = Object.keys(Assembler.radixes).join("");
-Assembler.escapedCharacters = {
-    '0': 0,
-    't': 9,
-    'n': 10,
-    'r': 13,
-    '\'': 47,
-    '"': 42
-};
-Assembler.escapedCharacterList = Object.keys(Assembler.escapedCharacters).join("");
+/// <reference path="Core.ts"/>
 class CoreFactory {
+    static getCoreList() {
+        return Object.keys(this.ISAs);
+    }
     static getCore(architecture, memorySize, virtualOS, options) {
         let isa = this.ISAs[architecture];
         if (isa === undefined) {
@@ -937,10 +1002,16 @@ class CoreFactory {
     }
 }
 CoreFactory.ISAs = {};
+/// <reference path="../Assembler.ts" />
+/// <reference path="../VirtualOS.ts"/>
+/// <reference path="../CoreFactory.ts"/>
+//The RISC-V Instruction Set Architecture, Version 2.1
 function RISCV(options) {
+    //Formats and Instructions
     let formats = [];
     let instructions = [];
     let pseudoInstructions = [];
+    //R-Type
     formats.push(new Format([
         new BitRange("funct7", 25, 7),
         new BitRange("rs2", 20, 5).parameterized(2, Parameter.register),
@@ -976,6 +1047,7 @@ function RISCV(options) {
         return null;
     }));
     instructions.push(new Instruction("XOR", rType, ["opcode", "funct3", "funct7"], [0b0110011, 0b100, 0b0000000], function (core) {
+        //
         core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) ^ core.registerFile.read(core.arguments[2]));
         core.pc += 4;
         return null;
@@ -1000,6 +1072,7 @@ function RISCV(options) {
         core.pc += 4;
         return null;
     }));
+    //I-Type
     formats.push(new Format([
         new BitRange("imm", 20, 12, null, true).parameterized(2, Parameter.immediate),
         new BitRange("rs1", 15, 5).parameterized(1, Parameter.register),
@@ -1043,6 +1116,7 @@ function RISCV(options) {
         core.pc += 4;
         return null;
     }));
+    //IL Subtype
     formats.push(new Format([
         new BitRange("imm", 20, 12, null, true).parameterized(1, Parameter.immediate),
         new BitRange("rs1", 15, 5).parameterized(2, Parameter.register),
@@ -1096,6 +1170,7 @@ function RISCV(options) {
         core.pc += 4;
         return null;
     }));
+    // IS Subtype
     formats.push(new Format([
         new BitRange("funct7", 25, 7),
         new BitRange("shamt", 20, 5).parameterized(2, Parameter.immediate),
@@ -1120,6 +1195,7 @@ function RISCV(options) {
         core.pc += 4;
         return null;
     }));
+    //S-Type
     formats.push(new Format([
         new BitRange("imm", 25, 7, null, true).parameterized(1, Parameter.immediate).limited(12, 5, 11),
         new BitRange("rs2", 20, 5).parameterized(0, Parameter.register),
@@ -1166,6 +1242,7 @@ function RISCV(options) {
         }
         return "Illegal memory access.";
     }));
+    //U-Type
     formats.push(new Format([
         new BitRange("imm", 12, 20, null, true).parameterized(1, Parameter.immediate),
         new BitRange("rd", 7, 5).parameterized(0, Parameter.offset),
@@ -1182,6 +1259,7 @@ function RISCV(options) {
         core.pc += 4;
         return null;
     }));
+    //SB-Type
     formats.push(new Format([
         new BitRange("imm", 31, 1, null, true).parameterized(2, Parameter.offset).limited(13, 12, 12),
         new BitRange("imm", 25, 6, null, true).parameterized(2, Parameter.offset).limited(13, 5, 10),
@@ -1247,6 +1325,7 @@ function RISCV(options) {
         }
         return null;
     }));
+    //UJ-Type
     formats.push(new Format([
         new BitRange("imm", 31, 1, null, true).parameterized(1, Parameter.offset).limited(21, 20, 20),
         new BitRange("imm", 21, 10, null, true).parameterized(1, Parameter.offset).limited(21, 1, 10),
@@ -1258,9 +1337,13 @@ function RISCV(options) {
     let ujType = formats[formats.length - 1];
     instructions.push(new Instruction("JAL", ujType, ["opcode"], [0b1101111], function (core) {
         core.registerFile.write(core.arguments[0], core.pc + 4);
+        //console.log(core.pc);
         core.pc += Utils.signExt(core.arguments[1], 21);
+        //console.log(core.arguments[1]);
         return null;
     }));
+    //System Type
+    //All-Const Type
     formats.push(new Format([
         new BitRange("const", 0, 32)
     ], /^\s*([a-zA-Z]+)\s*$/, "@mnem"));
@@ -1270,6 +1353,9 @@ function RISCV(options) {
         core.pc += 4;
         return result;
     }));
+    //PseudoInstructions
+    //This is a far from ideal implementation of pseudoinstructions and is only there for demo purposes.
+    //MV
     formats.push(new Format([
         new BitRange("funct7", 25, 7),
         new BitRange("rs2", 20, 5).parameterized(1, Parameter.register),
@@ -1280,8 +1366,9 @@ function RISCV(options) {
     ], /^\s*([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)\s*$/, "@mnem @arg0, @arg1"));
     let mvPseudo = formats[formats.length - 1];
     instructions.push(new Instruction("MV", mvPseudo, ["opcode", "funct3", "rs1", "funct7"], [0b0110011, 0b000, 0b00000, 0b0000000], function (core) {
-        return null;
+        return null; //Captured by and
     }, false, ["ADD"]));
+    //LI
     formats.push(new Format([
         new BitRange("imm", 20, 12, null, true).parameterized(1, Parameter.immediate),
         new BitRange("rs1", 15, 5),
@@ -1291,11 +1378,12 @@ function RISCV(options) {
     ], /^\s*([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)\s*$/, "@mnem @arg0, @arg1"));
     let liPseudo = formats[formats.length - 1];
     instructions.push(new Instruction("LI", liPseudo, ["opcode", "funct3", "rs1"], [0b0010011, 0b000, 0b00000], function (core) {
-        return null;
+        return null; //Captured by andi
     }, false, ["ADDI"]));
     instructions.push(new Instruction("LA", liPseudo, ["opcode", "funct3", "rs1"], [0b0010011, 0b000, 0b00000], function (core) {
-        return null;
+        return null; //Captured by andi
     }, false, ["ADDI"]));
+    //JR pseudo
     formats.push(new Format([
         new BitRange("imm", 20, 12, null, true),
         new BitRange("rs1", 15, 5).parameterized(0, Parameter.register),
@@ -1305,13 +1393,14 @@ function RISCV(options) {
     ], /^\s*([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*$/, "@mnem @arg0"));
     let jrPseudo = formats[formats.length - 1];
     instructions.push(new Instruction("JR", jrPseudo, ["opcode", "rd", "funct3", "imm"], [0b1100111, 0b00000, 0b000, 0b000000000000], function (core) {
-        return null;
+        return null; //captured by jalr
     }, false, ["ADDI"]));
+    //Scall, Syscall both as PseudoInstructions
     instructions.push(new Instruction("SCALL", allConstSubtype, ["const"], [0b00000000000000000000000001110011], function (core) {
-        return null;
+        return null; //captured by ecall
     }, false, ["ECALL"]));
     instructions.push(new Instruction("SYSCALL", allConstSubtype, ["const"], [0b00000000000000000000000001110011], function (core) {
-        return null;
+        return null; //captured by ecall
     }, false, ["ECALL"]));
     let abiNames = ['zero', 'ra', 'sp', 'gp', 'tp', 't0', 't1', 't2', 's0', 's1', 'a0', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9', 's10', 's11', 't3', 't4', 't5', 't6'];
     let keywords = [];
@@ -1383,7 +1472,7 @@ class RISCVRegisterFile {
             this.modifiedRegisters.push(false);
         }
         this.memorySize = memorySize;
-        this.physicalFile[2] = memorySize;
+        this.physicalFile[2] = memorySize; //stack pointer
         this.abiNames = abiNames;
     }
 }
@@ -1429,10 +1518,15 @@ CoreFactory.ISAs["RISC-V"] = {
     core: RISCVCore,
     options: []
 };
+/// <reference path="../Assembler.ts" />
+/// <reference path="../VirtualOS.ts"/>
+//The MIPS Instruction Set Architecture
 function MIPS(options) {
+    //Formats and Instructions
     let formats = [];
     let instructions = [];
     let pseudoInstructions = [];
+    //R-Type
     formats.push(new Format([
         new BitRange("opcode", 26, 6),
         new BitRange("rs", 21, 5).parameterized(1, Parameter.register),
@@ -1490,6 +1584,7 @@ function MIPS(options) {
         core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >> core.registerFile.read(core.arguments[2]));
         return null;
     }));
+    //R-Jump Subtype
     formats.push(new Format([
         new BitRange("opcode", 26, 6),
         new BitRange("rs", 21, 5).parameterized(0, Parameter.register),
@@ -1503,6 +1598,7 @@ function MIPS(options) {
         core.pc = core.registerFile.read(core.arguments[0]);
         return null;
     }));
+    //R-Shift Subtype
     formats.push(new Format([
         new BitRange("opcode", 26, 6),
         new BitRange("rs", 21, 5, 0),
@@ -1524,6 +1620,7 @@ function MIPS(options) {
         core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) >> core.arguments[2]);
         return null;
     }));
+    //R-Constant Subtype
     formats.push(new Format([
         new BitRange("funct", 0, 32)
     ], /^\s*([a-zA-Z]+)\s*$/, "@mnem"));
@@ -1532,6 +1629,7 @@ function MIPS(options) {
         core.virtualOS.ecall(core);
         return null;
     }));
+    //I-Type
     formats.push(new Format([
         new BitRange("opcode", 26, 6),
         new BitRange("rs", 21, 5).parameterized(1, Parameter.register),
@@ -1539,6 +1637,7 @@ function MIPS(options) {
         new BitRange("imm", 0, 16, null, true).parameterized(2, Parameter.immediate)
     ], /^\s*([a-zA-Z]+)\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)\s*$/, "@mnem @arg0, @arg1, @arg2"));
     let iType = formats[formats.length - 1];
+    //I-type instructions
     instructions.push(new Instruction("ADDI", iType, ["opcode"], [0x8], function (core) {
         core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) + core.arguments[2]);
         return null;
@@ -1567,6 +1666,7 @@ function MIPS(options) {
         core.registerFile.write(core.arguments[0], (core.registerFile.read(core.arguments[1]) >>> 0) ^ core.arguments[2]);
         return null;
     }));
+    //I-Branch Subtype
     formats.push(new Format([
         new BitRange("opcode", 26, 6),
         new BitRange("rs", 21, 5).parameterized(0, Parameter.register),
@@ -1586,6 +1686,7 @@ function MIPS(options) {
         }
         return null;
     }));
+    //I Load Upper Immediate Subtype
     formats.push(new Format([
         new BitRange("opcode", 26, 6),
         new BitRange("rs", 21, 5, 0),
@@ -1597,6 +1698,7 @@ function MIPS(options) {
         core.registerFile.write(core.arguments[0], (core.arguments[1] << 16));
         return null;
     }));
+    //I Load/Store Subtype
     formats.push(new Format([
         new BitRange("opcode", 26, 6),
         new BitRange("rs", 21, 5).parameterized(2, Parameter.register),
@@ -1604,6 +1706,7 @@ function MIPS(options) {
         new BitRange("imm", 0, 16, null, true).parameterized(1, Parameter.immediate)
     ], /^\s*([a-zA-Z]+)\s*(\$[A-Za-z0-9]+)\s*,\s*(-?0?[boxd]?[0-9A-F]+)\(\s*(\$[A-Za-z0-9]+)\s*\)\s*$/, "@mnem @arg0, @arg1(@arg2)"));
     let ilsSubtype = formats[formats.length - 1];
+    //TO-DO: Verify function(core) functionality
     instructions.push(new Instruction("LB", ilsSubtype, ["opcode"], [0x20], function (core) {
         let bytes = core.memcpy(core.registerFile.read(core.arguments[2]) + core.arguments[1], 1);
         if (bytes === null) {
@@ -1682,6 +1785,7 @@ function MIPS(options) {
         }
         return "Illegal memory access.";
     }));
+    //J-Type
     formats.push(new Format([
         new BitRange("opcode", 26, 6),
         new BitRange("imm", 0, 26).parameterized(0, Parameter.special)
@@ -1691,6 +1795,7 @@ function MIPS(options) {
             context: null,
             value: null
         };
+        //Label
         let value = null;
         let reference = assembler.linesByLabel[text];
         if (reference !== undefined) {
@@ -1747,6 +1852,8 @@ function MIPS(options) {
         core.pc = core.arguments[0];
         return null;
     }));
+    //Pseudoinstructions
+    //MV
     formats.push(new Format([
         new BitRange("opcode", 26, 6),
         new BitRange("rs", 21, 5).parameterized(1, Parameter.register),
@@ -1757,8 +1864,10 @@ function MIPS(options) {
     ], /^\s*([a-zA-Z]+)\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*$/, "@mnem @arg0, @arg1"));
     let mvPseudo = formats[formats.length - 1];
     instructions.push(new Instruction("MV", mvPseudo, ["opcode", "funct"], [0x0, 0x20], function (core) {
+        //Captured by ADD
         return null;
     }));
+    //LI/LA
     formats.push(new Format([
         new BitRange("opcode", 26, 6),
         new BitRange("rs", 21, 5, 0),
@@ -1767,9 +1876,11 @@ function MIPS(options) {
     ], /^\s*([a-zA-Z]+)\s*(\$[A-Za-z0-9]+)\s*,\s*(-?[a-zA-Z0-9_]+)\s*$/, "@mnem @arg0, @arg1"));
     let liPseudo = formats[formats.length - 1];
     instructions.push(new Instruction("LI", liPseudo, ["opcode"], [0x8], function (core) {
+        //Captured by ADDI
         return null;
     }));
     instructions.push(new Instruction("LA", liPseudo, ["opcode"], [0x8], function (core) {
+        //Captured by ADDI
         return null;
     }));
     let keywords = [];
@@ -1841,7 +1952,7 @@ class MIPSRegisterFile {
             this.modifiedRegisters.push(false);
         }
         this.memorySize = memorySize;
-        this.physicalFile[29] = memorySize;
+        this.physicalFile[29] = memorySize; //stack pointer
         this.abiNames = abiNames;
     }
 }
@@ -1885,100 +1996,14 @@ CoreFactory.ISAs["MIPS"] = {
     core: MIPSCore,
     options: []
 };
-let opt = require('node-getopt').create([
-    ['a', 'instructionSetArchitecture=ARG', 'String name of the instruction set architecture to use.', 'RISC-V'],
-    ['d', 'debug', 'String name of the instruction set architecture to use.', false],
-    ['o', 'archOptions=ARG+', 'Special options for the instruction set architecture.', []],
-    ['h', 'help', 'Show this message and exit.', false],
-    ['v', 'verbose', 'Verbose operation mode.', false],
-    ['V', 'version', 'Show this message and exit.', false],
-    [null, 'ppmc', 'Pretty prints the machine code for your viewing pleasure.', false]
-])
-    .bindHelp()
-    .parseSystem();
-let options = opt.options;
-let args = opt.argv;
-if (opt.options.version) {
-    console.log("Oak.js · 2.0-dev");
-    console.log("All rights reserved.");
-    console.log("You should have obtained a copy of the Mozilla Public License with your app.");
-    console.log("If you did not, a verbatim copy should be available at https://www.mozilla.org/en-US/MPL/2.0/.");
-    process.exit(0);
-}
-let Filesystem = require('fs');
-let Prompt = require('prompt-sync')();
-let cliVirtualOS = new VirtualOS();
-cliVirtualOS.outputInt = (number) => {
-    console.log(number);
+/// <reference path="CoreFactory.ts"/>
+/// <reference path="ISAs/RISCV.ts" />
+/// <reference path="ISAs/MIPS.ts" />
+
+export default {
+    VirtualOS: VirtualOS,
+    Endianness: Endianness,
+    Assembler: Assembler,
+    Line: Line,
+    CoreFactory: CoreFactory
 };
-cliVirtualOS.outputString = (string) => {
-    console.log(string);
-};
-let cpu = null;
-try {
-    cpu = CoreFactory.getCore(options.instructionSetArchitecture.toUpperCase(), 2048, cliVirtualOS, options.archOptions);
-}
-catch (err) {
-    console.error(err);
-    process.exit(64);
-}
-let file = Filesystem.readFileSync(args[0]).toString();
-let assembler = new Assembler(cpu.instructionSet, Endianness.little);
-let lines = Line.arrayFromFile(file);
-let passZero = assembler.assemble(lines, 0);
-if (passZero.length !== 0) {
-    for (let i in passZero) {
-        let line = passZero[i];
-        console.log(line.number, line.invalidReason);
-        process.exit(65);
-    }
-}
-let pass = null;
-let passCounter = 1;
-do {
-    pass = assembler.assemble(lines, passCounter);
-    if (pass.length !== 0) {
-        for (let i in passZero) {
-            let line = passZero[i];
-            console.error(line.number, line.invalidReason);
-            process.exit(65);
-        }
-    }
-    passCounter += 1;
-} while (pass === null);
-let machineCode = lines.map(line => line.machineCode).reduce((a, b) => a.concat(b), []);
-if (options.ppmc) {
-    lines.map(line => {
-        if (line.kind == Kind.data || line.kind == Kind.instruction) {
-            console.log(Utils.hex(line.machineCode));
-        }
-    });
-}
-cpu.memset(0, machineCode);
-running: while (true) {
-    let fetch = cpu.fetch();
-    if (options.verbose) {
-        console.log(`@ ${Utils.pad(cpu.pc, 8, 16)}:`);
-    }
-    if (fetch !== null) {
-        console.error(fetch);
-        break running;
-    }
-    let decode = cpu.decode();
-    if (decode === null) {
-        console.error("decode.failure");
-        process.exit(65);
-    }
-    if (options.verbose) {
-        console.log(decode);
-    }
-    ``;
-    let execute = cpu.execute();
-    if (execute !== null) {
-        if (execute !== 'HALT') {
-            console.log(execute);
-        }
-        break running;
-    }
-}
-process.exit(0);

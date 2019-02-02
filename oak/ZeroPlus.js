@@ -1,1 +1,7 @@
-export { v as VirtualOS, e as Endianness, a as Assembler, cf as CoreFactory, l as AssemblerLine}
+export default {
+    VirtualOS: VirtualOS,
+    Endianness: Endianness,
+    Assembler: Assembler,
+    Line: Line,
+    CoreFactory: CoreFactory
+};

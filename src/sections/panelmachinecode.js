@@ -2,7 +2,9 @@ import React, { Component } from 'react'
 import Select from '../modules/select'
 import {padNumber} from './numberttransform'
 
-export default class PanelMachineCode extends Component {
+import { connect } from 'react-redux';
+
+class PanelMachineCode extends Component {
     static display_name = "machine code";
 
     constructor(props) {
@@ -31,7 +33,12 @@ export default class PanelMachineCode extends Component {
     };
 
     render() {
-        let empty = this.props.machinecode.length === 0;
+        let tabs = this.props.tabs;
+        if (tabs.length === 0)
+            return <div></div>;
+            
+        let machinecode = tabs[this.props.selectedtab].machine_code;
+        let empty = machinecode.length === 0;
         return (
             <div id="panel_machine_code" className="panel panel_machine_code">
                 {empty && <span className="panel_empty">Machine Code Empty</span>}
@@ -42,7 +49,7 @@ export default class PanelMachineCode extends Component {
                     <option value="3">Binary</option>
                 </Select>}
                 
-                {!empty && this.props.machinecode.map((byte, i) => {
+                {!empty && machinecode.map((byte, i) => {
                     let val = this.translateRegister(byte);
                     return <span key={i}>{val} </span>;
                 })}
@@ -50,3 +57,12 @@ export default class PanelMachineCode extends Component {
         )
     }
 }
+
+const stateToProps = state => {
+	return {
+        tabs: state.tabs,
+        selectedtab: state.selectedtab
+	};
+};
+
+export default connect(stateToProps)(PanelMachineCode);

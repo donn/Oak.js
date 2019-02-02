@@ -3,6 +3,11 @@
 class CoreFactory {
     static ISAs = {
     };
+
+    static getCoreList(): String[] {
+        return Object.keys(this.ISAs);
+    }
+
     static getCore(architecture: string, memorySize: number, virtualOS: VirtualOS, options: boolean[]): Core {
         let isa = this.ISAs[architecture];
         if (isa === undefined) {

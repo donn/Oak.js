@@ -1,8 +1,9 @@
 import React, { Component } from 'react'
 import Select from '../modules/select'
 import {padNumber} from './numberttransform'
+import { connect } from 'react-redux';
 
-export default class PanelMemory extends Component {
+class PanelMemory extends Component {
     static display_name = "memory";
 
     constructor(props) {
@@ -31,7 +32,12 @@ export default class PanelMemory extends Component {
     };
 
     render() {
-        let empty = this.props.memory.length === 0;
+        let tabs = this.props.tabs;
+        if (tabs.length === 0)
+            return <div></div>;
+            
+        let memory = tabs[this.props.selectedtab].core.memory;
+        let empty = memory.length === 0;
         return (
             <div id="panel_memory" className="panel panel_memory">
                 {empty && <span className="panel_empty">Memory Empty</span>}
@@ -42,7 +48,7 @@ export default class PanelMemory extends Component {
                     <option value="3">Binary</option>
                 </Select>}
                 
-                {!empty && this.props.memory.map((byte, i) => {
+                {!empty && memory.map((byte, i) => {
                     let val = this.translateRegister(byte);
                     return (<span key={i}>{val} </span>);
                 })}
@@ -50,3 +56,12 @@ export default class PanelMemory extends Component {
         )
     }
 }
+
+const stateToProps = state => {
+	return {
+        tabs: state.tabs,
+        selectedtab: state.selectedtab
+	};
+};
+
+export default connect(stateToProps)(PanelMemory);

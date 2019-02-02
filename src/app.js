@@ -6,15 +6,21 @@ import PanelContainer from "./sections/panelcontainer.js";
 import PanelMemory from "./sections/panelmemory.js";
 import PanelConsole from "./sections/panelconsole.js";
 import PanelLog from "./sections/panellog.js";
-import StatusBar from "./sections/statusbar.js";
 import Help from './sections/help';
 import Settings from './sections/settings';
 import PanelSettings from './sections/panelsettings';
 import PanelConversion from './sections/panelconversion';
 import PanelRegisters from './sections/panelregisters';
-import CoreContext from './coreContext';
+//import CoreContext from './coreContext';
 import PanelMachineCode from './sections/panelmachinecode';
-import {VirtualOS, Endianness, CoreFactory, Assembler, AssemblerLine} from './backend.js'
+import OakJS from './backend.js';
+
+import { connect } from 'react-redux';
+import { Translate, withLocalize } from "react-localize-redux";
+import { renderToStaticMarkup } from 'react-dom/server';
+import enTranslations from "./translations/en.json";
+
+import { selectTab, addTab, updateTab, setProjectSettings } from "./actions"
 
 const SIMULATING_OFF  = 0;
 const SIMULATING_STEP = 1;
@@ -35,37 +41,61 @@ const MessageType = {
 	Success: 3,
 	Warning: 4,
 	Error: 5,
-}
+};
 
-let instruction_sets = ["RISC-V", "MIPS"];
-
-export default class App extends Component {
-	simulation_start;
-	simulation_status;
+class App extends Component {
 	virtual_os;
 
 	constructor(props) {
 		super(props);
+
+		this.props.initialize({
+			languages: [
+			  { name: "English", code: "en" }
+			],
+			options: { renderToStaticMarkup }
+		});
+		
 		this.state = {
-			core: {
-				selected: -1,
-				tabs: []
-			},
+			panel_x: 256,
+			panel_y: 256,
+			console_input: "",
+			console_input_type: 0, //CONSOLE_INPUT_NONE,
+			is_disabled: false,
+			cursor_pos: 0,
+		};
+		
+		this.props.addTranslationForLanguage(enTranslations, 'en');
+
+		this.virtual_os = new OakJS.VirtualOS(); // The virtual OS handles ecalls. It takes a bunch of callbacks: output Int, output String, etcetera...
+		this.virtual_os.outputInt = (number) => {
+			this.addConsoleMessage(MessageType.Output, ">> " + number);
+		};
+
+		this.virtual_os.outputString = (string) => {
+			this.addConsoleMessage(MessageType.Output, ">> " + string);
+		};
+		
+		this.addTabDefault();
+	}
+
+	/*simulation_start;
+	simulation_status;
+	virtual_os;
+	default_isa;
+	cursor_pos = 0;
+
+	constructor(props) {
+		super(props);
+		this.state = {
 			panel_x: 256,
 			panel_y: 256,
 			console_input: "",
 			console_input_type: CONSOLE_INPUT_NONE,
 			is_disabled: false,
 			cursor_pos: 0,
-			theme:      0,
-			default_isa: "",
-			hotkeyNewTab: "a_110",
-			hotkeySave: "a_115",
-			hotkeyOpen: "a_111",
-			hotkeyAssemble: "_119",
-			hotkeySimulate: "_120",
-			hotkeyStepbystep: "_121"
 		};
+		
 		this.component_settings = React.createRef();
 		this.component_help = React.createRef();
 		this.component_editor = React.createRef();
@@ -73,17 +103,13 @@ export default class App extends Component {
 		this.component_panel_settings = React.createRef();
 
 		
-		this.virtual_os = new VirtualOS(); // The virtual OS handles ecalls. It takes a bunch of callbacks: output Int, output String, etcetera...
-		this.virtual_os.outputInt = (number) => {
-			this.addConsoleMessage(MessageType.Output, ">> " + number);
-		};
-		this.virtual_os.outputString = (string) => {
-			this.addConsoleMessage(MessageType.Output, ">> " + string);
-		};
-	}
+		
 
 	componentDidMount() {
 		window.addEventListener("keypress", this.handleKeyPress);
+
+		instruction_sets = OakJS.CoreFactory.getCoreList();
+		this.default_isa = instruction_sets[0];
 
 		this.addTabDefault();
 	}
@@ -146,11 +172,12 @@ export default class App extends Component {
 				tabs: tabs
 			}
 		}));
-	}
+	}*/
 
 	addConsoleMessage = (msg_type, data) => {
-		let tabs = this.state.core.tabs;
-		let tab = tabs[this.state.core.selected];
+		let current_tab = this.props.selectedtab;
+		let tabs = this.props.tabs;
+		let tab = tabs[current_tab];
 		
 		let className;
 		if (msg_type === MessageType.Error)
@@ -165,17 +192,12 @@ export default class App extends Component {
 			className = "console_input";
 		else
 			className = "console_log";
+		
 		tab.console.push(<div className={className}>{data}</div>);
-
-		this.setState(prevState => ({
-			core: {
-				...prevState.core,
-				tabs: tabs
-			}
-		}));
+		this.props.updateTab(current_tab, tab);
 	}
 
-	registerRead = (core, reg) => {
+	/*registerRead = (core, reg) => {
 		return core.registerFile.physicalFile[reg];
 	}
 
@@ -217,12 +239,13 @@ export default class App extends Component {
 				this.addConsoleMessage(MessageType.Log, <span><b>Simulator Error: </b> {output}</span>);
 			}
 		}
-	}
+	}*/
 
 	checkUpdatedTabs = () => {
-		let tab = this.state.core.tabs[this.state.core.selected];
+		let tab = this.props.tabs[this.props.selectedtab];
 
 		var mod_reg = tab.core.registerFile.getModifiedRegisters();
+		
 		for(let i = 0; i < tab.register_changed.length; ++i) {
 			if (mod_reg[i])
 				tab.register_changed[i] = REGISTER_NEWASSIGNED;
@@ -231,75 +254,44 @@ export default class App extends Component {
 		}
 	}
 
-	addTab = (name, code, machine_code) => {
-		let selected = this.state.core.tabs.length;
+	addTabFull = (name, code, machine_code, mem_size, isa, get_example_code) => {
+		let selected = this.props.tabs.length;
 		
-		let memorySize = 4096;
-
-		let core = CoreFactory.getCore(instruction_sets[0], memorySize, this.virtual_os, []);
+		let core = OakJS.CoreFactory.getCore(isa, mem_size, this.virtual_os, []);
 
 		let new_tab = {
 			name: name,
-			content: code,
+			content: get_example_code ? core.instructionSet.exampleCode : code,
 			log: [],
 			console: [],
 			machine_code: machine_code,
 			core: core,
 			register_changed: [],
-			instruction_set: instruction_sets[0].name
+			instruction_set: isa
 		};
 
 		new_tab.register_changed = Array.from({ length: core.registerFile.physicalFile.length }, () => REGISTER_UNASSIGNED);
 		
-		console.log(this.component_panel_settings);
-		//this.component_panel_settings.current.setData(new_tab.name, new_tab.instruction_set, new_tab.core.memory.length);
+		// TODO: Send to Project Settings
+		this.props.setProjectSettings(name, mem_size, isa);
 		
-		let tabs = this.state.core.tabs;
-		tabs.push(new_tab);
+		this.props.addTab(new_tab);
+		this.props.selectTab(selected);
+	}
 
-		this.setState(prevState => ({
-			core: {
-				...prevState.core,
-				tabs: tabs,
-				selected: selected
-			}
-		}));
+	addTab = (name, code, machine_code) => {
+		this.addTabFull(name, code, machine_code, 4096, this.getDefaultISA(), false);
 	}
 
 	addTabDefault = () => {
-		let selected = this.state.core.tabs.length;
-		
-		let memorySize = 4096;
-
-		let core = CoreFactory.getCore(instruction_sets[0], memorySize, this.virtual_os, []);
-		let tabs = this.state.core.tabs;
-		let new_tab = {
-			name: "New Tab",
-			content: core.instructionSet.exampleCode,
-			log: [],
-			console: [],
-			machine_code: [],
-			core: core,
-			register_changed: [],
-			instruction_set: instruction_sets[0].name
-		};
-		
-		new_tab.register_changed = Array.from({ length: core.registerFile.physicalFile.length }, () => REGISTER_UNASSIGNED);
-		
-		console.log(this.component_panel_settings);
-		//this.component_panel_settings.current.setData(new_tab.name, new_tab.instruction_set, new_tab.core.memory.length);
-		
-		tabs.push(new_tab);
-		this.setState(prevState => ({
-			core: {
-				...prevState.core,
-				tabs: tabs,
-				selected: selected
-			}
-		}));
+		this.addTabFull("New Tab", "", [], 4096, this.getDefaultISA(), true);
 	}
 
-	handleUpload = (event) => {
+	getDefaultISA = () => {
+		return OakJS.CoreFactory.getCoreList()[0];
+	}
+
+	/*handleUpload = (event) => {
 		let files = this.component_input.current.files;
 		if (files.length <= 0) return;
 
@@ -401,36 +393,32 @@ export default class App extends Component {
 		document.body.appendChild(element);
 		element.click();
 		document.body.removeChild(element)
-	}
+	}*/
 
 	resetUI = () => {
-		let current_tab = this.state.core.selected;
-		let tabs = this.state.core.tabs;
+		let current_tab = this.props.selectedtab;
+		let tabs = this.props.tabs;
 		let tab = tabs[current_tab];
 		tab.log = [];
 		tab.console = [];
 		tab.register_changed = Array.from({ length: tab.register_changed.length }, () => REGISTER_UNASSIGNED);
 
-		this.setState(prevState => ({
-			core: {
-				...prevState.core,
-				tabs: tabs
-			}
-		}));
+		this.props.updateTab(current_tab, tab);
 	}
 
 	reset = () => {
-		let current_tab = this.state.core.selected;
-		let tabs = this.state.core.tabs;
+		let current_tab = this.props.selectedtab;
+		let tabs = this.props.tabs;
 		let tab = tabs[current_tab];
 
 		this.resetUI();
 		tab.core.reset();
+		this.props.updateTab(current_tab, tab);
 	}
 
 	uiSimulate = () => {
-		let current_tab = this.state.core.selected;
-		let tab = this.state.core.tabs[current_tab];
+		let current_tab = this.props.selectedtab;
+		let tab = this.props.tabs[current_tab];
 		let core =  tab.core;
 
 		/*if (this.simulation_status === SIMULATING_STEP) {
@@ -486,11 +474,14 @@ export default class App extends Component {
 				break;
 			}
 		}
+		
+		this.checkUpdatedTabs();
+		this.props.updateTab(current_tab, tab);
 	}
 
 	uiStepByStep = () => {
-		let current_tab = this.state.core.selected;
-		let tab = this.state.core.tabs[current_tab];
+		let current_tab = this.props.selectedtab;
+		let tab = this.props.tabs[current_tab];
 		let core = tab.core;
 
 		/*if (this.simulation_status !== SIMULATING_STEP) {
@@ -525,7 +516,6 @@ export default class App extends Component {
 		let decode = core.decode(); // Decode has the decoded instruction on success
 		tab.log.push(decode);
 		
-		console.log(decode);
 		if (decode === null) {
 			console.log("decode.failure");
 			tab.console.push("decode.failure");
@@ -538,11 +528,14 @@ export default class App extends Component {
 				tab.console.push(execute);
 			}
 		}
+
+		this.checkUpdatedTabs();
+		this.props.updateTab(current_tab, tab);
 	}
 	
 	uiAssemble = () => {
-		let current_tab = this.state.core.selected;
-		let tab = this.state.core.tabs[current_tab];
+		let current_tab = this.props.selectedtab;
+		let tab = this.props.tabs[current_tab];
 		var val = tab.content;
 		if (val === "") {
 			return;
@@ -550,10 +543,10 @@ export default class App extends Component {
 
 		var core = tab.core;
 		this.reset();
-		let assembler = new Assembler(core.instructionSet, Endianness.little);
+		let assembler = new OakJS.Assembler(core.instructionSet, OakJS.Endianness.little);
 		
-		let lines = AssemblerLine.arrayFromFile(val);
-		console.log(lines);
+		let lines = OakJS.Line.arrayFromFile(val);
+		
 		let passZero = assembler.assemble(lines, 0); // Assembler Pass 0. Returns Line array with errored lines, which are in line.invalidReason
 		if (passZero.length !== 0) {
 			for (let i in passZero) {
@@ -580,13 +573,12 @@ export default class App extends Component {
 
 		let machineCode = lines.map(line=> line.machineCode).reduce((a, b)=> a.concat(b), []); // Get machine code from lines
 		core.memset(0, machineCode); // memset
-		console.log(machineCode);
 
 		this.checkUpdatedTabs();
 
 		let error = false; //output.errorMessage===null;
 		if (!error) {
-			this.setMachineCodeValue(machineCode);
+			tab.machine_code = machineCode;
 			this.addConsoleMessage(MessageType.Success, <span><b>Complete:</b> Assembly succeeded.</span>);
 		}
 		else {
@@ -594,64 +586,51 @@ export default class App extends Component {
 		}
 
 		this.simulation_status = SIMULATING_OFF;
+
+		this.props.updateTab(current_tab, tab);
 	}
 
-	handleTabChange = (id) => {
-		let tab = this.state.core.tabs[id];
-		this.component_panel_settings.current.setData(tab.name, tab.instruction_set, tab.core.memory.length);
-		this.setState(prevState => ({
-			core: {
-				...prevState.core,
-				selected: id
-			}
-		}));
-	};
+	handleSettingsChange = () => {
+		let current_tab = this.props.selectedtab;
+		let tab = this.props.tabs[current_tab];
 
-	handleTabClose = (id) => {
-		let selected = this.state.core.selected;
+		if (!tab)
+			return;
 
-		let tabs = this.state.core.tabs;
-		tabs.splice(id, 1);
+		let file_name = this.props.project_settings.file_name;
+		let isa_type = this.props.project_settings.isa;
+		let memory_size = this.props.project_settings.memory_size;
 
-		if (selected >= id)
-			selected -= 1;
-
-		this.setState(prevState => ({
-			core: {
-				...prevState.core,
-				tabs: tabs,
-				selected: selected
-			}
-		}));
-	};
-
-	handleSettingsChange = (file_name, isa_type, memory_size) => {
-		let tabs = this.state.core.tabs;
-		let tab = this.state.core.tabs[this.state.core.selected];
 		tab.name = file_name;
 
-		if (this.state.isa_type !== tab.instruction_set || this.state.memory_size !== tab.memory_size) {
-			delete tab.core;
-			this.resetUI();
+		let diff_isa = isa_type !== tab.instruction_set;
+		let diff_mem = memory_size !== tab.core.memorySize;
 
-			for (let i = 0; i < instruction_sets.length; ++i) {
-				if (instruction_sets[i].name === isa_type) {
-					tab.core = instruction_sets[i].callback(memory_size, this.ecallCallback, this.instructionCallback);
-					break;
-				}
+		let new_isa_found = false;
+
+		if (diff_isa || diff_mem) {
+			let instruction_sets = OakJS.CoreFactory.ISAs;
+			if (instruction_sets[isa_type]) {
+				new_isa_found = true;
+				tab.core = OakJS.CoreFactory.getCore(isa_type, memory_size, this.virtual_os, []);
+				tab.instruction_set = isa_type;
+				this.resetUI();
 			}
 
-			tab.instruction_set = isa_type;
+			if (!new_isa_found) {
+				this.addConsoleMessage(MessageType.Error, <span><b>Error: </b>Could not find ISA {isa_type}.</span>);
+			}
 		}
 
-		this.setState(prevState => ({
-			core: {
-				...prevState.core,
-				tabs: tabs
-			}
-		}));
+		this.props.updateTab(current_tab, tab);
 
-		this.addConsoleMessage(MessageType.Success, <span><b>Complete: </b>Successfully changed ISA to {isa_type}.</span>);
+		if (new_isa_found) {
+			if (diff_isa)
+				this.addConsoleMessage(MessageType.Success, <span><b>Complete: </b>Successfully changed ISA to {isa_type}.</span>);
+
+			if (diff_mem)
+				this.addConsoleMessage(MessageType.Success, <span><b>Complete: </b>Successfully changed memory size to {memory_size}.</span>);
+		}
 	}
 
 	handleStartDragX = (event) => {
@@ -729,7 +708,7 @@ export default class App extends Component {
 		window.removeEventListener("mouseup", this.handleStopDragY);
 	}
 
-	showSettings = () => {
+	/*showSettings = () => {
 		this.component_settings.current.handleShow();
 	}
 
@@ -747,47 +726,14 @@ export default class App extends Component {
 				tabs: tabs
 			}
 		}));
-	}
-
-	setMachineCodeValue = (val) => {
-		let tabs = this.state.core.tabs;
-		tabs[this.state.core.selected].machine_code = val;
-
-		this.setState(prevState => ({
-			core: {
-				...prevState.core,
-				tabs: tabs
-			}
-		}));
-	}
+	}*/
 
 	render() {
-		let current_content = "";
-		let register_changed = [];
-		let register_names = [];
-		let registers = [];
-		let log = "";
-		let console_vals = [];
-		let machine_code = [];
-		let memory = [];
+		let has_tabs = this.props.tabs.length > 0;
+		let show_input = false; //this.state.console_input_type !== CONSOLE_INPUT_NONE;
 
-		if (this.state.core.selected !== -1) {
-			let tab = this.state.core.tabs[this.state.core.selected];
-			current_content = tab.content;
-			machine_code	= tab.machine_code;
-			memory			= tab.core.memory;
-			log				= tab.log;
-			console_vals	= tab.console;
-			register_changed= tab.register_changed;
-			register_names	= tab.core.registerFile.abiNames;
-			registers		= tab.core.registerFile.physicalFile;
-		}
-
-		let has_tabs = (this.state.core.tabs.length > 0);
-
-		//let disabled = this.state.is_disabled ? "disabled": "";
 		return (
-			<CoreContext.Provider value={this.state.core}>
+			<React.Fragment>
 				<Help ref={this.component_help} />
 				<Settings ref={this.component_settings}
 					fn_new={this.addTabDefault}
@@ -799,30 +745,53 @@ export default class App extends Component {
 				<Navigation showSettings={this.showSettings} showHelp={this.showHelp} assemble={this.uiAssemble} simulate={this.uiSimulate} stepbystep={this.uiStepByStep} downloadRam={this.downloadRam} downloadBin={this.downloadBin} handleAddTab={this.addTabDefault} handleLoadAsm={this.handleLoadAsm} handleLoadBin={this.handleLoadBin} handleDownloadAsm={this.handleDownloadAsm} />
 				{!has_tabs && <div className="no_tabs">
 					<div>
-						<h2>Welcome to Oak.js</h2>
-						<p>Oak.js is an online javascript IDE, Assembler, Disassembler, and Simulator for assembly languages such as RISC-V and MIPS.</p>
-						<button className="button" onClick={this.addTabDefault}>Add Tab</button>
-						<button className="button" onClick={this.handleLoadAsm}>Load Assembly</button>
-						<button className="button" onClick={this.handleLoadBin}>Load Binary</button>
+						<h2><Translate id="welcome.title">Welcome to Oak.js</Translate></h2>
+						<p><Translate id="welcome.subtitle">Oak.js is an online javascript IDE, Assembler, Disassembler, and Simulator for assembly languages such as RISC-V and MIPS.</Translate></p>
+						<button className="button" onClick={this.addTabDefault}><Translate id="menus.add_tab">Add a Tab</Translate></button>
+						<button className="button" onClick={this.handleLoadAsm}><Translate id="menus.load_assembly">Load Assembly</Translate></button>
+						<button className="button" onClick={this.handleLoadBin}><Translate id="menus.load_binary">Load Binary</Translate></button>
 					</div>
 				</div>}
 				{has_tabs && <div className="grid" style={{gridTemplateColumns: `auto ${this.state.panel_x}px`, gridTemplateRows: `auto calc(${this.state.panel_y}px)`}}>
-					<TextEditor is_disabled={this.state.is_disabled} editor_value={current_content} setEditorValue={this.setEditorValue} handleTabChange={this.handleTabChange} handleTabClose={this.handleTabClose} addTab={this.addTabDefault} />
+					<TextEditor is_disabled={this.state.is_disabled} addTab={this.addTabDefault} />
 					<PanelContainer handleStartDrag={this.handleStartDragY} className="panel_bottom">
-						<PanelConsole show_input={this.state.console_input_type !== CONSOLE_INPUT_NONE} input={this.state.console_input} log={console_vals} />
-						<PanelMachineCode machinecode={machine_code} />
-						<PanelMemory memory={memory} />
-						<PanelLog log={log}/>
+						<PanelConsole />
+						<PanelMachineCode />
+						<PanelMemory />
+						<PanelLog />
 					</PanelContainer>
 					<PanelContainer handleStartDrag={this.handleStartDragX} className="panel_side">
-						<PanelSettings ref={this.component_panel_settings} onSubmit={this.handleSettingsChange} instruction_sets={instruction_sets} />
-						<PanelRegisters register_changed={register_changed} register_names={register_names} registers={registers} />
+						<PanelSettings submitChanges={this.handleSettingsChange} />
+						<PanelRegisters />
 						<PanelConversion />
 					</PanelContainer>
 				</div>}
-				<StatusBar />
 				<input type="file" onChange={this.handleUpload} ref={this.component_input} />
-			</CoreContext.Provider>
+			</React.Fragment>
 		);
 	}
 }
+
+/*show_input={show_input} input={this.state.console_input} log={console_vals}*/
+/*<PanelSettings ref={this.component_panel_settings} onSubmit={this.handleSettingsChange} />
+						<PanelRegisters register_changed={register_changed} register_names={register_names} registers={registers} />*/
+
+const appStateToProps = state => {
+	return {
+		tabs: state.tabs,
+		selectedtab: state.selectedtab,
+		project_settings: state.project_settings
+	};
+};
+
+const appDispatchToProps = (dispatch, ownProps) => ({
+	addTab: (tab) => dispatch(addTab(tab)),
+	updateTab: (index, tab) => dispatch(updateTab(index, tab)),
+	selectTab: (id) => dispatch(selectTab(id)),
+	setProjectSettings: (n, s, i) => dispatch(setProjectSettings(n, s, i))
+})
+
+export default withLocalize(
+	connect(appStateToProps,
+			appDispatchToProps
+	)(App));

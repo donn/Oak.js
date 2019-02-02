@@ -11,9 +11,12 @@
     "prompt-sync": "^4.1.6",
     "react": "^16.4.2",
     "react-ace": "^6.1.4",
-    "react-dom": "^16.4.2",
+    "react-dom": "^16.7.0",
+    "react-localize-redux": "^3.5.2",
+    "react-redux": "^6.0.0",
     "react-scripts": "1.1.4",
-    "readline-sync": "^1.4.9"
+    "readline-sync": "^1.4.9",
+    "redux": "^4.0.1"
   },
   "scripts": {
     "build-all": "node make all",

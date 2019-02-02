@@ -1,12 +1,13 @@
 import React, { Component } from 'react'
 import Select from '../modules/select'
 import {padNumber, parseToFloat} from './numberttransform'
+import { connect } from 'react-redux';
 
 const REGISTER_UNASSIGNED = 0;
 const REGISTER_ASSIGNED = 1;
 const REGISTER_NEWASSIGNED = 2;
 
-export default class PanelRegisters extends Component {
+class PanelRegisters extends Component {
     static display_name = "registers";
 
     constructor(props) {
@@ -51,7 +52,16 @@ export default class PanelRegisters extends Component {
     }
 
     render() {
-        let me = this;
+        let tab = this.props.tabs[this.props.selectedtab];
+        if (!(tab && tab.core))
+            return <div></div>;
+
+        let core = tab.core;
+        let registers = core.registerFile.physicalFile;
+        let register_changed = tab.register_changed;
+        let register_names = core.registerFile.abiNames;
+
+        console.log(register_changed);
         return (
             <div id="panel_registers" className="panel panel_registers">
                 <Select onChange={this.handleType} icon="/images/icons/input_type.svg" placeholder="Display Type" defaultValue="0">
@@ -67,11 +77,11 @@ export default class PanelRegisters extends Component {
                     </thead>
                     <tbody>
                         {
-                            this.props.registers.map((register, i) => {
+                            registers.map((register, i) => {
                                 let register_dpy = this.translateRegister(register);
-                                return (<tr key={i} className={this.getChangedRegisterClass(this.props.register_changed[i])}>
+                                return (<tr key={i} className={this.getChangedRegisterClass(register_changed[i])}>
                                     <td>
-                                        {me.props.register_names[i]}
+                                        {register_names[i]}
                                     </td>
                                     <td data-info={register}>
                                         {register_dpy}
@@ -85,3 +95,12 @@ export default class PanelRegisters extends Component {
         )
     }
 }
+
+const stateToProps = state => {
+	return {
+        tabs: state.tabs,
+        selectedtab: state.selectedtab
+	};
+};
+
+export default connect(stateToProps)(PanelRegisters);
