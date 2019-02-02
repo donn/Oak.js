@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
+import { connect } from 'react-redux';
 
-export default class PanelLog extends Component {
+class PanelLog extends Component {
     static display_name = "log";
 
     render() {
@@ -13,3 +14,11 @@ export default class PanelLog extends Component {
         </div>)
     }
 }
+
+const stateToProps = state => {
+	return {
+		log: state.tabs[state.selectedtab].log
+	};
+};
+
+export default connect(stateToProps)(PanelLog);

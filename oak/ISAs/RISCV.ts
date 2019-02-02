@@ -833,10 +833,10 @@ function RISCV(options: boolean[]): InstructionSet {
 
     return new InstructionSet(32, formats, instructions, pseudoInstructions, abiNames, keywords, directives, false,
 `
-    la a0, str
-    li a7, 4 #4 is the string print service number...
+    la a1, str
+    li a0, 4 #4 is the string print service number...
     ecall
-    li a7, 10 #...and 10 is the program termination service number!
+    li a0, 10 #...and 10 is the program termination service number!
     ecall
 .data
 str:    .string "Hello, World!"
