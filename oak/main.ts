@@ -6,7 +6,7 @@ declare let require: any
 declare let process: any
 
 let opt = require('node-getopt').create([
-    ['a', 'instructionSetArchitecture=ARG'  , 'String name of the instruction set architecture to use.', 'RISC-V'],
+    ['a', 'instructionSetArchitecture=ARG'  , 'String name of the instruction set architecture to use.', 'RISCV'],
     // ['d', 'debug', 'Turn on debug mode. (Beta)', false],
     ['o', 'archOptions=ARG+', 'Special options for the instruction set architecture.', []],
     ['h', 'help', 'Show this message and exit.', false],

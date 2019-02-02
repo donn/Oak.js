@@ -950,7 +950,7 @@ class RISCVCore extends Core {
     }
 }
 
-CoreFactory.ISAs["RISC-V"] = {
+CoreFactory.ISAs["RISCV"] = {
     generator: RISCV,
     core: RISCVCore,
     options: []
