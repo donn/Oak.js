@@ -232,7 +232,7 @@ class Settings extends Component {
                                 </tr>*/}
                                 <tr>
                                     <td colSpan={2}>
-                                        <Select onChange={this.handleTheme} icon="/images/icons/input_type.svg" placeholder="Theme" value={this.state.theme}>
+                                        <Select onChange={this.handleTheme} icon="images/icons/input_type.svg" placeholder="Theme" value={this.state.theme}>
                                             <option value="theme_light">Light</option>
                                             <option value="theme_dark">Dark</option>
                                             <option value="theme_dos">Black</option>
