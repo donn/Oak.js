@@ -314,7 +314,7 @@ class Settings extends Component {
                         </table>
                         <button className="button" onClick={this.handleClose}>Accept Changes</button>
                         <button className="button subbutton" onClick={this.setDefaultsSave}>Restore Defaults</button>
-                        <button className="button subbutton" onClick={this.deleteAllCookies}>Cookies</button>
+                        <button className="button subbutton" onClick={this.deleteAllCookies}>Delete Cookies</button>
                     </div>
                 </div>
             </div>
