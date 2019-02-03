@@ -138,6 +138,10 @@ class Settings extends Component {
     }
 
     setTheme = (val, continuefn = () => {}) => {
+        if (!themes.includes(val)) {
+            val = themes[0];
+        }
+
         themes.forEach(function(element) {
             document.getElementById(element).disabled = (element !== val);
         });
