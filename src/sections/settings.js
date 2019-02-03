@@ -6,14 +6,23 @@ import { connect } from 'react-redux';
 import { Translate, withLocalize } from "react-localize-redux";
 import { setSettingsVisible } from "../actions"
 
+const themes = [
+    "theme_light",
+    "theme_dark",
+    "theme_dos",
+    "theme_macos"
+];
+
 class Settings extends Component {
     constructor(props) {
         super(props);
         this.state = {
             default_isa: "RISC-V",
-            theme: "Light"
+            theme: "theme_light"
         };
         
+		window.addEventListener("keydown", this.handleKey);
+
 		this.comp_new = React.createRef();
 		this.comp_load = React.createRef();
 		this.comp_save = React.createRef();
@@ -32,50 +41,56 @@ class Settings extends Component {
     };
 
     handleKey = (event) => {
-        let key_ctrl = event.ctrlKey;
-        let key_alt = event.altKey;
-        let key_shift = event.shiftKey;
-        let key_name = event.key.toLowerCase();
-        let cancel = false;
-        
-        if (this.comp_new.current.testKey(key_ctrl, key_alt, key_shift, key_name)) {
-            this.props.fn_new();
-            cancel = true;
-        }
-        else if (this.comp_load.current.testKey(key_ctrl, key_alt, key_shift, key_name)) {
-            this.props.fn_load();
-            cancel = true;
-        }
-        else if (this.comp_save.current.testKey(key_ctrl, key_alt, key_shift, key_name)) {
-            this.props.fn_save();
-            cancel = true;
-        }
-        else if (this.comp_assemble.current.testKey(key_ctrl, key_alt, key_shift, key_name)) {
-            this.props.fn_ass();
-            cancel = true;
-        }
-        else if (this.comp_step.current.testKey(key_ctrl, key_alt, key_shift, key_name)) {
-            this.props.fn_step();
-            cancel = true;
-        }
-        else if (this.comp_sim.current.testKey(key_ctrl, key_alt, key_shift, key_name)) {
-            this.props.fn_sim();
-            cancel = true;
-        }
+        if (this.props.canhandleinput) {
+            let key_name = event.key.toLowerCase();
+            if (key_name === "control" || key_name === "shift" || key_name === "alt")
+                return false;
 
-        if (cancel) {
-            event.preventDefault();
-            event.stopPropagation();
+            let key_ctrl = event.ctrlKey;
+            let key_alt = event.altKey;
+            let key_shift = event.shiftKey;
+            let cancel = false;
+
+            let hotkey = [
+                this.comp_new.current,
+                this.comp_load.current,
+                this.comp_save.current,
+                this.comp_assemble.current,
+                this.comp_step.current,
+                this.comp_sim.current
+            ];
+
+            let hotkeyfns = [
+                this.props.fn_new,
+                this.props.fn_load,
+                this.props.fn_save,
+                this.props.fn_ass,
+                this.props.fn_step,
+                this.props.fn_sim
+            ];
+
+            for (let i = 0; i < hotkey.length; ++i) {
+                if (hotkey[i].testKey(key_ctrl, key_alt, key_shift, key_name)) {
+                    hotkeyfns[i]();
+                    cancel = true;
+                }
+            }
+
+            if (cancel) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
         }
     }
 
     setDefaults = () => {
         this.comp_new.current.setKey(false, true, false, "n");
-        this.comp_load.current.setKey(false, true, false, "o");
-        this.comp_save.current.setKey(false, true, false, "s");
+        this.comp_load.current.setKey(true, false, false, "o");
+        this.comp_save.current.setKey(true, false, false, "s");
         this.comp_assemble.current.setKey(false, true, false, "f4");
         this.comp_sim.current.setKey(false, true, false, "f5");
         this.comp_step.current.setKey(false, true, false, "f6");
+        this.setTheme("theme_light");
 
         this.saveSettings();
     }
@@ -96,30 +111,40 @@ class Settings extends Component {
     }*/
     
     saveSettings = () => {
-        let values = "hotkey_new=" + this.comp_new.current.getKey() + "; ";
-        values += "hotkey_load=" + this.comp_load.current.getKey() + "; ";
-        values += "hotkey_save=" + this.comp_save.current.getKey() + "; ";
-        values += "hotkey_ass=" + this.comp_assemble.current.getKey() + "; ";
-        values += "hotkey_sim=" + this.comp_sim.current.getKey() + "; ";
-        values += "hotkey_step=" + this.comp_step.current.getKey() + "; ";
-
         var d = new Date();
-        d.setTime(d.getTime() + (360*24*60*60*1000));
+        d.setTime(d.getTime() + (30*24*60*60*1000));
         var expires = d.toUTCString();
-        document.cookie = values + "expires=" + expires + ";path=/";
+        let exp = "; expires=" + expires + "; path=/";
+        
+        document.cookie = "ojs_hotkey_new=" + this.comp_new.current.getKey() + exp;
+        document.cookie = "ojs_hotkey_load=" + this.comp_load.current.getKey() + exp;
+        document.cookie = "ojs_hotkey_save=" + this.comp_save.current.getKey() + exp;
+        document.cookie = "ojs_hotkey_ass=" + this.comp_assemble.current.getKey() + exp;
+        document.cookie = "ojs_hotkey_sim=" + this.comp_sim.current.getKey() + exp;
+        document.cookie = "ojs_hotkey_step=" + this.comp_step.current.getKey() + exp;
+        document.cookie = "ojs_theme=" + this.state.theme + exp;
+    }
+
+    setTheme = (val) => {
+        themes.forEach(function(element) {
+            document.getElementById(element).disabled = (element !== val);
+        });
+
+        this.setState({theme: val}, this.saveSettings);
     }
 
     componentDidMount() {
         let missing_fields = [
-            "hotkey_new",
-            "hotkey_load",
-            "hotkey_save",
-            "hotkey_ass",
-            "hotkey_sim",
-            "hotkey_step",
+            "ojs_hotkey_new",
+            "ojs_hotkey_load",
+            "ojs_hotkey_save",
+            "ojs_hotkey_ass",
+            "ojs_hotkey_sim",
+            "ojs_hotkey_step",
+            "ojs_theme"
         ];
         
-        var ca = document.cookie.split(';');
+        var ca = document.cookie.split("; ");
         let i = 0;
         for (; i < ca.length; i++) {
             var c = ca[i];
@@ -133,18 +158,20 @@ class Settings extends Component {
             let val = c.substr(eq+1);
             let index = missing_fields.indexOf(str);
             if (index !== -1) {
-                if (str === "hotkey_new")
+                if (str === "ojs_hotkey_new")
                     this.comp_new.current.setKeyStr(val);
-                else if (str === "hotkey_load")
+                else if (str === "ojs_hotkey_load")
                     this.comp_load.current.setKeyStr(val);
-                else if (str === "hotkey_save")
+                else if (str === "ojs_hotkey_save")
                     this.comp_save.current.setKeyStr(val);
-                else if (str === "hotkey_ass")
+                else if (str === "ojs_hotkey_ass")
                     this.comp_assemble.current.setKeyStr(val);
-                else if (str === "hotkey_sim")
+                else if (str === "ojs_hotkey_sim")
                     this.comp_sim.current.setKeyStr(val);
-                else if (str === "hotkey_step")
+                else if (str === "ojs_hotkey_step")
                     this.comp_step.current.setKeyStr(val);
+                else if (str === "ojs_theme")
+                    this.setTheme(val);
 
                 missing_fields.splice(index, 1);
             }
@@ -152,18 +179,20 @@ class Settings extends Component {
 
         for (i = 0; i < missing_fields.length; i++) {
             let str = missing_fields[i];
-            if (str === "hotkey_new")
+            if (str === "ojs_hotkey_new")
                 this.comp_new.current.setKey(false, true, false, "n");
-            if (str === "hotkey_load")
-                this.comp_load.current.setKey(false, true, false, "o");
-            if (str === "hotkey_save")
-                this.comp_save.current.setKey(false, true, false, "s");
-            if (str === "hotkey_ass")
+            if (str === "ojs_hotkey_load")
+                this.comp_load.current.setKey(true, false, false, "o");
+            if (str === "ojs_hotkey_save")
+                this.comp_save.current.setKey(true, false, false, "s");
+            if (str === "ojs_hotkey_ass")
                 this.comp_assemble.current.setKey(false, true, false, "f4");
-            if (str === "hotkey_sim")
+            if (str === "ojs_hotkey_sim")
                 this.comp_sim.current.setKey(false, true, false, "f5");
-            if (str === "hotkey_step")
+            if (str === "ojs_hotkey_step")
                 this.comp_step.current.setKey(false, true, false, "f6");
+            if (str === "ojs_theme")
+                this.setTheme("theme_light");
         }
 
         if (missing_fields.length > 0) {
@@ -176,7 +205,7 @@ class Settings extends Component {
     };
 
     handleTheme = (event) => {
-        this.setState({theme: event.target.value});
+        this.setTheme(event.target.value);
     };
 
     render() {
@@ -191,20 +220,21 @@ class Settings extends Component {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            {/*<tr>
                                 <td colSpan={2}>
                                     <Select onChange={this.handleISA} icon="/images/icons/input_type.svg" placeholder="Default ISA" value={this.state.default_isa}>
                                         <option>RISC-V</option>
                                         <option>MIPS</option>
                                     </Select>
                                 </td>
-                            </tr><tr>
+                            </tr>*/}
+                            <tr>
                                 <td colSpan={2}>
                                     <Select onChange={this.handleTheme} icon="/images/icons/input_type.svg" placeholder="Theme" value={this.state.theme}>
-                                        <option>Light</option>
-                                        <option>Dark</option>
-                                        <option>Black</option>
-                                        <option>Mac-OS</option>
+                                        <option value="theme_light">Light</option>
+                                        <option value="theme_dark">Dark</option>
+                                        <option value="theme_dos">Black</option>
+                                        <option value="theme_macos">Mac-OS</option>
                                     </Select>
                                 </td>
                             </tr>

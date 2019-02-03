@@ -2,11 +2,13 @@
   "name": "oak-js",
   "version": "2.0.0-dev",
   "description": "An online assembler/assembler generator and simulator.",
+  "homepage": "https://donn.github.io/Oak.js/",
   "main": "bin/Oak.js",
   "dependencies": {
     "babel": "^6.23.0",
     "babel-cli": "^6.26.0",
     "brace": "^0.11.1",
+    "gh-pages": "^2.0.1",
     "node-getopt": "^0.3.2",
     "prompt-sync": "^4.1.6",
     "react": "^16.4.2",
@@ -24,7 +26,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "devDependencies": {
     "typescript": "^3.0.1"
@@ -48,6 +52,5 @@
   "license": "MPL-2.0",
   "bugs": {
     "url": "https://github.com/donn/Oak.js/issues"
-  },
-  "homepage": "https://github.com/donn/Oak.js#readme"
+  }
 }

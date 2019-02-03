@@ -16,15 +16,18 @@ export default class HotkeyInput extends Component {
 
     handleClick = (event) => {
         this.setState({capturing: true});
-		window.addEventListener("keypress", this.handleKey);
+		window.addEventListener("keydown", this.handleKey);
     }
 
     handleKey = (event) => {
         if (this.state.capturing) {
-            event.preventDefault();
             event.stopPropagation();
+            event.preventDefault();
 
             let key = event.key.toLowerCase();
+            if (key === "control" || key === "shift" || key === "alt")
+                return false;
+
             this.setState({
                 shift: event.shiftKey,
                 ctrl: event.ctrlKey,
@@ -33,7 +36,7 @@ export default class HotkeyInput extends Component {
                 capturing: false
             });
 
-            window.removeEventListener("keypress", this.handleKey);
+            window.removeEventListener("keydown", this.handleKey);
             this.props.save();
         }
     }
@@ -69,10 +72,13 @@ export default class HotkeyInput extends Component {
     }
 
     setKeyStr = (str) => {
-		let shift = (str.indexOf("s")!==-1);
-		let alt = (str.indexOf("a")!==-1);
-		let ctrl = (str.indexOf("c")!==-1);
-        let key = str.substr(str.indexOf("_") + 1);
+        let upos = str.indexOf("_");
+        let mods = str.substr(0, upos);
+
+		let shift = (mods.indexOf("s")!==-1);
+		let alt = (mods.indexOf("a")!==-1);
+		let ctrl = (mods.indexOf("c")!==-1);
+        let key = str.substr(upos + 1);
         
         this.setKey(ctrl, alt, shift, key);
     }

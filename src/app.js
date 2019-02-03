@@ -64,6 +64,8 @@ class App extends Component {
 		};
 		
 		this.component_input = React.createRef();
+
+		window.addEventListener("keyup", this.handleKeyPress);
 		
 		this.props.addTranslationForLanguage(enTranslations, 'en');
 
@@ -72,7 +74,6 @@ class App extends Component {
 			let tab = this.props.tabs[this.props.selectedtab];
 			if (tab) {
 				tab.console_input_type = CONSOLE_INPUT_NUM;
-				this.startHandlingKeys();
 			}
 		};
 
@@ -80,7 +81,6 @@ class App extends Component {
 			let tab = this.props.tabs[this.props.selectedtab];
 			if (tab) {
 				tab.console_input_type = CONSOLE_INPUT_STR;
-				this.startHandlingKeys();
 			}
 		};
 		
@@ -109,77 +109,70 @@ class App extends Component {
 		this.addTabDefault();
 	}
 
-	startHandlingKeys = () => {
-		window.addEventListener("keyup", this.handleKeyPress);
-	}
-
-	endHandlingKeys = () => {
-		window.removeEventListener("keyup", this.handleKeyPress);
-	}
-
 	handleKeyPress = (event) => {
-		event.preventDefault();
-
 		let current_tab = this.props.selectedtab;
 		let tab = this.props.tabs[current_tab];
-		if (!tab) return;
 
-		let input = tab.console_input;
-		let cursor = tab.cursor_pos;
+		if (tab && tab.console_input_type !== CONSOLE_INPUT_NONE) {
+			event.preventDefault();
 
-		if (event.key === "Enter") {
-			this.continueAfterConsole(input);
-			tab.console_input = "";
-		}
-		else if (event.which === 8) {
-			if (cursor > 0) {
-				let val = input.slice(0, cursor - 1) + input.slice(cursor);
+			let input = tab.console_input;
+			let cursor = tab.cursor_pos;
+
+			if (event.key === "Enter") {
+				this.continueAfterConsole(input);
+				tab.console_input = "";
+			}
+			else if (event.which === 8) {
+				if (cursor > 0) {
+					let val = input.slice(0, cursor - 1) + input.slice(cursor);
+					
+					tab.cursor_pos = cursor - 1;
+					tab.console_input = val;
+				}
+			}
+			else if (event.keyCode === 46) {
+				if (cursor < input.length) {
+					let val = input.slice(0, cursor) + input.slice(cursor + 1);
+					
+					tab.cursor_pos = cursor - 1;
+					tab.console_input = val;
+				}
+			}
+			else if (event.keyCode === 37) {
+				cursor = (cursor <= 0) ? 0 : cursor - 1;
+				tab.cursor_pos = cursor;
+			}
+			else if (event.keyCode === 39) {
+				let l = tab.console_input.length;
+				cursor = (cursor >= l) ? l : cursor + 1;
+				tab.cursor_pos = l;
+			}
+			else {
+				let out = event.key;
 				
-				tab.cursor_pos = cursor - 1;
-				tab.console_input = val;
-			}
-		}
-		else if (event.keyCode === 46) {
-			if (cursor < input.length) {
-				let val = input.slice(0, cursor) + input.slice(cursor + 1);
+				const keycode = event.keyCode;
+				const isNum = tab.console_input_type === CONSOLE_INPUT_NUM;
 				
-				tab.cursor_pos = cursor - 1;
-				tab.console_input = val;
+				var valid = 
+				(keycode > 47 && keycode < 58)   || // number keys
+				(!isNum && (keycode === 32 || keycode === 13   || // spacebar & return key(s) (if you want to allow carriage returns)
+				(keycode > 64 && keycode < 91)   || // letter keys
+				(keycode > 95 && keycode < 112)  || // numpad keys
+				(keycode > 185 && keycode < 193) || // ;=,-./` (in order)
+				(keycode > 218 && keycode < 223)));
+
+				if (valid) {
+					out = input.slice(0, cursor) + out + input.slice(cursor);
+					tab.console_input = out;
+					tab.cursor_pos =  cursor + 1;
+				}
 			}
-		}
-		else if (event.keyCode === 37) {
-			cursor = (cursor <= 0) ? 0 : cursor - 1;
-			tab.cursor_pos = cursor;
-		}
-		else if (event.keyCode === 39) {
-			let l = tab.console_input.length;
-			cursor = (cursor >= l) ? l : cursor + 1;
-			tab.cursor_pos = l;
-		}
-		else {
-			let out = event.key;
-			
-			const keycode = event.keyCode;
-			const isNum = tab.console_input_type === CONSOLE_INPUT_NUM;
-			
-			var valid = 
-			(keycode > 47 && keycode < 58)   || // number keys
-			(!isNum && (keycode === 32 || keycode === 13   || // spacebar & return key(s) (if you want to allow carriage returns)
-			(keycode > 64 && keycode < 91)   || // letter keys
-			(keycode > 95 && keycode < 112)  || // numpad keys
-			(keycode > 185 && keycode < 193) || // ;=,-./` (in order)
-			(keycode > 218 && keycode < 223)));
 
-			if (valid) {
-				out = input.slice(0, cursor) + out + input.slice(cursor);
-				tab.console_input = out;
-				tab.cursor_pos =  cursor + 1;
-			}
+			this.props.updateTab(current_tab, tab);
+
+			return false;
 		}
-
-		this.props.updateTab(current_tab, tab);
-
-		return false;
 	}
 
 	addConsoleMessage = (msg_type, data) => {
@@ -221,7 +214,6 @@ class App extends Component {
 		}
 
 		tab.console_input_type = CONSOLE_INPUT_NONE;
-		this.endHandlingKeys();
 
 		this.checkUpdatedTabs();
 		this.props.updateTab(selected, tab);
@@ -691,18 +683,6 @@ class App extends Component {
 		this.props.setHelpVisible(true);
 	}
 
-	/*setEditorValue = (val) => {
-		let tabs = this.state.core.tabs;
-		tabs[this.state.core.selected].content = val;
-
-		this.setState(prevState => ({
-			core: {
-				...prevState.core,
-				tabs: tabs
-			}
-		}));
-	}*/
-
 	render() {
 		let current_tab = this.props.selectedtab;
 		let tab = this.props.tabs[current_tab];
@@ -716,13 +696,14 @@ class App extends Component {
 		return (
 			<React.Fragment>
 				<Help ref={this.component_help} />
-				<Settings ref={this.component_settings}
+				<Settings
+					canhandleinput={!show_input}
 					fn_new={this.addTabDefault}
 					fn_load={this.handleLoadAsm}
 					fn_save={this.handleDownloadAsm}
 					fn_ass={this.uiAssemble}
 					fn_sim={this.uiSimulate}
-					fn_step={this.uiStepbystep} />
+					fn_step={this.uiStepByStep} />
 				<Navigation showSettings={this.showSettings} showHelp={this.showHelp} assemble={this.uiAssemble} simulate={this.uiSimulate} stepbystep={this.uiStepByStep} downloadRam={this.downloadRam} downloadBin={this.downloadBin} handleAddTabRiscv={this.addTabDefaultRISCV} handleAddTabMips={this.addTabDefaultMIPS} handleLoadAsm={this.handleLoadAsm} handleLoadBin={this.handleLoadBin} handleDownloadAsm={this.handleDownloadAsm} />
 				{!has_tabs && <div className="no_tabs">
 					<div>
