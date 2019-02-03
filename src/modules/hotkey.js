@@ -48,13 +48,13 @@ export default class HotkeyInput extends Component {
             key_name === this.state.key_name);
     }
 
-    setKey = (key_ctrl, key_alt, key_shift, key_name) => {
+    setKey = (key_ctrl, key_alt, key_shift, key_name, done = () => {}) => {
         this.setState({
             ctrl: key_ctrl,
             alt: key_alt,
             shift: key_shift,
             key_name: key_name
-        });
+        }, done);
     }
 
     getKey = () => {
