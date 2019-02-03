@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import "./app.css";
 import TextEditor from "./sections/texteditor.js";
 import Navigation from "./sections/navigation.js";
 import PanelContainer from "./sections/panelcontainer.js";

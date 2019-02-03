@@ -42,7 +42,7 @@ class PanelMachineCode extends Component {
         return (
             <div id="panel_machine_code" className="panel panel_machine_code">
                 {empty && <span className="panel_empty">Machine Code Empty</span>}
-                {!empty && <Select onChange={this.handleType} icon="/images/icons/input_type.svg" placeholder="Display Type" defaultValue="0">
+                {!empty && <Select onChange={this.handleType} icon="images/icons/input_type.svg" placeholder="Display Type" defaultValue="0">
                     <option value="0">Hex</option>
                     <option value="1">Decimal</option>
                     <option value="2">Octal</option>

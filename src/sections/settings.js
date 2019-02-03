@@ -87,8 +87,8 @@ class Settings extends Component {
         this.comp_new.current.setKey(false, true, false, "n");
         this.comp_load.current.setKey(true, false, false, "o");
         this.comp_save.current.setKey(true, false, false, "s");
-        this.comp_assemble.current.setKey(false, true, false, "f4");
-        this.comp_sim.current.setKey(false, true, false, "f5");
+        this.comp_assemble.current.setKey(false, true, false, "f5");
+        this.comp_sim.current.setKey(false, true, false, "f7");
         this.comp_step.current.setKey(false, true, false, "f6");
         this.setTheme("theme_light");
 
@@ -186,9 +186,9 @@ class Settings extends Component {
             if (str === "ojs_hotkey_save")
                 this.comp_save.current.setKey(true, false, false, "s");
             if (str === "ojs_hotkey_ass")
-                this.comp_assemble.current.setKey(false, true, false, "f4");
+                this.comp_assemble.current.setKey(false, true, false, "f5");
             if (str === "ojs_hotkey_sim")
-                this.comp_sim.current.setKey(false, true, false, "f5");
+                this.comp_sim.current.setKey(false, true, false, "f7");
             if (str === "ojs_hotkey_step")
                 this.comp_step.current.setKey(false, true, false, "f6");
             if (str === "ojs_theme")
@@ -213,79 +213,79 @@ class Settings extends Component {
             <div id="settings" onClick={this.handleClose} className={`settings_overlay overlay fader${this.props.visible ? " fader_shown" : ""}`}>
                 <div className="settings_container" onClick={this.handleStopClose}>
                     <h2>Settings</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <td colSpan={2}>General Settings</td>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {/*<tr>
-                                <td colSpan={2}>
-                                    <Select onChange={this.handleISA} icon="/images/icons/input_type.svg" placeholder="Default ISA" value={this.state.default_isa}>
-                                        <option>RISC-V</option>
-                                        <option>MIPS</option>
-                                    </Select>
-                                </td>
-                            </tr>*/}
-                            <tr>
-                                <td colSpan={2}>
-                                    <Select onChange={this.handleTheme} icon="/images/icons/input_type.svg" placeholder="Theme" value={this.state.theme}>
-                                        <option value="theme_light">Light</option>
-                                        <option value="theme_dark">Dark</option>
-                                        <option value="theme_dos">Black</option>
-                                        <option value="theme_macos">Mac-OS</option>
-                                    </Select>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <table>
-                        <thead>
-                            <tr>
-                                <td colSpan={2}>Hotkeys</td>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>New Tab</td>
-                                <td>
-                                    <HotkeyInput ref={this.comp_new} save={this.saveSettings} />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Save Tab</td>
-                                <td>
-                                    <HotkeyInput ref={this.comp_save} save={this.saveSettings} />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Load</td>
-                                <td>
-                                    <HotkeyInput ref={this.comp_load} save={this.saveSettings} />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Assemble</td>
-                                <td>
-                                    <HotkeyInput ref={this.comp_assemble} save={this.saveSettings} />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Step-By-Step</td>
-                                <td>
-                                    <HotkeyInput ref={this.comp_step} save={this.saveSettings} />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Simulate</td>
-                                <td>
-                                    <HotkeyInput ref={this.comp_sim} save={this.saveSettings} />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <button className="button" onClick={this.setDefaults}>Restore Defaults</button>
+                    <div style={{position: "relative"}}>
+                        <button className="button reset_defaults" onClick={this.setDefaults}>Restore Defaults</button>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <td colSpan={2}>General Settings</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {/*<tr>
+                                    <td colSpan={2}>
+                                        <Select onChange={this.handleISA} icon="/images/icons/input_type.svg" placeholder="Default ISA" value={this.state.default_isa}>
+                                            <option>RISC-V</option>
+                                            <option>MIPS</option>
+                                        </Select>
+                                    </td>
+                                </tr>*/}
+                                <tr>
+                                    <td colSpan={2}>
+                                        <Select onChange={this.handleTheme} icon="/images/icons/input_type.svg" placeholder="Theme" value={this.state.theme}>
+                                            <option value="theme_light">Light</option>
+                                            <option value="theme_dark">Dark</option>
+                                            <option value="theme_dos">Black</option>
+                                            <option value="theme_macos">Mac-OS</option>
+                                        </Select>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <thead>
+                                <tr>
+                                    <td colSpan={2}>Hotkeys</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>New Tab</td>
+                                    <td>
+                                        <HotkeyInput ref={this.comp_new} save={this.saveSettings} />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Save Tab</td>
+                                    <td>
+                                        <HotkeyInput ref={this.comp_save} save={this.saveSettings} />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Load</td>
+                                    <td>
+                                        <HotkeyInput ref={this.comp_load} save={this.saveSettings} />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Assemble</td>
+                                    <td>
+                                        <HotkeyInput ref={this.comp_assemble} save={this.saveSettings} />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Step-By-Step</td>
+                                    <td>
+                                        <HotkeyInput ref={this.comp_step} save={this.saveSettings} />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Simulate</td>
+                                    <td>
+                                        <HotkeyInput ref={this.comp_sim} save={this.saveSettings} />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         );

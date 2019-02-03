@@ -325,10 +325,17 @@ input[type=file] {
 	height: 1.2rem;
 	box-sizing: border-box;
 	margin: 0.3rem;
-	background-image: url(/images/add.png);
+	background-image: url(../images/add.png);
 	background-position: center;
 	background-size: 80%;
 	background-repeat: no-repeat;
 	border-radius: $radius;
 	transition: 0.5s ease all;
+}
+
+.reset_defaults {
+	width: auto;
+	position: absolute;
+	top: 0;
+	right: 0;
 }

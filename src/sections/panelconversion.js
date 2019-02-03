@@ -90,15 +90,15 @@ export default class PanelConversion extends Component {
     render() {
         return (
             <div id="panel_conversion" className="panel panel_conversion">
-                <Input onChange={this.onChangeInput} icon="/images/icons/input_in.svg" placeholder="Input" type="text" />
-                <Select onChange={this.onChangeInputType} icon="/images/icons/input_type.svg" placeholder="Input Type">
+                <Input onChange={this.onChangeInput} icon="images/icons/input_in.svg" placeholder="Input" type="text" />
+                <Select onChange={this.onChangeInputType} icon="images/icons/input_type.svg" placeholder="Input Type">
                     <option value="0">Hex</option>
                     <option value="1">Integer</option>
                     <option value="3">Binary</option>
                     {/*<option value="4">Float</option>*/}
                 </Select>
                 <hr />
-                <Select onChange={this.onChangeOutputType} icon="/images/icons/input_type.svg" placeholder="Output Type">
+                <Select onChange={this.onChangeOutputType} icon="images/icons/input_type.svg" placeholder="Output Type">
                     <option value="0">Hex</option>
                     <option value="1">Unsigned Integer</option>
                     <option value="2">Signed Integer</option>

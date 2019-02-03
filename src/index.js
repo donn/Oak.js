@@ -4,7 +4,6 @@ import ReactDOM from 'react-dom';
 
 // App Imports
 import App from './app';
-import './index.css';
 
 // Redux Store Imports
 import allReducers from './reducers'

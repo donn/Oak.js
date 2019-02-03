@@ -41,7 +41,7 @@ class PanelMemory extends Component {
         return (
             <div id="panel_memory" className="panel panel_memory">
                 {empty && <span className="panel_empty">Memory Empty</span>}
-                {!empty && <Select onChange={this.handleType} icon="/images/icons/input_type.svg" placeholder="Display Type" defaultValue="0">
+                {!empty && <Select onChange={this.handleType} icon="images/icons/input_type.svg" placeholder="Display Type" defaultValue="0">
                     <option value="0">Hex</option>
                     <option value="1">Decimal</option>
                     <option value="2">Octal</option>

@@ -63,7 +63,7 @@ class PanelRegisters extends Component {
 
         return (
             <div id="panel_registers" className="panel panel_registers">
-                <Select onChange={this.handleType} icon="/images/icons/input_type.svg" placeholder="Display Type" defaultValue="0">
+                <Select onChange={this.handleType} icon="images/icons/input_type.svg" placeholder="Display Type" defaultValue="0">
                     <option value="0">Hex</option>
                     <option value="1">Unsigned Integer</option>
                     <option value="2">Signed Integer</option>

@@ -37,13 +37,13 @@ class PanelSettings extends Component {
         return (
             <div id="panel_settings" className="panel panel_settings">
                 <form onSubmit={this.handleSubmit}>
-                    <Input onChange={this.handleFileName} value={this.props.project_settings.file_name} icon="/images/icons/input_name.svg" placeholder="File Name" id="filename" />
-                    <Select onChange={this.handleISA} value={this.props.project_settings.isa} icon="/images/icons/input_code.svg" placeholder="Instruction Set" >
+                    <Input onChange={this.handleFileName} value={this.props.project_settings.file_name} icon="images/icons/input_name.svg" placeholder="File Name" id="filename" />
+                    <Select onChange={this.handleISA} value={this.props.project_settings.isa} icon="images/icons/input_code.svg" placeholder="Instruction Set" >
                         {isas.map((isa, i) => {
                             return <option key={isa} value={isa}>{isa}</option>
                         })}
                     </Select>
-                    <Input onChange={this.handleMemorySize} value={this.props.project_settings.memory_size} icon="/images/icons/input_memory.svg" placeholder="Memory Size (Bytes)" type="number" />
+                    <Input onChange={this.handleMemorySize} value={this.props.project_settings.memory_size} icon="images/icons/input_memory.svg" placeholder="Memory Size (Bytes)" type="number" />
 
                     <input className="button" value="Accept Changes" type="submit" />
                 </form>
