@@ -503,7 +503,7 @@ table tbody tr:nth-child(even) {
 }
 
 .key_bar {
-  background-color: #000;
+  background-color: #0f0;
   border-radius: 8px;
 }
 
@@ -683,4 +683,4 @@ body:not(.rtl) .input_group select, body:not(.rtl) .select_group select {
 * {
   font-family: 'Consolas', "Lucida Console", Monaco, monospace !important;
 }
-/*# sourceMappingURL=theme_macos.css.map */
+/*# sourceMappingURL=theme_apple2.css.map */

@@ -10,7 +10,7 @@ const themes = [
     "theme_light",
     "theme_dark",
     "theme_dos",
-    "theme_macos"
+    "theme_apple2"
 ];
 
 class Settings extends Component {
@@ -262,8 +262,8 @@ class Settings extends Component {
                                         <Select onChange={this.handleTheme} icon="images/icons/input_type.svg" placeholder="Theme" value={this.state.theme}>
                                             <option value="theme_light">Light</option>
                                             <option value="theme_dark">Dark</option>
-                                            <option value="theme_dos">Black</option>
-                                            <option value="theme_macos">Mac-OS</option>
+                                            <option value="theme_dos">DOS</option>
+                                            <option value="theme_apple2">Apple ][</option>
                                         </Select>
                                     </td>
                                 </tr>
