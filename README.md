@@ -43,12 +43,9 @@ Simply invoke `node make web`.
 ## On-computer usage
 Invoke `make`. This does require a POSIX-y environment and GNU make.
 
-For more, invoke `./bin/Oak.js --help`.
+For more, invoke `./bin/oak --help`.
 
 (There is `node make exec` but it's maintained by the GUI side of the project and I have no guarantees that it will work.)
 
 # License
 Mozilla Public License 2.0. Check LICENSE.
-
-# Note
-Yes, I did patch the Ace text editor to support 0-based numbering. No, I don't remember how.
