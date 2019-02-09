@@ -487,8 +487,12 @@ class Assembler {
             
             let registerNo = null;
             if (this.keywordRegexes[Keyword.register]) {
-                registerNo = new RegExp(this.keywordRegexes[Parameter.register]).exec(text)[1];
-            } else {
+                let match = this.keywordRegexes[Keyword.register].exec(text);
+                if (match !== null) {
+                    registerNo = match[1];
+                }
+            }
+            if (registerNo === null) {
                 result.errorMessage = `args.registerDoesNotExist(${text})`;
                 return result;
             }

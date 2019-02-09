@@ -2,9 +2,6 @@
 /// <reference path="ISAs/MIPS.ts"/>
 /// <reference path="VirtualOS.ts"/>
 
-declare let require: any
-declare let process: any
-
 let opt = require('node-getopt').create([
     ['a', 'instructionSetArchitecture=ARG'  , 'String name of the instruction set architecture to use.', 'RISCV'],
     // ['d', 'debug', 'Turn on debug mode. (Beta)', false],
@@ -39,6 +36,9 @@ cliVirtualOS.outputInt = (number) => {
 cliVirtualOS.outputString = (string) => {
     console.log(string);
 };
+cliVirtualOS.handleHalt = () => {
+    console.log("Halting execution...")
+}
 
 let cpu: Core = null;
 try {
@@ -58,24 +58,23 @@ if (passZero.length !== 0) {
     for (let i in passZero) {
         let line = passZero[i];
         console.log(line.number, line.invalidReason);
-        process.exit(65);
     }
+    process.exit(65);
 }
+
 let pass = null;
 let passCounter = 1;
 do { // Subsequent assembler passes. Typically one pass is needed, but when there's a lot of variance in ISA word sizes, another pass might be needed.
     pass = assembler.assemble(lines, passCounter);
     if (pass.length !== 0) {
-        for (let i in passZero) {
-            let line = passZero[i];
+        for (let i in pass) {
+            let line = pass[i];
             console.error(line.number, line.invalidReason);
-            process.exit(65);
         }
+        process.exit(65);
     }
     passCounter += 1;
 } while (pass === null);
-
-//console.log(lines);
 
 let machineCode = lines.map(line=> line.machineCode).reduce((a, b)=> a.concat(b), []); // Get machine code from lines
 if (options.ppmc) {
@@ -106,7 +105,7 @@ running: while (true) {
     }
     if (options.verbose) {
         console.log(decode);
-    }``
+    }
 
     let execute = cpu.execute();
     if (execute !== null) {

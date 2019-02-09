@@ -1,6 +1,6 @@
 {
   "name": "oak-js",
-  "version": "2.0.0",
+  "version": "2.0.1-dev",
   "description": "An online assembler/assembler generator and simulator.",
   "homepage": "https://donn.github.io/Oak.js/",
   "main": "bin/Oak.js",
@@ -52,5 +52,11 @@
   "license": "MPL-2.0",
   "bugs": {
     "url": "https://github.com/donn/Oak.js/issues"
-  }
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
 }
