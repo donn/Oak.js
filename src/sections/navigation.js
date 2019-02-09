@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Translate, withLocalize } from 'react-localize-redux';
 import { connect } from 'react-redux';
+import { setSettingsVisible, setHelpVisible, setAboutVisible } from "../actions"
 
 const SimulatingStatus = {
 	Stopped:	0,
@@ -41,6 +42,7 @@ class Navigation extends Component {
 					</li>
 					<li onClick={this.props.showSettings}><Translate id="menus.settings" /></li>
 					<li onClick={this.props.showHelp}><Translate id="menus.help" /></li>
+					<li onClick={this.props.showAbout}><Translate id="menus.about" /></li>
 				</ul>
 
 				<div className="buttons_right">
@@ -60,4 +62,13 @@ const stateToProps = state => {
 	};
 };
 
-export default withLocalize(connect(stateToProps)(Navigation));
+const appDispatchToProps = (dispatch, ownProps) => ({
+	showHelp: (visible) => dispatch(setHelpVisible(visible)),
+	showAbout: (visible) => dispatch(setAboutVisible(visible)),
+	showSettings: (visible) => dispatch(setSettingsVisible(visible))
+});
+
+export default withLocalize(
+	connect(stateToProps,
+		appDispatchToProps)
+	(Navigation));

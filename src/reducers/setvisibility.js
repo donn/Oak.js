@@ -8,6 +8,11 @@ const selectedTabReducer = (state = {
                 ...state,
                 help: action.state
             };
+        case 'SET_ABOUT_VISIBLE':
+            return {
+                ...state,
+                about: action.state
+            };
         case 'SET_SETTINGS_VISIBLE':
             return {
                 ...state,

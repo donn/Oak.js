@@ -4,6 +4,7 @@
         "subtitle": "Oak.js is an online javascript IDE, Assembler, Disassembler, and Simulator for assembly languages such as RISC-V and MIPS."
     },
     "menus": {
+        "about": "About",
         "settings": "Settings",
         "help": "Help",
         "add_tab": "Add Tab",
@@ -22,6 +23,13 @@
             "isa": "File Name",
             "memory_size": "Memory Size"
         }
+    },
+    "about": {
+        "title": "About",
+        "core_devs": "Core Developers",
+        "additional_devs": "Additional Developers",
+        "translators": "Translators",
+        "auc": "Special thanks to the American University of Cairo, whose professors (especially Dr. Mohamed Shalan), have helped guide the project."
     },
     "help": {
         "title": "Help",

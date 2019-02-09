@@ -6,6 +6,7 @@ import PanelMemory from "./sections/panelmemory.js";
 import PanelConsole from "./sections/panelconsole.js";
 import PanelLog from "./sections/panellog.js";
 import Help from './sections/help';
+import About from './sections/about';
 import Settings from './sections/settings';
 import PanelSettings from './sections/panelsettings';
 import PanelConversion from './sections/panelconversion';
@@ -19,7 +20,7 @@ import { Translate, withLocalize } from "react-localize-redux";
 import { renderToStaticMarkup } from 'react-dom/server';
 import enTranslations from "./translations/en.json";
 
-import { selectTab, addTab, updateTab, setProjectSettings, setSettingsVisible, setHelpVisible } from "./actions"
+import { selectTab, addTab, updateTab, setProjectSettings, setSettingsVisible, setHelpVisible, setAboutVisible } from "./actions"
 
 const SimulatingStatus = {
 	Stopped:	0,
@@ -435,12 +436,14 @@ class App extends Component {
 			}
 		
 			let decode = core.decode(); // Decode has the decoded instruction on success
-			tab.log.push(decode);
 			
 			if (decode === null) {
 				this.addConsoleMessage(MessageType.Error, "decode.failure");
 				tab.runningStatus = SimulatingStatus.Stopped;
 				break;
+			}
+			else {
+				tab.log.push(decode);
 			}
 		
 			let execute = core.execute();
@@ -480,13 +483,15 @@ class App extends Component {
 		}
 	
 		let decode = core.decode(); // Decode has the decoded instruction on success
-		tab.log.push(decode);
 		
 		if (decode === null) {
 			this.addConsoleMessage(MessageType.Error, "decode.failure");
 			tab.runningStatus = SimulatingStatus.Stopped;
 			this.props.updateTab(current_tab, tab);
 			return;
+		}
+		else {
+			tab.log.push(decode);
 		}
 	
 		let execute = core.execute();
@@ -682,6 +687,11 @@ class App extends Component {
 		this.props.setHelpVisible(true);
 	}
 
+	showAbout =  () => {
+		alert(1);
+		this.props.setAboutVisible(true);
+	}
+
 	render() {
 		let current_tab = this.props.selectedtab;
 		let tab = this.props.tabs[current_tab];
@@ -694,7 +704,8 @@ class App extends Component {
 		
 		return (
 			<React.Fragment>
-				<Help ref={this.component_help} />
+				<About />
+				<Help />
 				<Settings
 					canhandleinput={!show_input}
 					fn_new={this.addTabDefault}
@@ -703,7 +714,7 @@ class App extends Component {
 					fn_ass={this.uiAssemble}
 					fn_sim={this.uiSimulate}
 					fn_step={this.uiStepByStep} />
-				<Navigation showSettings={this.showSettings} showHelp={this.showHelp} assemble={this.uiAssemble} simulate={this.uiSimulate} stepbystep={this.uiStepByStep} downloadRam={this.downloadRam} downloadBin={this.downloadBin} handleAddTabRiscv={this.addTabDefaultRISCV} handleAddTabMips={this.addTabDefaultMIPS} handleLoadAsm={this.handleLoadAsm} handleLoadBin={this.handleLoadBin} handleDownloadAsm={this.handleDownloadAsm} />
+				<Navigation assemble={this.uiAssemble} simulate={this.uiSimulate} stepbystep={this.uiStepByStep} downloadRam={this.downloadRam} downloadBin={this.downloadBin} handleAddTabRiscv={this.addTabDefaultRISCV} handleAddTabMips={this.addTabDefaultMIPS} handleLoadAsm={this.handleLoadAsm} handleLoadBin={this.handleLoadBin} handleDownloadAsm={this.handleDownloadAsm} />
 				{!has_tabs && <div className="no_tabs">
 					<div>
 						<h2><Translate id="welcome.title">Welcome to Oak.js</Translate></h2>
@@ -747,6 +758,7 @@ const appDispatchToProps = (dispatch, ownProps) => ({
 	selectTab: (id) => dispatch(selectTab(id)),
 	setProjectSettings: (n, s, i) => dispatch(setProjectSettings(n, s, i)),
 	setHelpVisible: (visible) => dispatch(setHelpVisible(visible)),
+	setAboutVisible: (visible) => dispatch(setAboutVisible(visible)),
 	setSettingsVisible: (visible) => dispatch(setSettingsVisible(visible))
 });
 
