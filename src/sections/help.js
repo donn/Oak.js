@@ -18,9 +18,11 @@ class Help extends Component {
         return (
             <div id="help" onClick={this.handleClose} className={`settings_overlay overlay fader${this.props.visible ? " fader_shown" : ""}`}>
                 <div className="settings_container" onClick={this.handleStopClose}>
+                    <button className="floating_close" onClick={this.handleClose}></button>
                     <h2><Translate id="help.title" /></h2>
                     <div className="overlay_contents">
                         <Translate id="help.data" options={{ renderInnerHtml: true }} />
+                        <button className="button" onClick={this.handleClose}>Close</button>
                     </div>
                 </div>
             </div>

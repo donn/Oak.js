@@ -1,27 +1,38 @@
 export default {
     core: [
         {
+            "affiliation": "Student, American University in Cairo",
             "pic": "donn.jpg",
             "name": "Mohamed \"Donn\" Gaber",
-            "job": "Primary ISA/ISS Developer",
+            "job": "Assembler / Simulator Developer",
             "link": "https://donn.github.io/",
-            "desc": ""
+            "desc": "Hi I play video games"
         },
         {
+            "affiliation": "Student, American University in Cairo",
             "pic": "karimio.jpg",
             "name": "Karim Abdel Hamid",
             "job": "Primary Front-End/IDE Developer",
             "link": "https://karimio.github.io/",
-            "desc": "I'm a game and web developer that loves to write stories, play guitar, and paint."
+            "desc": "I'm a game and web developer; love to write stories, play guitar, & paint."
         }
     ],
     additional: [
         {
+            "affiliation": "Student, American University in Cairo",
             "pic": "ali_khaled.jpg",
             "name": "Ali Khaled",
             "job": "MIPS co-developer",
             "link": "https://github.com/loshya",
-            "desc": ""
+            "desc": "りゅうがわがてきをクラウ！"
+        },
+        {
+            "affiliation": "Professor, American University in Cairo",
+            "pic": "shalan.jpg",
+            "name": "Dr. Mohamed Shalan",
+            "job": "Advisor",
+            "link": "https://github.com/shalan",
+            "desc": "Founder at Cloud V, Open Hardware Researcher and Advocate"
         }
     ],
     translators: []

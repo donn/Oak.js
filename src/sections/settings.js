@@ -236,6 +236,7 @@ class Settings extends Component {
         return (
             <div id="settings" onClick={this.handleClose} className={`settings_overlay overlay fader${this.props.visible ? " fader_shown" : ""}`}>
                 <div className="settings_container" onClick={this.handleStopClose}>
+                    <button className="floating_close" onClick={this.handleClose}></button>
                     <h2>Settings</h2>
                     {!this.state.use_cookies && 
                         <div className="cookie_screen">

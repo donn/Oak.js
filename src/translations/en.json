@@ -26,10 +26,9 @@
     },
     "about": {
         "title": "About",
-        "core_devs": "Core Developers",
-        "additional_devs": "Additional Developers",
-        "translators": "Translators",
-        "auc": "Special thanks to the American University of Cairo, whose professors (especially Dr. Mohamed Shalan), have helped guide the project."
+        "core_devs": "Developers",
+        "additional_devs": "Special Thanks",
+        "translators": "Translators"
     },
     "help": {
         "title": "Help",

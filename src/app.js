@@ -36,6 +36,8 @@ const CONSOLE_INPUT_NONE= 0;
 const CONSOLE_INPUT_NUM = 1;
 const CONSOLE_INPUT_STR = 2;
 
+const decode_error_msg = <span><b>Error: </b>Failed to decode instruction. In practice, the most likely cause is forgetting to terminate the program using the appropriate system call (see help section).</span>;
+
 const MessageType = {
 	Log: 0,
 	Input: 1,
@@ -438,7 +440,7 @@ class App extends Component {
 			let decode = core.decode(); // Decode has the decoded instruction on success
 			
 			if (decode === null) {
-				this.addConsoleMessage(MessageType.Error, "decode.failure");
+				this.addConsoleMessage(MessageType.Error, decode_error_msg);
 				tab.runningStatus = SimulatingStatus.Stopped;
 				break;
 			}
@@ -485,7 +487,7 @@ class App extends Component {
 		let decode = core.decode(); // Decode has the decoded instruction on success
 		
 		if (decode === null) {
-			this.addConsoleMessage(MessageType.Error, "decode.failure");
+			this.addConsoleMessage(MessageType.Error, decode_error_msg);
 			tab.runningStatus = SimulatingStatus.Stopped;
 			this.props.updateTab(current_tab, tab);
 			return;
@@ -524,9 +526,8 @@ class App extends Component {
 		if (passZero.length !== 0) {
 			for (let i in passZero) {
 				let line = passZero[i];
-				console.log(line.number, line.invalidReason);
+				this.addConsoleMessage(MessageType.Error, <span><b>Assembly error on line {line.number}:</b> {line.invalidReason}.</span>);
 				return;
-				//process.exit(65);
 			}
 		}
 		let pass = null;
@@ -534,11 +535,10 @@ class App extends Component {
 		do { // Subsequent assembler passes. Typically one pass is needed, but when there's a lot of variance in ISA word sizes, another pass might be needed.
 			pass = assembler.assemble(lines, passCounter);
 			if (pass.length !== 0) {
-				for (let i in passZero) {
-					let line = passZero[i];
-					console.log(line.number, line.invalidReason);
+				for (let i in pass) {
+					let line = pass[i];
+					this.addConsoleMessage(MessageType.Error, <span><b>Assembly error on line {line.number}:</b> {line.invalidReason}.</span>);
 					return;
-					//process.exit(65);
 				}
 			}
 			passCounter += 1;

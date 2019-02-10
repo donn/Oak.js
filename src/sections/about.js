@@ -21,6 +21,7 @@ class About extends Component {
                 <img src={`images/about/${element.pic}`} />
                 <h4>{element.name}</h4>
                 <span>{element.job}</span>
+                <span>{element.affiliation}</span>
                 <p>{element.desc}</p>
             </a>;
         })
@@ -30,6 +31,7 @@ class About extends Component {
         return (
             <div id="about" onClick={this.handleClose} className={`settings_overlay overlay fader${this.props.visible ? " fader_shown" : ""}`}>
                 <div className="settings_container" onClick={this.handleStopClose}>
+                    <button className="floating_close" onClick={this.handleClose}></button>
                     <h2><Translate id="about.title" /></h2>
                     <div className="overlay_contents">
                         <div className="devlist">
@@ -55,12 +57,6 @@ class About extends Component {
                                 })
                             }
                         </div>}
-                        <div className="about_auc">
-                            <img src="images/about/auc.png" />
-                            <p>
-                                <Translate id="about.auc" options={{ renderInnerHtml: true }} />
-                            </p>
-                        </div>
                     </div>
                     <button className="button" onClick={this.handleClose}>Close</button>
                 </div>
