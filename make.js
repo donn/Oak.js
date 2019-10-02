@@ -1,54 +1,73 @@
-let arg = process.argv.slice(2)[0];
-var exec = require('child_process').exec, child;
+let fs = require("fs");
+let mkdirpSync = require("mkdirp").sync;
+let { exec } = require("child_process");
+let { version } = require("./package.json");
 
-var isWin = process.platform === "win32";
+let concatenate = (isBackend) => {
+    console.log("Concatenating…");
 
-let concatenate = () => {
-    let path = "src/backend.js";
+    if (isBackend) {
+        let path = "src/backend.js";
+    
+        let backendJS = fs.readFileSync(
+            path,
+            "utf8"
+        );
 
-    let fs = require('fs');
-    function writeData(content) {
-        fs.writeFile(path, content, function(err) {
-            if (err) throw err;
-            console.log('Complete.');
-        });
+        let zeroPlus  = fs.readFileSync(
+            "oak/ZeroPlus.js",
+            "utf8"
+        );
+
+        fs.writeFileSync(path, backendJS + "\n" + zeroPlus);
+    } else {
+        let path = "bin/Oak.js"
+        let execJS = fs.readFileSync(
+            path,
+            "utf8"
+        );
+        fs.writeFileSync(
+            "bin/oak",
+            `#!/usr/bin/env node\n${
+                execJS.
+                split("__VERSION__").
+                join(version)
+            }`,
+            "utf8"
+        );
+        fs.chmodSync(
+            "bin/oak",
+            "755"
+        );
     }
-
-    function readContent(content) {
-        fs.readFile("oak/ZeroPlus.js", 'utf8', function (err, data) {
-            if (err) throw err;
-            writeData(content + "\n" + data);
-        });
-    }
-
-    fs.readFile(path, 'utf8', function (err, data) {
-        if (err) throw err;
-        readContent(data);
-    });
 }
 
 let create_tsc = (isBackend) => {
-    let tsc = isWin ? "tsc" : "./node_modules/typescript/bin/tsc";
-    let tsc_flags = " --module amd --pretty --target ES2016 --noEmitOnError";
-    let tsc_target = isBackend ? " oak/Zero.ts --outFile src/backend.js" : " --removeComments oak/main.ts --outFile bin/Oak.js";
-    exec(tsc + tsc_flags + tsc_target, (error, stdout, stderr) => {
-        if (stdout)
-            console.log('stdout: ' + stdout);
+    let invocation = "node ./node_modules/typescript/bin/tsc";
+    let flags = "--module amd --pretty --target ES2016 --noEmitOnError";
+    let target = isBackend ?
+        "oak/Zero.ts --outFile src/backend.js" :
+        "--removeComments oak/main.ts --outFile bin/Oak.js"
+    ;
+    mkdirpSync("bin/");
+
+    let command = `${invocation} ${flags} ${target}`;
+    exec(command, (error, stdout, stderr) => {
+        console.log(stdout, stderr);
         
-        if (stderr)
-            console.log('stderr: ' + stderr);
+        if (error) {
+            process.exit(error);
+        }
 
-        if (error)
-            console.log('exec error: ' + error);
+        concatenate(isBackend);
 
-        if (isBackend)
-            concatenate();
-        else
-            console.log("Complete");
+        console.log("\nDone.")
+        process.exit(0);
     });
 }
 
-console.log("Building Oak.js...");
+let arg = process.argv.slice(2)[0];
+console.log(`Building Oak.js for target '${arg}'…`);
 if (arg === "backend") {
     create_tsc(true);
 }
@@ -60,5 +79,6 @@ else if (arg === "all") {
     create_tsc(false);
 }
 else {
-    console.log("Invalid build target")
+    console.error(`Target '${arg}' not found.'`)
+    process.exit(64);
 }

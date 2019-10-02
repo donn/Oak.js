@@ -2,6 +2,8 @@
 /// <reference path="ISAs/MIPS.ts"/>
 /// <reference path="VirtualOS.ts"/>
 
+let pjson = require("../package.json");
+
 let opt = require('node-getopt').create([
     ['a', 'instructionSetArchitecture=ARG'  , 'String name of the instruction set architecture to use.', 'RISCV'],
     // ['d', 'debug', 'Turn on debug mode. (Beta)', false],
@@ -18,7 +20,7 @@ let options = opt.options;
 let args = opt.argv;
 
 if (opt.options.version) {
-    console.log("Oak.js · 2.0.0");
+    console.log(`Oak.js · __VERSION__`);
     console.log("All rights reserved.");
     console.log("You should have obtained a copy of the Mozilla Public License with your app.");
     console.log("If you did not, a verbatim copy should be available at https://www.mozilla.org/en-US/MPL/2.0/.");

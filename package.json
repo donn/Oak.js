@@ -1,10 +1,11 @@
 {
   "name": "oak-js",
-  "version": "2.0.1-dev",
-  "description": "An online assembler/assembler generator and simulator.",
+  "version": "2.0.1",
+  "description": "An online assembler/simulator generator.",
   "homepage": "https://donn.github.io/Oak.js/",
   "main": "bin/Oak.js",
   "dependencies": {
+    "@types/node": "^12.7.9",
     "babel": "^6.23.0",
     "babel-cli": "^6.26.0",
     "brace": "^0.11.1",
@@ -21,6 +22,10 @@
     "redux": "^4.0.1"
   },
   "scripts": {
+    "make": "node make exec",
+    "make-test": "node bin/oak examples/riscv/bubblesort.S > /dev/null && node bin/oak -a mips examples/mips/bubblesort.S > /dev/null && echo '> Tests completed successfully.'",
+    "make-clean": " rm -rf bin && rm -rf build",
+
     "build-all": "node make all",
     "build-back": "node make backend",
     "start": "react-scripts start",
@@ -31,6 +36,7 @@
     "deploy": "gh-pages -d build"
   },
   "devDependencies": {
+    "mkdirp": "^0.5.1",
     "terser": "^3.14.1",
     "typescript": "^3.3.1"
   },
@@ -47,7 +53,7 @@
   ],
   "contributors": [
     "Karim Abdel Hamid <karimah@aucegypt.edu> https://karimio.github.io/",
-    "Mohamed Gaber <donnspersonal@icloud.com> https://donn.github.io/about.html",
+    "Mohamed Gaber <donnspersonal@icloud.com> https://donn.website/",
     "Ali Khaled <alikhaled96@aucegypt.edu> https://github.com/alikhaled96"
   ],
   "license": "MPL-2.0",
