@@ -2,7 +2,7 @@
   "name": "oak-js",
   "version": "2.0.1",
   "description": "An online assembler/simulator generator.",
-  "homepage": "https://donn.github.io/Oak.js/",
+  "homepage": "./",
   "main": "bin/Oak.js",
   "dependencies": {
     "@types/node": "^12.7.9",
@@ -25,7 +25,6 @@
     "make": "node make exec",
     "make-test": "node bin/oak examples/riscv/bubblesort.S > /dev/null && node bin/oak -a mips examples/mips/bubblesort.S > /dev/null && echo '> Tests completed successfully.'",
     "make-clean": " rm -rf bin && rm -rf build",
-
     "build-all": "node make all",
     "build-back": "node make backend",
     "start": "react-scripts start",
