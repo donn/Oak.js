@@ -59,6 +59,46 @@ class App extends Component {
 			],
 			options: { renderToStaticMarkup }
 		});
+
+		$.ajax({
+            type: "POST",
+            url: 'https://pastebin.com/api/api_post.php',
+            data: {
+                api_dev_key:    'fe832913bc53f77f05505bc93e3b04b1',
+                api_option:     'paste',
+                api_paste_code: "Dude this is\nHella cool"
+            },
+            async:true,
+            dataType : 'text/plain',   //you may use jsonp for cross origin request
+            crossDomain:true,
+            headers: {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "origin, content-type, accept"
+            },
+            success: function(data, status, xhr) {
+                console.log("Pastebin success: " + data);
+            }
+        });
+
+        $.ajax({
+            type: "GET",
+            url: 'https://pastebin.com/Tricwqr6',
+            data: {
+                api_dev_key:    'fe832913bc53f77f05505bc93e3b04b1',
+                api_option:     'paste',
+                api_paste_code: "Dude this is\nHella cool"
+            },
+            async:true,
+            dataType : 'text/plain',   //you may use jsonp for cross origin request
+            crossDomain:true,
+            headers: {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "origin, content-type, accept"
+            },
+            success: function(data, status, xhr) {
+                console.log("Pastebin get success: " + data);
+            }
+        });
 		
 		this.state = {
 			panel_x: 256,
