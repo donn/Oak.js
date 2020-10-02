@@ -9,23 +9,21 @@ The assembler and simulator were designed by [@donn](https://github.com/donn) an
 Special thanks to [@alikhaled96](https://github.com/alikhaled96) for helping implement MIPS.
 
 # Requirements and Building
-TypeScript 2 or above, UglifyJS 2 or above, and a compatible version of Node.js. It was tested with Node v7.
+Node v12 or higher.
 
 If you just want to use Oak.js, it should work fine on any modern browser, bar modern versions of Internet Explorer.
 
 ## Getting Node
-### macOS
-It is recommended to use the [Homebrew package manager](https://brew.sh) first. Type in your terminal:
-
-    brew install node
-
-### Debian-based OSes (incl. Ubuntu)
+### Unix
 Use `tj/n` to install node.
     
     curl -L https://git.io/n-install | bash
+    sudo n lts
     
 ### Windows
-Please use Bash on Ubuntu on Windows 10 and follow the instructions for Debian-based OSes for a supported and tested workflow. If you do not wish to use the Linux subsystem, try first installing Node.js from [their website](http://nodejs.org/).
+Please use WSL2 for Windows 10 and follow the instructions for Debian-based OSes for a supported and tested workflow.
+
+If you do not wish to use the Linux subsystem, try first installing Node.js from [their website](http://nodejs.org/). This codebase uses symlinks, however, so no promises this will function.
 
 Like Debian-based OSes, you may need administrative privileges for this.
 
@@ -39,7 +37,7 @@ You also need to install package dependencies. You can just write `yarn install`
 Invoke `node make web` for the web version or `node run make` for the local executable.
 
 # Usage
-For the web, `yarn start,` for the CLI, invoke `node ./bin/oak --help`.
+For the web, `yarn start` for the CLI, invoke `node ./main.js --help`.
 
 # License
 Mozilla Public License 2.0. Check LICENSE.

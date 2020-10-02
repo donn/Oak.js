@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import Input from '../modules/input'
 import Select from '../modules/select'
-import OakJS from '../backend.js';
+import OakJS from '../oak';
 
 import { connect } from 'react-redux';
 import { withLocalize } from "react-localize-redux";
@@ -32,7 +32,7 @@ class PanelSettings extends Component {
     };
 
     render() {
-        let isas = OakJS.CoreFactory.getCoreList();
+        let isas = OakJS.Core.factory.getCoreList();
         
         return (
             <div id="panel_settings" className="panel panel_settings">

@@ -13,7 +13,11 @@ import PanelConversion from './sections/panelconversion';
 import PanelRegisters from './sections/panelregisters';
 //import CoreContext from './coreContext';
 import PanelMachineCode from './sections/panelmachinecode';
-import OakJS from './backend.js';
+
+import './isas/RISCV';
+import './isas/MIPS';
+
+import OakJS from './oak';
 
 import { connect } from 'react-redux';
 import { Translate, withLocalize } from "react-localize-redux";
@@ -278,7 +282,7 @@ class App extends Component {
 	addTabFull = (name, code, machine_code, mem_size, isa, get_example_code) => {
 		let selected = this.props.tabs.length;
 		
-		let core = OakJS.CoreFactory.getCore(isa, mem_size, this.virtual_os, []);
+		let core = OakJS.Core.factory.getCore(isa, mem_size, this.virtual_os, []);
 
 		let new_tab = {
 			name: name,
@@ -321,7 +325,7 @@ class App extends Component {
 	}
 
 	getDefaultISA = () => {
-		return OakJS.CoreFactory.getCoreList()[0];
+		return OakJS.Core.factory.getCoreList()[0];
 	}
 
 	handleUpload = (event) => {
@@ -642,10 +646,10 @@ class App extends Component {
 		let new_isa_found = false;
 
 		if (diff_isa || diff_mem) {
-			let instruction_sets = OakJS.CoreFactory.ISAs;
+			let instruction_sets = OakJS.Core.factory.ISAs;
 			if (instruction_sets[isa_type]) {
 				new_isa_found = true;
-				tab.core = OakJS.CoreFactory.getCore(isa_type, memory_size, this.virtual_os, []);
+				tab.core = OakJS.Core.factory.getCore(isa_type, memory_size, this.virtual_os, []);
 				tab.instruction_set = isa_type;
 				this.resetUI();
 			}
