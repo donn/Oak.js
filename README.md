@@ -29,14 +29,17 @@ Please use Bash on Ubuntu on Windows 10 and follow the instructions for Debian-b
 
 Like Debian-based OSes, you may need administrative privileges for this.
 
-### All
-You also need to install package dependencies. You can just write `npm i`.
+## Getting yarn
+Type `npm i -g yarn`. Simple.
+
+## Installing Dependencies
+You also need to install package dependencies. You can just write `yarn install`.
 
 ## Building
 Invoke `node make web` for the web version or `node run make` for the local executable.
 
 # Usage
-For web, `npm run start,` for local usage, invoke `node ./bin/oak --help`.
+For the web, `yarn start,` for the CLI, invoke `node ./bin/oak --help`.
 
 # License
 Mozilla Public License 2.0. Check LICENSE.

@@ -37,6 +37,7 @@ class Navigation extends Component {
 							<li onClick={this.props.handleLoadBin}><Translate id="menus.load_binary" /></li>
 							<li onClick={this.props.handleDownloadAsm}><Translate id="menus.download_assembly" /></li>
 							<li onClick={this.props.downloadBin}><Translate id="menus.download_binary" /></li>
+							<li onClick={this.props.downloadBinH}><Translate id="menus.download_binary_h" /></li>
 							<li onClick={this.props.downloadRam}><Translate id="menus.download_memory" /></li>
 						</ul>
 					</li>
@@ -69,6 +70,10 @@ const appDispatchToProps = (dispatch, ownProps) => ({
 });
 
 export default withLocalize(
-	connect(stateToProps,
-		appDispatchToProps)
-	(Navigation));
+	connect(
+		stateToProps,
+		appDispatchToProps
+	)(
+		Navigation
+	)
+);

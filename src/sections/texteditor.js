@@ -1,10 +1,8 @@
 import React, { Component } from 'react'
-//import brace from 'brace';
 import AceEditor from 'react-ace';
 
-import 'brace/mode/java';
-import 'brace/theme/github';
-//import './ace_theme';
+import 'ace-builds/src-noconflict/mode-java';
+import 'ace-builds/src-noconflict/theme-github';
 
 import { selectTab, deleteTab, updateTab, setProjectSettings } from "../actions"
 import { connect } from 'react-redux';

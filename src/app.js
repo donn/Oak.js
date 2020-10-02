@@ -18,6 +18,7 @@ import OakJS from './backend.js';
 import { connect } from 'react-redux';
 import { Translate, withLocalize } from "react-localize-redux";
 import { renderToStaticMarkup } from 'react-dom/server';
+
 import enTranslations from "./translations/en.json";
 
 import { selectTab, addTab, updateTab, setProjectSettings, setSettingsVisible, setHelpVisible, setAboutVisible } from "./actions"
@@ -60,45 +61,45 @@ class App extends Component {
 			options: { renderToStaticMarkup }
 		});
 
-		$.ajax({
-            type: "POST",
-            url: 'https://pastebin.com/api/api_post.php',
-            data: {
-                api_dev_key:    'fe832913bc53f77f05505bc93e3b04b1',
-                api_option:     'paste',
-                api_paste_code: "Dude this is\nHella cool"
-            },
-            async:true,
-            dataType : 'text/plain',   //you may use jsonp for cross origin request
-            crossDomain:true,
-            headers: {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Headers": "origin, content-type, accept"
-            },
-            success: function(data, status, xhr) {
-                console.log("Pastebin success: " + data);
-            }
-        });
+		// $.ajax({
+        //     type: "POST",
+        //     url: 'https://pastebin.com/api/api_post.php',
+        //     data: {
+        //         api_dev_key:    'fe832913bc53f77f05505bc93e3b04b1',
+        //         api_option:     'paste',
+        //         api_paste_code: "Dude this is\nHella cool"
+        //     },
+        //     async:true,
+        //     dataType : 'text/plain',   //you may use jsonp for cross origin request
+        //     crossDomain:true,
+        //     headers: {
+        //         "Access-Control-Allow-Origin": "*",
+        //         "Access-Control-Allow-Headers": "origin, content-type, accept"
+        //     },
+        //     success: function(data, status, xhr) {
+        //         console.log("Pastebin success: " + data);
+        //     }
+        // });
 
-        $.ajax({
-            type: "GET",
-            url: 'https://pastebin.com/Tricwqr6',
-            data: {
-                api_dev_key:    'fe832913bc53f77f05505bc93e3b04b1',
-                api_option:     'paste',
-                api_paste_code: "Dude this is\nHella cool"
-            },
-            async:true,
-            dataType : 'text/plain',   //you may use jsonp for cross origin request
-            crossDomain:true,
-            headers: {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Headers": "origin, content-type, accept"
-            },
-            success: function(data, status, xhr) {
-                console.log("Pastebin get success: " + data);
-            }
-        });
+        // $.ajax({
+        //     type: "GET",
+        //     url: 'https://pastebin.com/Tricwqr6',
+        //     data: {
+        //         api_dev_key:    'fe832913bc53f77f05505bc93e3b04b1',
+        //         api_option:     'paste',
+        //         api_paste_code: "Dude this is\nHella cool"
+        //     },
+        //     async:true,
+        //     dataType : 'text/plain',   //you may use jsonp for cross origin request
+        //     crossDomain:true,
+        //     headers: {
+        //         "Access-Control-Allow-Origin": "*",
+        //         "Access-Control-Allow-Headers": "origin, content-type, accept"
+        //     },
+        //     success: function(data, status, xhr) {
+        //         console.log("Pastebin get success: " + data);
+        //     }
+        // });
 		
 		this.state = {
 			panel_x: 256,
@@ -408,7 +409,28 @@ class App extends Component {
 		element.click();
 		document.body.removeChild(element);
 	}
-	
+
+	downloadBinH = () => {
+		const current_tab = this.props.selectedtab;
+		let tab = this.props.tabs[current_tab];
+
+		let finalFile = tab.machine_code.map(byte=> byte.toString(16).padStart(2, "0")).join("\n");
+
+		var blob = new Blob([finalFile],
+		{
+			type: "text/plain"
+		});
+		var blobLink = URL.createObjectURL(blob);
+		var element = document.createElement("a");
+		var name = tab.name + ".hex";
+		element.setAttribute("href", blobLink);
+		element.setAttribute("download", name);
+		element.style.display = "none";
+		document.body.appendChild(element);
+		element.click();
+		document.body.removeChild(element);
+	}
+
 	downloadRam = () =>{
 		const current_tab = this.props.selectedtab;
 		let tab = this.props.tabs[current_tab];
@@ -421,7 +443,7 @@ class App extends Component {
 		});
 		var blobLink = URL.createObjectURL(blob);
 		var element = document.createElement("a");
-		var name = tab.name + ".ram";
+		var name = tab.name + ".bin";
 		element.setAttribute("href", blobLink);
 		element.setAttribute("download", name);
 		element.style.display = "none";
@@ -754,7 +776,19 @@ class App extends Component {
 					fn_ass={this.uiAssemble}
 					fn_sim={this.uiSimulate}
 					fn_step={this.uiStepByStep} />
-				<Navigation assemble={this.uiAssemble} simulate={this.uiSimulate} stepbystep={this.uiStepByStep} downloadRam={this.downloadRam} downloadBin={this.downloadBin} handleAddTabRiscv={this.addTabDefaultRISCV} handleAddTabMips={this.addTabDefaultMIPS} handleLoadAsm={this.handleLoadAsm} handleLoadBin={this.handleLoadBin} handleDownloadAsm={this.handleDownloadAsm} />
+				<Navigation
+					assemble={this.uiAssemble}
+					simulate={this.uiSimulate}
+					stepbystep={this.uiStepByStep}
+					downloadRam={this.downloadRam}
+					downloadBin={this.downloadBin}
+					downloadBinH={this.downloadBinH}
+					handleAddTabRiscv={this.addTabDefaultRISCV}
+					handleAddTabMips={this.addTabDefaultMIPS}
+					handleLoadAsm={this.handleLoadAsm}
+					handleLoadBin={this.handleLoadBin}
+					handleDownloadAsm={this.handleDownloadAsm}
+				/>
 				{!has_tabs && <div className="no_tabs">
 					<div>
 						<h2><Translate id="welcome.title">Welcome to Oak.js</Translate></h2>

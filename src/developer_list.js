@@ -1,15 +1,15 @@
 export default {
     core: [
         {
-            "affiliation": "Student, American University in Cairo",
+            "affiliation": "Research Associate, American University in Cairo",
             "pic": "donn.jpg",
             "name": "Mohamed \"Donn\" Gaber",
             "job": "Assembler / Simulator Developer",
-            "link": "https://donn.github.io/",
-            "desc": "Hi I play video games"
+            "link": "https://donn.website/",
+            "desc": "Maintainer of the Cloud V platform on both https://cloudv.io and https://efabless.com. I consume an unhealthy amount of video games in my spare time."
         },
         {
-            "affiliation": "Student, American University in Cairo",
+            "affiliation": "Student, American University in Cairo (formerly)",
             "pic": "karimio.jpg",
             "name": "Karim Abdel Hamid",
             "job": "Primary Front-End/IDE Developer",
@@ -19,10 +19,10 @@ export default {
     ],
     additional: [
         {
-            "affiliation": "Student, American University in Cairo",
+            "affiliation": "Student, American University in Cairo (formerly)",
             "pic": "ali_khaled.jpg",
             "name": "Ali Khaled",
-            "job": "MIPS co-developer",
+            "job": "MIPS Assistance",
             "link": "https://github.com/loshya",
             "desc": "りゅうがわがてきをクラウ！"
         },

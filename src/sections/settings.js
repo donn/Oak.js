@@ -3,7 +3,7 @@ import HotkeyInput from '../modules/hotkey.js'
 import Select from '../modules/select'
 
 import { connect } from 'react-redux';
-import { Translate, withLocalize } from "react-localize-redux";
+import { withLocalize } from "react-localize-redux";
 import { setSettingsVisible } from "../actions"
 
 const themes = [

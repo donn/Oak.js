@@ -4,7 +4,7 @@ import Select from '../modules/select'
 import OakJS from '../backend.js';
 
 import { connect } from 'react-redux';
-import { Translate, withLocalize } from "react-localize-redux";
+import { withLocalize } from "react-localize-redux";
 import { setProjectSettings } from "../actions"
 
 class PanelSettings extends Component {
