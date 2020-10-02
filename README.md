@@ -1,6 +1,6 @@
 ![Oak.js](public/images/logo.png)
 
-An assembler and simulator generator written in TypeScript.
+An assembler and simulator generator written in ~~TypeScript~~ JavaScript.
 
 It supports both RISCV (RV32I) and MIPS (Core Instruction Set).
 
@@ -32,9 +32,6 @@ Type `npm i -g yarn`. Simple.
 
 ## Installing Dependencies
 You also need to install package dependencies. You can just write `yarn install`.
-
-## Building
-Invoke `node make web` for the web version or `node run make` for the local executable.
 
 # Usage
 For the web, `yarn start` for the CLI, invoke `node ./main.js --help`.
