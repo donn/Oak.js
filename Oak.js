@@ -3,7 +3,7 @@ import "./isas/RISCV.js";
 
 import { Endianness } from "./oak/InstructionSet.js";
 import { VirtualOS } from "./oak/VirtualOS.js";
-import { Line, Assembler } from "./oak/Assembler.js";
+import { Line, Assembler, Kind } from "./oak/Assembler.js";
 import { Core } from "./oak/Core.js";
 import { Utils } from "./oak/Utils.js"
 import NodeGetopt from "node-getopt";

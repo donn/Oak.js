@@ -3,41 +3,33 @@
   "version": "2.1.0",
   "description": "An online assembler/simulator generator.",
   "homepage": "./",
-  "main": "Oak.js",
+  "main": "oak/index.js",
   "dependencies": {
-    "ace-builds": "^1.4.12",
-    "gh-pages": "^2.0.1",
-    "js-yaml": "^3.14.0",
-    "node-getopt": "^0.3.2",
-    "prompt-sync": "^4.1.6",
-    "react": "^16.7.0",
-    "react-ace": "^9.1.4",
-    "react-dom": "^16.7.0",
-    "react-localize-redux": "^3.5.2",
-    "react-redux": "^6.0.0",
-    "readline-sync": "^1.4.9",
-    "redux": "^4.0.1"
+    "jsbi": "^3.1.4"
   },
   "devDependencies": {
     "@babel/cli": "^7.11",
     "@babel/core": "^7.11",
     "@types/node": "^12.7.9",
-    "mkdirp": "^0.5.1",
+    "ace-builds": "^1.4.12",
+    "gh-pages": "^2.0.1",
+    "node-getopt": "^0.3.2",
+    "react": "^16.7.0",
+    "react-ace": "^9.1.4",
+    "react-dom": "^16.7.0",
+    "react-localize-redux": "^3.5.2",
+    "react-redux": "^6.0.0",
     "react-scripts": "^3.4",
-    "terser": "^3.14.1",
+    "redux": "^4.0.1",
     "typescript": "^3.3.1"
   },
   "scripts": {
     "clean": "rm -rf build",
-
     "start": "react-scripts start",
     "build": "react-scripts build",
-    
     "test-cli": "node bin/oak examples/riscv/bubblesort.S > /dev/null && node bin/oak -a mips examples/mips/bubblesort.S > /dev/null && echo '> Tests completed successfully.'",
     "test": "react-scripts test --env=jsdom",
-
     "eject": "react-scripts eject",
-
     "deploy": "yarn build && gh-pages -d build"
   },
   "repository": {

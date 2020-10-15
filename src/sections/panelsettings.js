@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import Input from '../modules/input'
 import Select from '../modules/select'
-import OakJS from '../oak';
+import OakJS from '../oak/index.js';
 
 import { connect } from 'react-redux';
 import { withLocalize } from "react-localize-redux";

@@ -22,6 +22,9 @@ export class Utils {
         if (bits >= 32) {
             return null; // No stable way of checking.
         }
+        if (Math.abs(value).toString(2).length > bits) {
+            return false;
+        }
         var min = -(1 << bits - 1);
         var max = (1 << bits - 1) - 1;
         value = this.signExt(value, bits);

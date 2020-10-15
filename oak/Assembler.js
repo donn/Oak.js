@@ -526,7 +526,7 @@ Assembler.radixes = {
     'b': 2,
     'o': 8,
     'd': 10,
-    'h': 16
+    'x': 16
 };
 Assembler.radixList = Object.keys(Assembler.radixes).join("");
 

@@ -2,9 +2,11 @@
 import { Parameter, Keyword, Directive, Instruction, InstructionSet, Format, BitRange } from "../oak/InstructionSet.js";
 import { Core } from "../oak/Core.js";
 import { Utils } from "../oak/Utils.js";
+import JSBI from "jsbi";
 
 //The MIPS Instruction Set Architecture
 function MIPS(options) {
+    let opts = options || [];
     //Formats and Instructions
     let formats = [];
     let instructions = [];
@@ -20,19 +22,63 @@ function MIPS(options) {
     ], /^\s*([a-zA-Z]+)\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*,\s*(\$[A-Za-z0-9]+)\s*$/, "@mnem @arg0, @arg1, @arg2"));
     let rType = formats[formats.length - 1];
     instructions.push(new Instruction("ADD", rType, ["opcode", "funct"], [0x0, 0x20], function (core) {
-        core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) + core.registerFile.read(core.arguments[2]));
+        core.registerFile.write(
+            core.arguments[0],
+            JSBI.toNumber(
+                JSBI.bitwiseAnd(
+                    JSBI.add(
+                        JSBI.BigInt(core.registerFile.read(core.arguments[1])),
+                        JSBI.BigInt(core.registerFile.read(core.arguments[2]))
+                    ),
+                    JSBI.BigInt("0xFFFFFFFF")
+                )
+            )
+        );
         return null;
     }));
     instructions.push(new Instruction("ADDU", rType, ["opcode", "funct"], [0x0, 0x21], function (core) {
-        core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) + core.registerFile.read(core.arguments[2]));
+        core.registerFile.write(
+            core.arguments[0],
+            JSBI.toNumber(
+                JSBI.bitwiseAnd(
+                    JSBI.add(
+                        JSBI.BigInt(core.registerFile.read(core.arguments[1])),
+                        JSBI.BigInt(core.registerFile.read(core.arguments[2]))
+                    ),
+                    JSBI.BigInt("0xFFFFFFFF")
+                )
+            )
+        );
         return null;
     }));
     instructions.push(new Instruction("SUB", rType, ["opcode", "funct"], [0x0, 0x22], function (core) {
-        core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) - core.registerFile.read(core.arguments[2]));
+        core.registerFile.write(
+            core.arguments[0],
+            JSBI.toNumber(
+                JSBI.bitwiseAnd(
+                    JSBI.subtract(
+                        JSBI.BigInt(core.registerFile.read(core.arguments[1])),
+                        JSBI.BigInt(core.registerFile.read(core.arguments[2]))
+                    ),
+                    JSBI.BigInt("0xFFFFFFFF")
+                )
+            )
+        );
         return null;
     }));
     instructions.push(new Instruction("SUBU", rType, ["opcode", "funct"], [0x0, 0x23], function (core) {
-        core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) - core.registerFile.read(core.arguments[2]));
+        core.registerFile.write(
+            core.arguments[0],
+            JSBI.toNumber(
+                JSBI.bitwiseAnd(
+                    JSBI.subtract(
+                        JSBI.BigInt(core.registerFile.read(core.arguments[1])),
+                        JSBI.BigInt(core.registerFile.read(core.arguments[2]))
+                    ),
+                    JSBI.BigInt("0xFFFFFFFF")
+                )
+            )
+        );
         return null;
     }));
     instructions.push(new Instruction("AND", rType, ["opcode", "funct"], [0x0, 0x24], function (core) {
@@ -334,7 +380,9 @@ function MIPS(options) {
         core.pc = core.arguments[0];
         return null;
     }));
-    //Pseudoinstructions
+
+
+    //"Pseudoinstructions"
     //MV
     formats.push(new Format([
         new BitRange("opcode", 26, 6),

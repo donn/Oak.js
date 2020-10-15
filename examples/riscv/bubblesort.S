@@ -1,9 +1,9 @@
 la s0, array
 addi t0, s0, 40
 
+li a0, 1
 loop1:
 beq s0, t0, exit1
-li a0, 1
 lb a1, 0(s0)
 scall
 addi s0, s0, 4
@@ -15,18 +15,25 @@ la a0, array
 li a1, 10
 jal ra, bubblesort
 
+li a0, 4
+li a1, midsplit
+scall
+
 la s0, array
 addi t0, s0, 40
 
+li a0, 1
 loop2:
 beq s0, t0, exit2
-li a0, 1
 lb a1, 0(s0)
 scall
 addi s0, s0, 4
 jal x0, loop2
 
 exit2:
+li a0, 4
+li a1, message
+scall
 li a0, 10
 scall
 
@@ -77,4 +84,5 @@ jalr x0, ra, 0
 
 .data
 array: .word 9, 5, 17, 6, 8, 2, 4, 39, 18, 3
+midsplit: .string "---"
 message: .string "Done!"

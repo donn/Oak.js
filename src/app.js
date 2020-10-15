@@ -17,7 +17,7 @@ import PanelMachineCode from './sections/panelmachinecode';
 import './isas/RISCV';
 import './isas/MIPS';
 
-import OakJS from './oak';
+import OakJS from './oak/index.js';
 
 import { connect } from 'react-redux';
 import { Translate, withLocalize } from "react-localize-redux";

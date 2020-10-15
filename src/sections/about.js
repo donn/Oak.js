@@ -18,7 +18,7 @@ class About extends Component {
     printdev = (arr) => {
         return arr.map((element, i) => {
             return <a key={i} href={element.link}>
-                <img src={`images/about/${element.pic}`} />
+                <img src={`images/about/${element.pic}`} alt={element.name} />
                 <h4>{element.name}</h4>
                 <span>{element.job}</span>
                 <span>{element.affiliation}</span>

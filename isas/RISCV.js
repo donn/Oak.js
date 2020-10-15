@@ -2,10 +2,12 @@
 import { Parameter, Keyword, Directive, Instruction, InstructionSet, Format, BitRange } from "../oak/InstructionSet.js";
 import { Core } from "../oak/Core.js";
 import { Utils } from "../oak/Utils.js";
+import JSBI from "jsbi";
 
 //The RISC-V Instruction Set Architecture, Version 2.1
 function RISCV(options) {
     //Formats and Instructions
+    let opts = options || [];
     let formats = [];
     let instructions = [];
     let pseudoInstructions = [];
@@ -20,12 +22,34 @@ function RISCV(options) {
     ], /^\s*([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)\s*$/, "@mnem @arg0, @arg1, @arg2"));
     let rType = formats[formats.length - 1];
     instructions.push(new Instruction("ADD", rType, ["opcode", "funct3", "funct7"], [0b0110011, 0b000, 0b0000000], function (core) {
-        core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) + core.registerFile.read(core.arguments[2]));
+        core.registerFile.write(
+            core.arguments[0],
+            JSBI.toNumber(
+                JSBI.bitwiseAnd(
+                    JSBI.add(
+                        JSBI.BigInt(core.registerFile.read(core.arguments[1])),
+                        JSBI.BigInt(core.registerFile.read(core.arguments[2]))
+                    ),
+                    JSBI.BigInt("0xFFFFFFFF")
+                )
+            )
+        );
         core.pc += 4;
         return null;
     }));
     instructions.push(new Instruction("SUB", rType, ["opcode", "funct3", "funct7"], [0b0110011, 0b000, 0b0100000], function (core) {
-        core.registerFile.write(core.arguments[0], core.registerFile.read(core.arguments[1]) - core.registerFile.read(core.arguments[2]));
+        core.registerFile.write(
+            core.arguments[0],
+            JSBI.toNumber(
+                JSBI.bitwiseAnd(
+                    JSBI.subtract(
+                        JSBI.BigInt(core.registerFile.read(core.arguments[1])),
+                        JSBI.BigInt(core.registerFile.read(core.arguments[2]))
+                    ),
+                    JSBI.BigInt("0xFFFFFFFF")
+                )
+            )
+        );
         core.pc += 4;
         return null;
     }));
@@ -70,6 +94,109 @@ function RISCV(options) {
         core.pc += 4;
         return null;
     }));
+    if (opts.includes("M")) {
+        instructions.push(new Instruction("MUL", rType, ["opcode", "funct3", "funct7"], [0b0110011, 0b000, 0b0000001], function (core) {
+            let multiplier = JSBI.BigInt(core.registerFile.read(core.arguments[1]) >> 0);
+            let multiplicant = JSBI.BigInt(core.registerFile.read(core.arguments[2]) >> 0);
+            let product = JSBI.multiply(multiplier, multiplicant);
+            let productNumber = JSBI.toNumber(JSBI.bitwiseAnd(product, JSBI.BigInt("0xFFFFFFFF")));
+            core.registerFile.write(core.arguments[0], productNumber);
+            core.pc += 4;
+            return null;
+        }));
+        instructions.push(new Instruction("MULH", rType, ["opcode", "funct3", "funct7"], [0b0110011, 0b001, 0b0000001], function (core) {
+            console.log()
+            let multiplier = JSBI.BigInt(core.registerFile.read(core.arguments[1]) >> 0);
+            let multiplicant = JSBI.BigInt(core.registerFile.read(core.arguments[2]) >> 0);
+            let product = JSBI.multiply(multiplier, multiplicant);
+            let productNumber = JSBI.toNumber(JSBI.bitwiseAnd(JSBI.signedRightShift(product, JSBI.BigInt("32")), JSBI.BigInt("0xFFFFFFFF")));
+            core.registerFile.write(core.arguments[0], productNumber);
+            core.pc += 4;
+            return null;
+        }));
+        instructions.push(new Instruction("MULHU", rType, ["opcode", "funct3", "funct7"], [0b0110011, 0b010, 0b0000001], function (core) {
+            let multiplier = JSBI.BigInt(core.registerFile.read(core.arguments[1]) >>> 0);
+            let multiplicant = JSBI.BigInt(core.registerFile.read(core.arguments[2]) >>> 0);
+            let product = JSBI.multiply(multiplier, multiplicant);
+            let productNumber = JSBI.toNumber(JSBI.bitwiseAnd(JSBI.signedRightShift(product, JSBI.BigInt("32")), JSBI.BigInt("0xFFFFFFFF")));
+            core.registerFile.write(core.arguments[0], productNumber);
+            core.pc += 4;
+            return null;
+        }));
+        instructions.push(new Instruction("MULHSU", rType, ["opcode", "funct3", "funct7"], [0b0110011, 0b011, 0b0000001], function (core) {
+            let multiplier = JSBI.BigInt(core.registerFile.read(core.arguments[1]) >> 0);
+            let multiplicant = JSBI.BigInt(core.registerFile.read(core.arguments[2]) >>> 0);
+            let product = JSBI.multiply(multiplier, multiplicant);
+            let productNumber = JSBI.toNumber(JSBI.bitwiseAnd(JSBI.signedRightShift(product, JSBI.BigInt("32")), JSBI.BigInt("0xFFFFFFFF")));
+            core.registerFile.write(core.arguments[0], productNumber);
+            core.pc += 4;
+            return null;
+        }));
+        instructions.push(new Instruction("DIV", rType, ["opcode", "funct3", "funct7"], [0b0110011, 0b100, 0b0000001], function (core) {
+            let dividend = JSBI.BigInt(core.registerFile.read(core.arguments[1]) >> 0);
+            let divisor = JSBI.BigInt(core.registerFile.read(core.arguments[2]) >> 0);
+
+            let product = null;
+            if (divisor === JSBI.BigInt("0")) {
+                product = JSBI.BigInt("-1");
+            } else if (JSBI.bitwiseAnd(dividend, "0xFFFFFFFF") === JSBI.BigInt("0x80000000") && divisor === JSBI.BigInt("-1")) {
+                product = JSBI.BigInt("0x80000000");
+            } else {
+                product = JSBI.divide(dividend, divisor);
+            }
+            let productNumber = JSBI.toNumber(JSBI.bitwiseAnd(product, "0xFFFFFFFF")); 
+            core.registerFile.write(core.arguments[0], productNumber);
+            core.pc += 4;
+            return null;
+        }));
+        instructions.push(new Instruction("DIVU", rType, ["opcode", "funct3", "funct7"], [0b0110011, 0b101, 0b0000001], function (core) {
+            let dividend = JSBI.BigInt(core.registerFile.read(core.arguments[1]) >>> 0);
+            let divisor = JSBI.BigInt(core.registerFile.read(core.arguments[2]) >>> 0);
+
+            let product = null;
+            if (divisor === JSBI.BigInt("0")) {
+                product = JSBI.BigInt("-1");
+            } else {
+                product = JSBI.divide(dividend, divisor);
+            }
+            let productNumber = JSBI.toNumber(JSBI.bitwiseAnd(product, "0xFFFFFFFF")); 
+            core.registerFile.write(core.arguments[0], productNumber);
+            core.pc += 4;
+            return null;
+        }));
+        instructions.push(new Instruction("REM", rType, ["opcode", "funct3", "funct7"], [0b0110011, 0b110, 0b0000001], function (core) {
+            let dividend = JSBI.BigInt(core.registerFile.read(core.arguments[1]) >> 0);
+            let divisor = JSBI.BigInt(core.registerFile.read(core.arguments[2]) >> 0);
+
+            let remainder = null;
+            if (divisor === JSBI.BigInt("0")) {
+                remainder = dividend;
+            } else if (JSBI.bitwiseAnd(dividend, "0xFFFFFFFF") === JSBI.BigInt("0x80000000") && divisor === JSBI.BigInt("-1")) {
+                remainder = JSBI.BigInt("0");
+            } else {
+                remainder = JSBI.remainder(dividend, divisor);
+            }
+            let productNumber = JSBI.toNumber(JSBI.bitwiseAnd(remainder, "0xFFFFFFFF")); 
+            core.registerFile.write(core.arguments[0], productNumber);
+            core.pc += 4;
+            return null;
+        }));
+        instructions.push(new Instruction("REMU", rType, ["opcode", "funct3", "funct7"], [0b0110011, 0b111, 0b0000001], function (core) {
+            let dividend = JSBI.BigInt(core.registerFile.read(core.arguments[1]) >>> 0);
+            let divisor = JSBI.BigInt(core.registerFile.read(core.arguments[2]) >>> 0);
+
+            let remainder = null;
+            if (divisor === JSBI.BigInt("0")) {
+                remainder = dividend;
+            } else {
+                remainder = JSBI.remainder(dividend, divisor);
+            }
+            let productNumber = JSBI.toNumber(JSBI.bitwiseAnd(remainder, "0xFFFFFFFF")); 
+            core.registerFile.write(core.arguments[0], productNumber);
+            core.pc += 4;
+            return null;
+        }));
+    }
     //I-Type
     formats.push(new Format([
         new BitRange("imm", 20, 12, null, true).parameterized(2, Parameter.immediate),
@@ -243,7 +370,7 @@ function RISCV(options) {
     //U-Type
     formats.push(new Format([
         new BitRange("imm", 12, 20, null, true).parameterized(1, Parameter.immediate),
-        new BitRange("rd", 7, 5).parameterized(0, Parameter.offset),
+        new BitRange("rd", 7, 5).parameterized(0, Parameter.register),
         new BitRange("opcode", 0, 7)
     ], /^\s*([a-zA-Z]+)\s*([A-Za-z0-9]+)\s*,\s*([a-zA-Z0-9_]+)\s*$/, "@mnem @arg0, @arg1"));
     let uType = formats[formats.length - 1];
@@ -392,7 +519,7 @@ function RISCV(options) {
     let jrPseudo = formats[formats.length - 1];
     instructions.push(new Instruction("JR", jrPseudo, ["opcode", "rd", "funct3", "imm"], [0b1100111, 0b00000, 0b000, 0b000000000000], function (core) {
         return null; //captured by jalr
-    }, false, ["ADDI"]));
+    }, false, ["JALR"]));
     //Scall, Syscall both as PseudoInstructions
     instructions.push(new Instruction("SCALL", allConstSubtype, ["const"], [0b00000000000000000000000001110011], function (core) {
         return null; //captured by ecall
@@ -451,7 +578,7 @@ class RISCVRegisterFile {
         }
     }
     write(registerNumber, value) {
-        this.physicalFile[registerNumber] = value;
+        this.physicalFile[registerNumber] = ((value >>> 0) & 0xFFFFFFFF);
         this.modifiedRegisters[registerNumber] = true;
     }
     getRegisterCount() {
@@ -512,5 +639,5 @@ class RISCVCore extends Core {
 Core.factory.ISAs["RISCV"] = {
     generator: RISCV,
     core: RISCVCore,
-    options: []
+    options: ["M"]
 };
