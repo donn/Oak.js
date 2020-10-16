@@ -1,11 +1,7 @@
-lui s0, 0xFFFFF
-addi s0, x0, 0xFFF
-li s1, 0x2
-li a0, 1
-mv a1, s0
-scall
+lusi s0, 0x80000
+li s1, -1
 
-mul s2, s1, s0
+rem s2, s0, s1
 
 li a0, 1
 mv a1, s2

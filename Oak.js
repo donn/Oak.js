@@ -57,7 +57,8 @@ let passZero = assembler.assemble(lines, 0); // Assembler Pass 0. Returns Line a
 if (passZero.length !== 0) {
     for (let i in passZero) {
         let line = passZero[i];
-        console.log(line.number, line.invalidReason);
+        console.error(`${args[0]}:${line.number}: ${line.invalidReason}`);
+        console.error(`\t${line.raw}`);
     }
     process.exit(65);
 }
@@ -68,7 +69,8 @@ do { // Subsequent assembler passes. Typically one pass is needed, but when ther
     if (pass.length !== 0) {
         for (let i in pass) {
             let line = pass[i];
-            console.error(line.number, line.invalidReason);
+            console.error(`${args[0]}:${line.number}: ${line.invalidReason}`);
+            console.error(`\t${line.raw}`);
         }
         process.exit(65);
     }
@@ -94,7 +96,7 @@ running: while (true) {
     }
     let decode = cpu.decode(); // Decode has the decoded instruction on success
     if (decode === null) {
-        console.error("decode.failure");
+        console.error(`Failed to decode instruction at ${Utils.pad(cpu.pc, 8, 16)}`);
         process.exit(65);
     }
     if (options.verbose) {

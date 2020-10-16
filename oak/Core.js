@@ -10,14 +10,17 @@ export class CoreFactory {
         return Object.keys(this.ISAs);
     }
     
-    getCore(architecture, memorySize, virtualOS, options) {
+    getCore(architecture, memorySize, virtualOS, options=null) {
         let isa = this.ISAs[architecture];
         if (isa === undefined) {
-            throw "oak.unregisteredISA";
+            throw `ISA '${architecture}' not found.`;
+        }
+        if (options === null) {
+            options = isa.options;
         }
         for (let key in options) {
             if (isa.options[key] === undefined) {
-                throw "isa.unsupportedOptions";
+                throw `Option '${key}' for ISA ${architecture} is unsupported.`;
             }
         }
         let instructionSet = isa.generator(options);

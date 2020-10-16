@@ -137,14 +137,22 @@ function RISCV(options) {
             let divisor = JSBI.BigInt(core.registerFile.read(core.arguments[2]) >> 0);
 
             let product = null;
-            if (divisor === JSBI.BigInt("0")) {
+            if (JSBI.equal(divisor, JSBI.BigInt("0"))) {
                 product = JSBI.BigInt("-1");
-            } else if (JSBI.bitwiseAnd(dividend, "0xFFFFFFFF") === JSBI.BigInt("0x80000000") && divisor === JSBI.BigInt("-1")) {
+            } else if (
+                JSBI.equal(
+                    JSBI.bitwiseAnd(dividend, JSBI.BigInt("0xFFFFFFFF")),
+                    JSBI.BigInt("0x80000000")
+                ) && JSBI.equal(
+                    divisor,
+                    JSBI.BigInt("-1")
+                )
+            ) {
                 product = JSBI.BigInt("0x80000000");
             } else {
                 product = JSBI.divide(dividend, divisor);
             }
-            let productNumber = JSBI.toNumber(JSBI.bitwiseAnd(product, "0xFFFFFFFF")); 
+            let productNumber = JSBI.toNumber(JSBI.bitwiseAnd(product, JSBI.BigInt("0xFFFFFFFF"))); 
             core.registerFile.write(core.arguments[0], productNumber);
             core.pc += 4;
             return null;
@@ -154,12 +162,12 @@ function RISCV(options) {
             let divisor = JSBI.BigInt(core.registerFile.read(core.arguments[2]) >>> 0);
 
             let product = null;
-            if (divisor === JSBI.BigInt("0")) {
+            if (JSBI.equal(divisor, JSBI.BigInt("0"))) {
                 product = JSBI.BigInt("-1");
             } else {
                 product = JSBI.divide(dividend, divisor);
             }
-            let productNumber = JSBI.toNumber(JSBI.bitwiseAnd(product, "0xFFFFFFFF")); 
+            let productNumber = JSBI.toNumber(JSBI.bitwiseAnd(product, JSBI.BigInt("0xFFFFFFFF"))); 
             core.registerFile.write(core.arguments[0], productNumber);
             core.pc += 4;
             return null;
@@ -169,14 +177,22 @@ function RISCV(options) {
             let divisor = JSBI.BigInt(core.registerFile.read(core.arguments[2]) >> 0);
 
             let remainder = null;
-            if (divisor === JSBI.BigInt("0")) {
+            if (JSBI.equal(divisor, JSBI.BigInt("0"))) {
                 remainder = dividend;
-            } else if (JSBI.bitwiseAnd(dividend, "0xFFFFFFFF") === JSBI.BigInt("0x80000000") && divisor === JSBI.BigInt("-1")) {
+            } else if (
+                JSBI.equal(
+                    JSBI.bitwiseAnd(dividend, JSBI.BigInt("0xFFFFFFFF")),
+                    JSBI.BigInt("0x80000000")
+                ) && JSBI.equal(
+                    divisor,
+                    JSBI.BigInt("-1")
+                )
+            ) {
                 remainder = JSBI.BigInt("0");
             } else {
                 remainder = JSBI.remainder(dividend, divisor);
             }
-            let productNumber = JSBI.toNumber(JSBI.bitwiseAnd(remainder, "0xFFFFFFFF")); 
+            let productNumber = JSBI.toNumber(JSBI.bitwiseAnd(remainder, JSBI.BigInt("0xFFFFFFFF"))); 
             core.registerFile.write(core.arguments[0], productNumber);
             core.pc += 4;
             return null;
@@ -186,12 +202,12 @@ function RISCV(options) {
             let divisor = JSBI.BigInt(core.registerFile.read(core.arguments[2]) >>> 0);
 
             let remainder = null;
-            if (divisor === JSBI.BigInt("0")) {
+            if (JSBI.equal(divisor, JSBI.BigInt("0"))) {
                 remainder = dividend;
             } else {
                 remainder = JSBI.remainder(dividend, divisor);
             }
-            let productNumber = JSBI.toNumber(JSBI.bitwiseAnd(remainder, "0xFFFFFFFF")); 
+            let productNumber = JSBI.toNumber(JSBI.bitwiseAnd(remainder, JSBI.BigInt("0xFFFFFFFF"))); 
             core.registerFile.write(core.arguments[0], productNumber);
             core.pc += 4;
             return null;
@@ -610,12 +626,9 @@ class RISCVCore extends Core {
         this.registerFile.reset();
     }
     fetch() {
-        if (this.pc < 0) {
-            return "fetch.negativePC";
-        }
-        let arr = this.memcpy(this.pc, 4);
+        let arr = this.memcpy((this.pc >>> 0), 4);
         if (arr === null) {
-            return "fetch.invalidMemoryAccess";
+            return `Attempting to fetch from illegal memory address @${this.pc}`;
         }
         this.fetched = Utils.catBytes(arr);
         return null;

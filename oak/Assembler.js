@@ -68,7 +68,7 @@ export class Line {
                         this.kind = Kind.directive;
                         break;
                     default:
-                        this.invalidReason = "text.unsupportedDirective";
+                        this.invalidReason = `Unsupported directive.`;
                 }
                 return true;
             }
@@ -81,7 +81,7 @@ export class Line {
                 return match !== null;
             });
             if (this.possibleInstructions.length === 0) {
-                this.invalidReason = "text.noMatchingInstructions";
+                this.invalidReason = `Could not find any matching instructions.`;
                 return true;
             }
             let minimum = this.possibleInstructions[0][0].bytes;
@@ -119,11 +119,11 @@ export class Line {
                     // fall through
                     case Directive.string:
                         if (assembler.keywordRegexes[Keyword.string] === null) {
-                            this.invalidReason = "isa.noStringTokenDefined";
+                            this.invalidReason = `This instruction set does not define a string keyword.`;
                         }
                         let match = assembler.keywordRegexes[Keyword.string].exec(this.directiveData);
                         if (match === null) {
-                            this.invalidReason = "data.invalidString";
+                            this.invalidReason = `Invalid string "${this.directiveData}".`;
                         }
                         else {
                             let regex = RegExp(assembler.generalCharacters, "g");
@@ -148,7 +148,7 @@ export class Line {
                         this.kind = Kind.data;
                         break;
                     default:
-                        this.invalidReason = "data.unrecognizedDirective";
+                        this.invalidReason = `Unrecognized directive.`;
                 }
             }
             else {
@@ -160,10 +160,10 @@ export class Line {
                     }
                 });
                 if (isInstruction) {
-                    this.invalidReason = "data.instruction";
+                    this.invalidReason = `Matched instruction in data section.`;
                 }
                 else {
-                    this.invalidReason = "data.unknownInput";
+                    this.invalidReason = `Unknown input in the data section.`;
                 }
             }
             return false;
@@ -272,7 +272,7 @@ export class Line {
                 // Already handled in pass 0.
                 break;
             default:
-                this.invalidReason = "data.unrecognizedDirective";
+                this.invalidReason = `Unrecognized directive.`;
         }
         return errorMessage;
     }
@@ -464,7 +464,7 @@ export class Assembler {
                 result.value = value;
                 return result;
             default:
-                result.errorMessage = "oak.paramUnsupported";
+                result.errorMessage = `Internal Oak Error: Unknown parameter '${Parameter[type]}'.`;
                 return result;
         }
     }

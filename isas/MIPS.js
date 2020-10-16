@@ -496,9 +496,9 @@ class MIPSCore extends Core {
         this.registerFile.reset();
     }
     fetch() {
-        let arr = this.memcpy(this.pc, 4);
+        let arr = this.memcpy((this.pc >>> 0), 4);
         if (arr === null) {
-            return "fetch.illegalMemoryAddress";
+            return `Attempting to fetch from illegal memory address @${this.pc}`;
         }
         this.pc += 4;
         this.fetched = Utils.catBytes(arr);

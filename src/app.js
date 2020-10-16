@@ -282,7 +282,7 @@ class App extends Component {
 	addTabFull = (name, code, machine_code, mem_size, isa, get_example_code) => {
 		let selected = this.props.tabs.length;
 		
-		let core = OakJS.Core.factory.getCore(isa, mem_size, this.virtual_os, []);
+		let core = OakJS.Core.factory.getCore(isa, mem_size, this.virtual_os);
 
 		let new_tab = {
 			name: name,
