@@ -1,61 +1,68 @@
 {
-  "name": "oak-js",
-  "version": "2.1.0",
-  "description": "An online assembler/simulator generator.",
-  "homepage": "./",
-  "main": "oak/index.js",
-  "dependencies": {
-    "jsbi": "^3.1.4"
-  },
-  "devDependencies": {
-    "@babel/cli": "^7.11",
-    "@babel/core": "^7.11",
-    "@types/node": "^12.7.9",
-    "ace-builds": "^1.4.12",
-    "gh-pages": "^2.0.1",
-    "node-getopt": "^0.3.2",
-    "react": "^16.7.0",
-    "react-ace": "^9.1.4",
-    "react-dom": "^16.7.0",
-    "react-localize-redux": "^3.5.2",
-    "react-redux": "^6.0.0",
-    "react-scripts": "^3.4",
-    "redux": "^4.0.1",
-    "typescript": "^3.3.1"
-  },
-  "scripts": {
-    "clean": "rm -rf build",
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test-cli": "node bin/oak examples/riscv/bubblesort.S > /dev/null && node bin/oak -a mips examples/mips/bubblesort.S > /dev/null && echo '> Tests completed successfully.'",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject",
-    "deploy": "yarn build && gh-pages -d build"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/donn/Oak.js.git"
-  },
-  "keywords": [
-    "assembly",
-    "assembler",
-    "riscv",
-    "mips",
-    "simulator"
-  ],
-  "contributors": [
-    "Karim Abdel Hamid <karimah@aucegypt.edu> https://karimio.github.io/",
-    "Mohamed Gaber <me@donn.website> https://donn.website/"
-  ],
-  "license": "MPL-2.0",
-  "bugs": {
-    "url": "https://github.com/donn/Oak.js/issues"
-  },
-  "browserslist": [
-    ">0.2%",
-    "not dead",
-    "not ie <= 11",
-    "not op_mini all"
-  ],
-  "type": "module"
+    "name": "oak-js",
+    "version": "2.1.0",
+    "description": "An online assembler/simulator generator.",
+    "homepage": "./",
+    "main": "oak/index.js",
+    "dependencies": {
+        "jsbi": "^3.1.4"
+    },
+    "devDependencies": {
+        "@babel/cli": "^7.11",
+        "@babel/core": "^7.11",
+        "@types/node": "^12.7.9",
+        "ace-builds": "^1.4.12",
+        "gh-pages": "^2.0.1",
+        "node-getopt": "^0.3.2",
+        "prettier": "^2.6.2",
+        "react": "^16.7.0",
+        "react-ace": "^9.1.4",
+        "react-dom": "^16.7.0",
+        "react-localize-redux": "^3.5.2",
+        "react-redux": "^6.0.0",
+        "react-scripts": "^3.4",
+        "redux": "^4.0.1",
+        "typescript": "^3.3.1"
+    },
+    "scripts": {
+        "clean": "rm -rf build",
+        "start": "react-scripts start",
+        "build": "react-scripts build",
+        "test-cli": "node bin/oak examples/riscv/bubblesort.S > /dev/null && node bin/oak -a mips examples/mips/bubblesort.S > /dev/null && echo '> Tests completed successfully.'",
+        "test": "react-scripts test --env=jsdom",
+        "eject": "react-scripts eject",
+        "deploy": "yarn build && gh-pages -d build",
+        "format": "node ./node_modules/prettier/bin-prettier.js --write .",
+        "lint": "node ./node_modules/prettier/bin-prettier.js --check ."
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/donn/Oak.js.git"
+    },
+    "keywords": [
+        "assembly",
+        "assembler",
+        "riscv",
+        "mips",
+        "simulator"
+    ],
+    "contributors": [
+        "Karim Abdel Hamid <karimah@aucegypt.edu> https://karimio.github.io/",
+        "Mohamed Gaber <me@donn.website> https://donn.website/"
+    ],
+    "license": "MPL-2.0",
+    "bugs": {
+        "url": "https://github.com/donn/Oak.js/issues"
+    },
+    "browserslist": [
+        ">0.2%",
+        "not dead",
+        "not ie <= 11",
+        "not op_mini all"
+    ],
+    "type": "module",
+    "prettier": {
+        "tabWidth": 4,
+        "quoteProps": "consistent"
+    }
 }

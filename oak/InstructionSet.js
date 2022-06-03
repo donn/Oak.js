@@ -7,13 +7,13 @@ export const Parameter = new Enum({
     condition: 2,
     offset: 3,
     special: 4,
-    fpImmediate: 5
+    fpImmediate: 5,
 });
 
 export const Endianness = new Enum({
     little: 0,
     big: 1,
-    bi: 2
+    bi: 2,
 });
 
 export const Keyword = new Enum({
@@ -26,7 +26,7 @@ export const Keyword = new Enum({
 
     string: 6,
     char: 7,
-    numberic: 8
+    numberic: 8,
 });
 
 export const Directive = new Enum({
@@ -43,7 +43,7 @@ export const Directive = new Enum({
     fixedPoint: 8,
     floatingPoint: 9,
 
-    custom: 10
+    custom: 10,
 });
 
 export class BitRange {
@@ -72,7 +72,13 @@ export class BitRange {
 }
 
 export class Format {
-    constructor(ranges, regex, disassembly, processSpecialParameter = null, decodeSpecialParameter = null) {
+    constructor(
+        ranges,
+        regex,
+        disassembly,
+        processSpecialParameter = null,
+        decodeSpecialParameter = null
+    ) {
         this.ranges = ranges;
         this.regex = regex;
         this.disassembly = disassembly;
@@ -82,7 +88,15 @@ export class Format {
 }
 
 export class Instruction {
-    constructor(mnemonic, format, constants, constValues, executor, signatoryOverride = null, pseudoInstructionFor = []) {
+    constructor(
+        mnemonic,
+        format,
+        constants,
+        constValues,
+        executor,
+        signatoryOverride = null,
+        pseudoInstructionFor = []
+    ) {
         this.computedBits = null;
         /*
          Mask
@@ -127,9 +141,9 @@ export class Instruction {
         if (this.computedMask !== null) {
             return this.computedMask;
         }
-        var string = '';
+        var string = "";
         for (let i = 0; i < this.bits; i += 1) {
-            string += 'X';
+            string += "X";
         }
         for (let i in this.format.ranges) {
             let range = this.format.ranges[i];
@@ -140,19 +154,19 @@ export class Instruction {
             if (constant != null) {
                 let before = string.substr(0, this.bits - range.end - 1);
                 let addition = Utils.pad(constant, range.bits, 2);
-                let after = range.start === 0 ? '' : string.substr(-range.start);
+                let after =
+                    range.start === 0 ? "" : string.substr(-range.start);
                 string = before + addition + after;
             }
         }
         this.computedMask = string;
         return this.computedMask;
     }
-    ;
     match(machineCode) {
         let machineCodeMutable = machineCode >>> 0;
         let maskBits = this.mask.split("");
         for (let i = this.bits - 1; i >= 0; i--) {
-            let bit = (machineCodeMutable & 1);
+            let bit = machineCodeMutable & 1;
             machineCodeMutable >>= 1;
             if (maskBits[i] === "X") {
                 continue;
@@ -175,23 +189,31 @@ export class Instruction {
                 constant = range.constant;
             }
             if (constant != null) {
-                temp |= (constant << range.start);
+                temp |= constant << range.start;
             }
         }
         this.computedTemplate = temp;
         return temp;
     }
-    ;
 }
 
-export class PseudoInstruction {
-}
+export class PseudoInstruction {}
 
 export class InstructionSet {
     /*
         InstructionSet initializer
     */
-    constructor(bits, formats, instructions, pseudoInstructions, abiNames, keywords, directives, incrementOnFetch, exampleCode) {
+    constructor(
+        bits,
+        formats,
+        instructions,
+        pseudoInstructions,
+        abiNames,
+        keywords,
+        directives,
+        incrementOnFetch,
+        exampleCode
+    ) {
         this.bits = bits;
         this.formats = formats;
         this.instructions = instructions;
@@ -222,7 +244,10 @@ export class InstructionSet {
             let instruction = this.instructions[i];
             if (line.toUpperCase().hasPrefix(instruction.mnemonic)) {
                 let captures = instruction.format.regex.exec(line);
-                if (captures && captures[1].toUpperCase() === instruction.mnemonic) {
+                if (
+                    captures &&
+                    captures[1].toUpperCase() === instruction.mnemonic
+                ) {
                     result.push(instruction);
                 }
             }
@@ -236,7 +261,12 @@ export class InstructionSet {
             let range = instruction.format.ranges[i];
             let parameter = range.parameter;
             if (parameter != null) {
-                output = output.replace("@arg" + range.parameter, (range.parameterType === Parameter.register) ? this.abiNames[args[parameter]] : args[parameter].toString());
+                output = output.replace(
+                    "@arg" + range.parameter,
+                    range.parameterType === Parameter.register
+                        ? this.abiNames[args[parameter]]
+                        : args[parameter].toString()
+                );
             }
         }
         return output;

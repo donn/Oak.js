@@ -1,15 +1,14 @@
 export function padNumber(str, length) {
     var padded = str;
-    for (var i = 0; i < length - str.length; i++)
-    {
+    for (var i = 0; i < length - str.length; i++) {
         padded = "0" + padded;
     }
     return padded;
-};
-    
+}
+
 export function parseToFloat(num) {
     return num;
-};
+}
 
 // From Jonas Raoni Soares Silva, JSFromHell states
 //          that code can be redistributed and modified

@@ -1,15 +1,15 @@
 // React Imports
-import React from 'react';
-import ReactDOM from 'react-dom';
+import React from "react";
+import ReactDOM from "react-dom";
 
 // App Imports
-import App from './app';
+import App from "./app";
 
 // Redux Store Imports
-import allReducers from './reducers'
-import { Provider } from 'react-redux';
-import { createStore } from 'redux';
-import { LocalizeProvider } from 'react-localize-redux';
+import allReducers from "./reducers";
+import { Provider } from "react-redux";
+import { createStore } from "redux";
+import { LocalizeProvider } from "react-localize-redux";
 
 // Create a store...
 const store = createStore(
@@ -20,7 +20,6 @@ const store = createStore(
     window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
 );
 
-
 // Render the app with an attached memory store to the element #root
 ReactDOM.render(
     <LocalizeProvider store={store}>
@@ -28,5 +27,6 @@ ReactDOM.render(
             <App />
         </Provider>
     </LocalizeProvider>,
-    
-    document.getElementById('root'));
+
+    document.getElementById("root")
+);

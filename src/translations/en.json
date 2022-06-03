@@ -1,38 +1,38 @@
 {
     "welcome": {
-      "title": "Welcome to Oak.js",
-      "subtitle": "Oak.js is an online javascript IDE, Assembler, Disassembler, and Simulator for assembly languages such as RISC-V and MIPS."
+        "title": "Welcome to Oak.js",
+        "subtitle": "Oak.js is an online javascript IDE, Assembler, Disassembler, and Simulator for assembly languages such as RISC-V and MIPS."
     },
     "menus": {
-      "about": "About",
-      "settings": "Settings",
-      "help": "Help",
-      "add_tab": "Add Tab",
-      "add_tab_riscv": "Add Tab RISC-V",
-      "add_tab_mips": "Add Tab MIPS",
-      "load_assembly": "Load Assembly",
-      "load_binary": "Load Binary",
-      "download_assembly": "Download Assembly",
-      "download_binary": "Download Binary (Raw)",
-      "download_binary_h": "Download Binary (Verilog Hex Format)",
-      "download_memory": "Download Memory"
+        "about": "About",
+        "settings": "Settings",
+        "help": "Help",
+        "add_tab": "Add Tab",
+        "add_tab_riscv": "Add Tab RISC-V",
+        "add_tab_mips": "Add Tab MIPS",
+        "load_assembly": "Load Assembly",
+        "load_binary": "Load Binary",
+        "download_assembly": "Download Assembly",
+        "download_binary": "Download Binary (Raw)",
+        "download_binary_h": "Download Binary (Verilog Hex Format)",
+        "download_memory": "Download Memory"
     },
     "panels": {
-      "projectsettings": {
-        "name": "Project Settings",
-        "file_name": "File Name",
-        "isa": "File Name",
-        "memory_size": "Memory Size"
-      }
+        "projectsettings": {
+            "name": "Project Settings",
+            "file_name": "File Name",
+            "isa": "File Name",
+            "memory_size": "Memory Size"
+        }
     },
     "about": {
-      "title": "About",
-      "core_devs": "Developers",
-      "additional_devs": "Special Thanks",
-      "translators": "Translators"
+        "title": "About",
+        "core_devs": "Developers",
+        "additional_devs": "Special Thanks",
+        "translators": "Translators"
     },
     "help": {
-      "title": "Help",
-      "data": "<p>Oak.js is a web-based assembler, disassembler and simulator for the RISCV instruction set architecture. It is designed after version 2.1 and currently supports most of the RV32I base integer instruction set.</p>\n<p>\n    Oak.js starts executing from address 0 and implements a von Neumann structure; i.e., there is no distinction between program data and machine code in binary files. It is the programmer's responsibility to make sure static data is not\n    interpreted as instructions (to halt execution, see environment call 10).\n</p>\n<h3>Instruction Support</h3>\n<h4>RISC-V</h4>\n<p>Oak.js supports the RV32I base integer instruction set, save for the following instructions:</p>\n<p><i> fence, fence.i, ebreak, csrrw, csrrs, cssrc, csrrwi, csrrsi, csrrci </i></p>\n<h4>MIPS</h4>\n<p>The entire MIPS core integer instruction set is supported.</p>\n<h4>Pseudoinstructions</h4>\n<p>\n    As a limitation of Oak.js's architecture, very few pseudoinstructions are supported, and they all expand into only one instruction. The currently supported pseudoinstructions for RISC-V are li, mv, la, jr, scall, and syscall (the last\n    two just mirror ecall). MIPS does not support pseudoinstructions.\n</p>\n<h4>Environment Calls</h4>\n<p>The calling convention is as follows:</p>\n<p>\n    a7<sup>RISC-V</sup>/v0<sup>MIPS</sup> - Service Number <br />\n    a0-a3 - Arguments\n</p>\n<p>The return value will be placed in the same register as the service number.</p>\n<p>Oak.js supports four environment calls at the moment.</p>\n<ul>\n    <li><b>1: Print Integer.</b> Arguments: 0 - Integer to print. Prints integer to console.</li>\n    <li><b>4: Print String.</b> Arguments: 0 - Address of string to print in memory. Prints string to console.</li>\n    <li><b>5: Read Integer.</b> Arguments: None. Reads integer from user, stores in a7.</li>\n    <li><b>8: Read String.</b> Arguments: 0 - Address in memory to read string to.</li>\n    <li><b>10: Exit.</b> Arguments: None. Concludes execution of the current program.</li>\n</ul>\n<h3>Usage</h3>\n<p>\n    Input text into the main editor field. Assemble using the <img src=\"images/assembleHelp.png\" class=\"help_icon\" alt=\"assemble\" /> button. You can press <img src=\"images/playAssembleHelp.png\" class=\"help_icon\" alt=\"assemble + play\" /> to\n    assemble, and then start the simulation. Alternatively, when you have a blank codebase but you have machine code, if you press <img src=\"images/playHelp.png\" class=\"help_icon\" alt=\"play\" /> you can simply directly simulate the machine\n    code.\n</p>\n<p>You can create new tabs to manage multiple files as well, and the tabs do not share any memory or registers so you can keep different things running, no problem. You can add a new tab by going to file and pressing add tab.</p>\n<p>\n    The output panel has three output modes: console, memory and instructions. The console shows the output generated by environment calls and shows the status of the editor. The memory shows the state of the memory following simulation.\n    The Instruction Log shows the step by step disassembly of the program. You can switch between them in the select drop down menu in the top right of the output panel.\n</p>\n<p>Registers are also displayed to the right side menu. Simply press the register tab. You can select the view type under the dropdown menu.</p>\n<h4>Uploading</h4>\n<p>\n    You can also upload either assembly code or binary files directly to Oak.js.\n</p>\n<p>\n    To do it, go to the file menu in the top left of the editor, and and press \"Load Binary\" or \"Load Assembly\" to upload a file. Keep in mind, binaries and assembly files must be in the correct file. After assembly files are uploaded, you\n    need to press the assemble <img src=\"images/assembleHelp.png\" class=\"help_icon\" alt=\"assemble\" /> button. After either that or the binary file, you must press play <img src=\"images/playHelp.png\" class=\"help_icon\" alt=\"play\" />.\n</p>\n<h4>Downloading</h4>\n<p>\n    Downloading is similar. Simply open the file menu, and press \"Download RAM\", \"Download Binary\", or \"Download Assembly\". The first two must be opened in a hex editor or other program capable of opening binaries. Assembly files can be\n    loaded in any text editor.\n</p>\n<h4>Keyboard Shortcuts</h4>\n<p>\n    <b>F8</b>: Assemble.<br />\n    <b>F9</b>: Assemble if there's assembly code, and simulate.<br />\n    <b>F10</b>: Step by Step (requires assembly first).\n</p>\n"
+        "title": "Help",
+        "data": "<p>Oak.js is a web-based assembler, disassembler and simulator for the RISCV instruction set architecture. It is designed after version 2.1 and currently supports most of the RV32I base integer instruction set.</p>\n<p>\n    Oak.js starts executing from address 0 and implements a von Neumann structure; i.e., there is no distinction between program data and machine code in binary files. It is the programmer's responsibility to make sure static data is not\n    interpreted as instructions (to halt execution, see environment call 10).\n</p>\n<h3>Instruction Support</h3>\n<h4>RISC-V</h4>\n<p>Oak.js supports the RV32I base integer instruction set, save for the following instructions:</p>\n<p><i> fence, fence.i, ebreak, csrrw, csrrs, cssrc, csrrwi, csrrsi, csrrci </i></p>\n<h4>MIPS</h4>\n<p>The entire MIPS core integer instruction set is supported.</p>\n<h4>Pseudoinstructions</h4>\n<p>\n    As a limitation of Oak.js's architecture, very few pseudoinstructions are supported, and they all expand into only one instruction. The currently supported pseudoinstructions for RISC-V are li, mv, la, jr, scall, and syscall (the last\n    two just mirror ecall). MIPS does not support pseudoinstructions.\n</p>\n<h4>Environment Calls</h4>\n<p>The calling convention is as follows:</p>\n<p>\n    a7<sup>RISC-V</sup>/v0<sup>MIPS</sup> - Service Number <br />\n    a0-a3 - Arguments\n</p>\n<p>The return value will be placed in the same register as the service number.</p>\n<p>Oak.js supports four environment calls at the moment.</p>\n<ul>\n    <li><b>1: Print Integer.</b> Arguments: 0 - Integer to print. Prints integer to console.</li>\n    <li><b>4: Print String.</b> Arguments: 0 - Address of string to print in memory. Prints string to console.</li>\n    <li><b>5: Read Integer.</b> Arguments: None. Reads integer from user, stores in a7.</li>\n    <li><b>8: Read String.</b> Arguments: 0 - Address in memory to read string to.</li>\n    <li><b>10: Exit.</b> Arguments: None. Concludes execution of the current program.</li>\n</ul>\n<h3>Usage</h3>\n<p>\n    Input text into the main editor field. Assemble using the <img src=\"images/assembleHelp.png\" class=\"help_icon\" alt=\"assemble\" /> button. You can press <img src=\"images/playAssembleHelp.png\" class=\"help_icon\" alt=\"assemble + play\" /> to\n    assemble, and then start the simulation. Alternatively, when you have a blank codebase but you have machine code, if you press <img src=\"images/playHelp.png\" class=\"help_icon\" alt=\"play\" /> you can simply directly simulate the machine\n    code.\n</p>\n<p>You can create new tabs to manage multiple files as well, and the tabs do not share any memory or registers so you can keep different things running, no problem. You can add a new tab by going to file and pressing add tab.</p>\n<p>\n    The output panel has three output modes: console, memory and instructions. The console shows the output generated by environment calls and shows the status of the editor. The memory shows the state of the memory following simulation.\n    The Instruction Log shows the step by step disassembly of the program. You can switch between them in the select drop down menu in the top right of the output panel.\n</p>\n<p>Registers are also displayed to the right side menu. Simply press the register tab. You can select the view type under the dropdown menu.</p>\n<h4>Uploading</h4>\n<p>\n    You can also upload either assembly code or binary files directly to Oak.js.\n</p>\n<p>\n    To do it, go to the file menu in the top left of the editor, and and press \"Load Binary\" or \"Load Assembly\" to upload a file. Keep in mind, binaries and assembly files must be in the correct file. After assembly files are uploaded, you\n    need to press the assemble <img src=\"images/assembleHelp.png\" class=\"help_icon\" alt=\"assemble\" /> button. After either that or the binary file, you must press play <img src=\"images/playHelp.png\" class=\"help_icon\" alt=\"play\" />.\n</p>\n<h4>Downloading</h4>\n<p>\n    Downloading is similar. Simply open the file menu, and press \"Download RAM\", \"Download Binary\", or \"Download Assembly\". The first two must be opened in a hex editor or other program capable of opening binaries. Assembly files can be\n    loaded in any text editor.\n</p>\n<h4>Keyboard Shortcuts</h4>\n<p>\n    <b>F8</b>: Assemble.<br />\n    <b>F9</b>: Assemble if there's assembly code, and simulate.<br />\n    <b>F10</b>: Step by Step (requires assembly first).\n</p>\n"
     }
-  }
+}

@@ -1,35 +1,36 @@
 #root {
-      margin:  0;
-      padding: 0;
-      width:	 100vw;
-      height:  100vh;
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
 }
-  
+
 body {
-    margin:		0;
-    padding:		0;
+    margin: 0;
+    padding: 0;
     overflow: hidden;
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+        "Lucida Sans", Arial, sans-serif;
 }
 
 .navigation {
-	background-color: $primary_color;
-    
+    background-color: $primary_color;
+
     li {
         background-color: $primary_color_dark;
         color: $primary_color_text;
         transition: 0.5s ease all;
-		
-		&:hover {
-			background-color: $primary_color_dark2;
-		}
+
+        &:hover {
+            background-color: $primary_color_dark2;
+        }
     }
 }
 
 .conversion_output {
-	background: $conv_back;
-	border: 2px solid $conv_border_color;
-	color: $conv_text_color;
+    background: $conv_back;
+    border: 2px solid $conv_border_color;
+    color: $conv_text_color;
 }
 
 .panel_container {
@@ -38,15 +39,15 @@ body {
 }
 
 .status_bar {
-	background-color: $primary_color_dark;
+    background-color: $primary_color_dark;
 }
 
 .overlay {
-	background: rgba(0,0,0,0.95);
+    background: rgba(0, 0, 0, 0.95);
 }
 
 .editor_area {
-	height: calc(100% - 1.8rem - 4px) !important;
+    height: calc(100% - 1.8rem - 4px) !important;
 }
 
 .page_tabs {
@@ -56,7 +57,8 @@ body {
     li {
         background-color: $tab_reg;
         color: $tab_reg_color;
-        font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+        font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+            "Lucida Sans", Arial, sans-serif;
         cursor: pointer;
         border-top: 3px solid $tab_reg_border;
 
@@ -86,7 +88,7 @@ body {
     }
 }
 
-.panel_registers {            
+.panel_registers {
     .reg_assigned {
         background-color: $table_done_back;
         color: $table_done_color;
@@ -96,7 +98,7 @@ body {
             color: $table_done_alt_color;
         }
     }
-   
+
     .reg_new {
         background-color: $table_new_back;
         color: $table_new_color;
@@ -112,22 +114,22 @@ table {
     width: 100%;
     border-collapse: collapse;
 
-	tr {
-		font-size: 0.8rem;
-		text-align: center;
+    tr {
+        font-size: 0.8rem;
+        text-align: center;
 
-		td {
-			padding: 0.5rem;
+        td {
+            padding: 0.5rem;
         }
     }
-    
+
     tbody {
         tr {
             &:nth-child(odd) {
                 background: $table_back;
                 color: $table_color;
             }
-            
+
             &:nth-child(even) {
                 background: $table_alt_back;
                 color: $table_alt_color;
@@ -135,11 +137,12 @@ table {
         }
     }
 }
-    
+
 .panel_tabs {
     background-color: $tab_back;
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-    
+    font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+        "Lucida Sans", Arial, sans-serif;
+
     li {
         background-color: $tab_reg;
         color: $tab_reg_color;
@@ -165,21 +168,22 @@ table {
     font-weight: bold;
     transition: 0.5s ease all;
     cursor: pointer;
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+        "Lucida Sans", Arial, sans-serif;
     text-transform: uppercase;
 
     &.subbutton {
         color: $altbutton;
         border: 2px solid $altbutton;
         background: transparent;
-    
+
         &:hover {
             background: transparent;
             color: $altbutton_hover;
             border-color: $altbutton_hover;
         }
     }
-    
+
     &:hover {
         background: $button_hover_back;
         color: $button_hover_text;
@@ -192,7 +196,7 @@ table {
 
 .oak_logo {
     &::before {
-        content: '';
+        content: "";
         position: absolute;
         left: 0;
         top: 0;
@@ -293,19 +297,19 @@ table {
 }
 
 .settings_container {
-	width: 90%;
+    width: 90%;
     max-width: 900px;
     max-height: 90vh;
-	position: absolute;
-	left: 50%;
-	top: 50%;
+    position: absolute;
+    left: 50%;
+    top: 50%;
     transform: translate(-50%, -50%);
     box-shadow: $shadow_hover;
     background: $settings_back;
     border-radius: 8px;
     overflow-y: auto;
     border: $overlay_container_border;
-    
+
     h2 {
         margin: 0;
         margin-bottom: 1rem;
@@ -330,7 +334,7 @@ table {
 
     .button {
         float: right;
-    	width: auto;
+        width: auto;
     }
 }
 
@@ -357,7 +361,7 @@ table {
 
 .panel {
     font-size: 0.8rem;
-    font-family: 'Consolas', 'Courier New', Courier, monospace;
+    font-family: "Consolas", "Courier New", Courier, monospace;
 }
 
 .console_output {
@@ -393,38 +397,40 @@ table {
     }
 }
 
-
-.input_group, .select_group {
-	position: relative;
-	font-size: 30px;
-	width: calc(100% - 0.4rem);
-	margin: 0.2rem;
-	box-sizing: border-box;
+.input_group,
+.select_group {
+    position: relative;
+    font-size: 30px;
+    width: calc(100% - 0.4rem);
+    margin: 0.2rem;
+    box-sizing: border-box;
 
     .group_label {
         font-size: 0.55rem;
         top: 0.2rem;
         opacity: 1;
-		position: absolute;
-		pointer-events: none;
+        position: absolute;
+        pointer-events: none;
         transition: 0.5s ease all;
         color: $label_color;
-        font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+        font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+            "Lucida Sans", Arial, sans-serif;
         text-transform: uppercase;
-		
-		.rtl & {
-			right: 2rem;
-		}
 
-		body:not(.rtl) & {
-			left: 2rem;
-			top: 0.32rem;
-		}
+        .rtl & {
+            right: 2rem;
+        }
+
+        body:not(.rtl) & {
+            left: 2rem;
+            top: 0.32rem;
+        }
     }
 
-    input, select {
+    input,
+    select {
         padding: 0.6rem;
-        padding-top: 1.0rem;
+        padding-top: 1rem;
         padding-bottom: 0.4rem;
         font-size: 0.7rem;
         transition: 0.5s ease all;
@@ -433,66 +439,69 @@ table {
         background-color: $input_back;
         width: 100%;
         box-sizing: border-box;
-        font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+        font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+            "Lucida Sans", Arial, sans-serif;
         height: 3rem;
-        
-		&:hover {
-			background-color: $input_hover_text_color;
-			background-color: $input_hover_back;
-			border-color: $input_hover_border_color;
-		}
 
-		&:focus {
-			background-color: $input_focus_text_color;
-			background-color: $input_focus_back;
-			border-color: $input_focus_border_color;
-		}
+        &:hover {
+            background-color: $input_hover_text_color;
+            background-color: $input_hover_back;
+            border-color: $input_hover_border_color;
+        }
+
+        &:focus {
+            background-color: $input_focus_text_color;
+            background-color: $input_focus_back;
+            border-color: $input_focus_border_color;
+        }
 
         body.rtl & {
-            padding-right: 2.00rem;
+            padding-right: 2rem;
         }
         body:not(.rtl) & {
-            padding-left: 2.0rem;
-		}
-	}
+            padding-left: 2rem;
+        }
+    }
 
-	input {
-		background-repeat: no-repeat;
-		background-size: 1rem;
-		border-radius: $radius;
-
-		.rtl & {
-			background-position: calc(100% - 0.6rem) center;
-		}
-
-		body:not(.rtl) & {
-			background-position: 0.6rem center;
-		}
-	}
-
-	select {
+    input {
+        background-repeat: no-repeat;
+        background-size: 1rem;
         border-radius: $radius;
-		-webkit-appearance: none;
-		-moz-appearance: none;
-		appearance: none;
-		background-repeat: no-repeat;
-		background-size: 0.6rem, 1rem;
 
-		.rtl & {
-			background-position: 0.6rem center, calc(100% - 0.5rem) center;
-		}
+        .rtl & {
+            background-position: calc(100% - 0.6rem) center;
+        }
 
-		body:not(.rtl) & {
-			background-position: calc(100% - 0.5rem) center, 0.6rem center;
-		}
-	}
+        body:not(.rtl) & {
+            background-position: 0.6rem center;
+        }
+    }
 
-    input:placeholder-shown, select:invalid {
+    select {
+        border-radius: $radius;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-repeat: no-repeat;
+        background-size: 0.6rem, 1rem;
+
+        .rtl & {
+            background-position: 0.6rem center, calc(100% - 0.5rem) center;
+        }
+
+        body:not(.rtl) & {
+            background-position: calc(100% - 0.5rem) center, 0.6rem center;
+        }
+    }
+
+    input:placeholder-shown,
+    select:invalid {
         padding-top: 1rem;
         padding-bottom: 0.4rem;
     }
 
-    input:placeholder-shown:not(:hover):not(:focus) + .group_label, select:invalid + .group_label {
+    input:placeholder-shown:not(:hover):not(:focus) + .group_label,
+    select:invalid + .group_label {
         font-size: 0.7rem;
         right: 2rem;
         top: 0.8rem;
@@ -502,18 +511,18 @@ table {
         color: transparent;
         opacity: 0;
     }
-    
+
     :-ms-input-placeholder {
         color: transparent;
     }
-    
+
     ::-ms-input-placeholder {
         color: transparent;
     }
 
     select:invalid {
-        color: transparent
-	}
+        color: transparent;
+    }
 }
 
 .cookie_screen {
@@ -524,10 +533,10 @@ table {
     h3 {
         font-size: 1.3rem;
     }
-    
+
     p {
         padding: 1rem;
-        font-size: 1.0rem;
+        font-size: 1rem;
     }
 
     .button {
@@ -535,14 +544,15 @@ table {
     }
 }
 
-.devlist, .translatorlist {
-	a {
-		color: $about_primary;
+.devlist,
+.translatorlist {
+    a {
+        color: $about_primary;
     }
-    
-	p {
-		color: $about_secondary;
-	}
+
+    p {
+        color: $about_secondary;
+    }
 }
 
 .floating_close {

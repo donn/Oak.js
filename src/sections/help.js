@@ -1,8 +1,8 @@
-import React, { Component } from 'react'
+import React, { Component } from "react";
 
-import { connect } from 'react-redux';
+import { connect } from "react-redux";
 import { Translate, withLocalize } from "react-localize-redux";
-import { setHelpVisible } from "../actions"
+import { setHelpVisible } from "../actions";
 
 class Help extends Component {
     handleClose = (e) => {
@@ -13,16 +13,35 @@ class Help extends Component {
     handleStopClose = (event) => {
         event.stopPropagation();
     };
-    
+
     render() {
         return (
-            <div id="help" onClick={this.handleClose} className={`settings_overlay overlay fader${this.props.visible ? " fader_shown" : ""}`}>
-                <div className="settings_container" onClick={this.handleStopClose}>
-                    <button className="floating_close" onClick={this.handleClose}></button>
-                    <h2><Translate id="help.title" /></h2>
+            <div
+                id="help"
+                onClick={this.handleClose}
+                className={`settings_overlay overlay fader${
+                    this.props.visible ? " fader_shown" : ""
+                }`}
+            >
+                <div
+                    className="settings_container"
+                    onClick={this.handleStopClose}
+                >
+                    <button
+                        className="floating_close"
+                        onClick={this.handleClose}
+                    ></button>
+                    <h2>
+                        <Translate id="help.title" />
+                    </h2>
                     <div className="overlay_contents">
-                        <Translate id="help.data" options={{ renderInnerHtml: true }} />
-                        <button className="button" onClick={this.handleClose}>Close</button>
+                        <Translate
+                            id="help.data"
+                            options={{ renderInnerHtml: true }}
+                        />
+                        <button className="button" onClick={this.handleClose}>
+                            Close
+                        </button>
                     </div>
                 </div>
             </div>
@@ -30,17 +49,14 @@ class Help extends Component {
     }
 }
 
-const stateToProps = state => {
+const stateToProps = (state) => {
     return {
-        visible: state.panel_visibility.help
+        visible: state.panel_visibility.help,
     };
 };
 
 const dispatchToProps = (dispatch, ownProps) => ({
-    setHelpVisible: (visible) => dispatch(setHelpVisible(visible))
+    setHelpVisible: (visible) => dispatch(setHelpVisible(visible)),
 });
 
-export default withLocalize(
-    connect(stateToProps,
-            dispatchToProps
-    )(Help));
+export default withLocalize(connect(stateToProps, dispatchToProps)(Help));

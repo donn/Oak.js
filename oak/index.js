@@ -8,5 +8,5 @@ export default {
     Endianness: Endianness,
     Assembler: Assembler,
     Line: Line,
-    Core: Core
+    Core: Core,
 };

@@ -9,8 +9,8 @@ export class CoreFactory {
     getCoreList() {
         return Object.keys(this.ISAs);
     }
-    
-    getCore(architecture, memorySize, virtualOS, options=null) {
+
+    getCore(architecture, memorySize, virtualOS, options = null) {
         let isa = this.ISAs[architecture];
         if (isa === undefined) {
             throw `ISA '${architecture}' not found.`;
@@ -28,11 +28,10 @@ export class CoreFactory {
     }
 }
 
-
 export class Core {
     //Returns bytes on success, null on failure
     memcpy(address, bytes) {
-        if (((address + bytes) >>> 0) > this.memorySize) {
+        if ((address + bytes) >>> 0 > this.memorySize) {
             return null;
         }
         let result = [];
@@ -73,14 +72,28 @@ export class Core {
             let range = bitRanges[i];
             if (range.parameter != null) {
                 let limit = range.limitStart;
-                let value = ((this.fetched >>> range.start) & ((1 << range.bits) - 1)) << limit;
+                let value =
+                    ((this.fetched >>> range.start) &
+                        ((1 << range.bits) - 1)) <<
+                    limit;
                 if (range.parameterType === Parameter.special) {
-                    value = this.decoded.format.decodeSpecialParameter(value, this.pc); //Unmangle...
+                    value = this.decoded.format.decodeSpecialParameter(
+                        value,
+                        this.pc
+                    ); //Unmangle...
                 }
-                this.arguments[range.parameter] = this.arguments[range.parameter] || 0;
-                this.arguments[range.parameter] = this.arguments[range.parameter] | value;
-                if (this.decoded.format.ranges[i].signed && range.parameterType !== Parameter.register) {
-                    this.arguments[range.parameter] = Utils.signExt(this.arguments[range.parameter], range.totalBits ? range.totalBits : range.bits);
+                this.arguments[range.parameter] =
+                    this.arguments[range.parameter] || 0;
+                this.arguments[range.parameter] =
+                    this.arguments[range.parameter] | value;
+                if (
+                    this.decoded.format.ranges[i].signed &&
+                    range.parameterType !== Parameter.register
+                ) {
+                    this.arguments[range.parameter] = Utils.signExt(
+                        this.arguments[range.parameter],
+                        range.totalBits ? range.totalBits : range.bits
+                    );
                 }
             }
         }

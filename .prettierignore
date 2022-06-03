@@ -1,0 +1,5 @@
+**/node_modules
+**/*.md
+**/*.yml
+**/*.yaml
+/public/legacy

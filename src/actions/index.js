@@ -1,48 +1,48 @@
 export const Actions = {
-    SELECT_TAB: 'SELECT_TAB',
-    ADD_TAB: 'ADD_TAB',
-    UPDATE_TAB: 'UPDATE_TAB',
-    DELETE_TAB: 'DELETE_TAB',
-    UPDATE_PROJECT_SETTINGS: 'UPDATE_PROJECT_SETTINGS',
-    SET_HELP_VISIBLE: 'SET_HELP_VISIBLE',
-    SET_ABOUT_VISIBLE: 'SET_ABOUT_VISIBLE',
-    SET_SETTINGS_VISIBLE: 'SET_SETTINGS_VISIBLE'
+    SELECT_TAB: "SELECT_TAB",
+    ADD_TAB: "ADD_TAB",
+    UPDATE_TAB: "UPDATE_TAB",
+    DELETE_TAB: "DELETE_TAB",
+    UPDATE_PROJECT_SETTINGS: "UPDATE_PROJECT_SETTINGS",
+    SET_HELP_VISIBLE: "SET_HELP_VISIBLE",
+    SET_ABOUT_VISIBLE: "SET_ABOUT_VISIBLE",
+    SET_SETTINGS_VISIBLE: "SET_SETTINGS_VISIBLE",
 };
 
 export const setSettingsVisible = (state) => ({
     type: Actions.SET_SETTINGS_VISIBLE,
-    state
+    state,
 });
 
 export const setHelpVisible = (state) => ({
     type: Actions.SET_HELP_VISIBLE,
-    state
+    state,
 });
 
 export const setAboutVisible = (state) => ({
     type: Actions.SET_ABOUT_VISIBLE,
-    state
+    state,
 });
 
-export const selectTab = id => ({
+export const selectTab = (id) => ({
     type: Actions.SELECT_TAB,
-    id
+    id,
 });
 
-export const addTab = tab => ({
+export const addTab = (tab) => ({
     type: Actions.ADD_TAB,
-    tab
+    tab,
 });
 
 export const updateTab = (index, tab) => ({
     type: Actions.UPDATE_TAB,
     index,
-    tab
+    tab,
 });
 
-export const deleteTab = id => ({
+export const deleteTab = (id) => ({
     type: Actions.DELETE_TAB,
-    id
+    id,
 });
 
 export const setProjectSettings = (n, s, i) => ({
@@ -50,6 +50,6 @@ export const setProjectSettings = (n, s, i) => ({
     payload: {
         file_name: n,
         memory_size: s,
-        isa: i
-    }
-})
+        isa: i,
+    },
+});

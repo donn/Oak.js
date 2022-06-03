@@ -31,7 +31,7 @@ export class VirtualOS {
                     array.push(char);
                     iterator += 1;
                 }
-                let outStr = array.map(c => String.fromCharCode(c)).join('');
+                let outStr = array.map((c) => String.fromCharCode(c)).join("");
                 this.outputString(outStr);
                 return null;
             }
